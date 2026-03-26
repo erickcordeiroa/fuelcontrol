@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Livewire\Reports;
+
+use App\Models\Driver;
+use App\Models\Trip;
+use App\Models\Vehicle;
+use App\Services\MetricsService;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+#[Layout('layouts.app')]
+#[Title('Relatórios de Rotas')]
+class RouteReports extends Component
+{
+    use WithPagination;
+
+    public string $startDate = '';
+
+    public string $endDate = '';
+
+    public ?int $filterVehicleId = null;
+
+    public ?int $filterDriverId = null;
+
+    public function mount(): void
+    {
+        Gate::authorize('viewAny', Trip::class);
+
+        $this->startDate = now()->startOfMonth()->toDateString();
+        $this->endDate = now()->endOfMonth()->toDateString();
+    }
+
+    public function applyFilters(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updating($name): void
+    {
+        if (str_starts_with((string) $name, 'filter') || str_ends_with((string) $name, 'Date')) {
+            $this->resetPage();
+        }
+    }
+
+    public function render()
+    {
+        $user = auth()->user();
+        $driverScopeId = $user->isAdmin() ? null : $user->driver?->id;
+
+        $vehicleId = $this->filterVehicleId;
+        $driverId = $user->isAdmin() ? $this->filterDriverId : $driverScopeId;
+
+        $metrics = $driverScopeId === null && ! $user->isAdmin()
+            ? [
+                'total_fuel_cost' => 0.0,
+                'total_other_expenses' => 0.0,
+                'total_operational_cost' => 0.0,
+                'total_km' => 0,
+                'total_liters' => 0.0,
+                'efficiency_km_per_liter' => null,
+                'cost_per_km' => null,
+            ]
+            : app(MetricsService::class)->getAggregates(
+                $this->startDate,
+                $this->endDate,
+                $vehicleId,
+                $driverId,
+            );
+
+        $series = app(MetricsService::class)->getDailySeries(
+            $this->startDate,
+            $this->endDate,
+            $vehicleId,
+            $driverId,
+        );
+
+        $vehicleRows = app(MetricsService::class)->getVehicleEfficiencyRows(
+            $this->startDate,
+            $this->endDate,
+            $driverId,
+        );
+
+        $this->js(sprintf(
+            'window.fleetCharts.line("reportLine", %s, %s, %s); window.fleetCharts.horizontalBars("reportBars", %s);',
+            json_encode($series['labels']),
+            json_encode($series['fuel_cost']),
+            json_encode($series['other_expenses']),
+            json_encode($vehicleRows)
+        ));
+
+        $trips = Trip::query()
+            ->with(['vehicle', 'driver', 'fuel', 'expenses'])
+            ->whereDate('date', '>=', $this->startDate)
+            ->whereDate('date', '<=', $this->endDate)
+            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($user->isAdmin() && $this->filterDriverId, fn ($q) => $q->where('driver_id', $this->filterDriverId))
+            ->when(! $user->isAdmin(), function ($q) use ($driverScopeId) {
+                if ($driverScopeId === null) {
+                    $q->whereRaw('1 = 0');
+                } else {
+                    $q->where('driver_id', $driverScopeId);
+                }
+            })
+            ->orderByDesc('date')
+            ->paginate(10);
+
+        $vehicles = $user->isAdmin()
+            ? Vehicle::query()->orderBy('plate')->get()
+            : collect();
+
+        $drivers = $user->isAdmin()
+            ? Driver::query()->orderBy('name')->get()
+            : collect();
+
+        return view('livewire.reports.route-reports', [
+            'metrics' => $metrics,
+            'trips' => $trips,
+            'vehicles' => $vehicles,
+            'drivers' => $drivers,
+        ]);
+    }
+}
