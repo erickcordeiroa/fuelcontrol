@@ -15,6 +15,10 @@ class DriverPolicy
 
     public function view(User $user, Driver $driver): bool
     {
+        if ((int) ($driver->user_id ?? 0) !== $user->tenantOwnerId()) {
+            return false;
+        }
+
         if ($user->role === UserRole::Admin) {
             return true;
         }
@@ -29,12 +33,14 @@ class DriverPolicy
 
     public function update(User $user, Driver $driver): bool
     {
-        return $user->role === UserRole::Admin;
+        return $user->role === UserRole::Admin
+            && (int) ($driver->user_id ?? 0) === $user->tenantOwnerId();
     }
 
     public function delete(User $user, Driver $driver): bool
     {
-        return $user->role === UserRole::Admin;
+        return $user->role === UserRole::Admin
+            && (int) ($driver->user_id ?? 0) === $user->tenantOwnerId();
     }
 
     public function restore(User $user, Driver $driver): bool

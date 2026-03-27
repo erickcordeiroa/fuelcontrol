@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\ExpenseType;
 use App\Enums\TripStatus;
+use App\Models\Concerns\BelongsToTenant;
+use Database\Factories\TripFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,13 +14,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Trip extends Model
 {
-    /** @use HasFactory<\Database\Factories\TripFactory> */
-    use HasFactory;
+    /** @use HasFactory<TripFactory> */
+    use BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'date',
         'vehicle_id',
         'driver_id',
@@ -28,6 +31,24 @@ class Trip extends Model
         'revenue',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Trip $trip): void {
+            if ($trip->user_id !== null) {
+                return;
+            }
+
+            if ($trip->vehicle_id === null) {
+                return;
+            }
+
+            $uid = Vehicle::withoutGlobalScopes()->find($trip->vehicle_id)?->user_id;
+            if ($uid !== null) {
+                $trip->user_id = (int) $uid;
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

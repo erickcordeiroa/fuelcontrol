@@ -5,23 +5,11 @@
             <input
                 type="search"
                 class="w-full rounded-xl border border-fleet-border bg-fleet-page py-2.5 pl-10 pr-3 text-sm text-fleet-ink placeholder:text-fleet-muted focus:border-fleet-primary focus:outline-none focus:ring-2 focus:ring-fleet-primary/20"
-                placeholder="{{ __('Pesquisar Frota…') }}"
+                placeholder="{{ __('Pesquisar…') }}"
                 disabled
             />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-3 text-sm font-medium text-fleet-secondary">
-            <span class="hidden md:inline">{{ __('Frota') }}</span>
-            <span class="hidden md:inline">{{ __('Motoristas') }}</span>
-            <span class="hidden md:inline">{{ __('Manutenção') }}</span>
-            @if (auth()->user()->isAdmin())
-                <a
-                    href="{{ route('assets.vehicles') }}"
-                    wire:navigate
-                    class="rounded-xl bg-fleet-dark px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:opacity-90"
-                >
-                    + {{ __('Veículo') }}
-                </a>
-            @endif
             <livewire:layout.user-menu />
         </div>
     </div>

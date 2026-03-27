@@ -21,13 +21,14 @@ class DriverFactory extends Factory
             'license_number' => fake()->numerify('###########'),
             'phone' => fake()->optional(0.85)->phoneNumber(),
             'user_id' => null,
+            'linked_user_id' => null,
         ];
     }
 
-    public function forUser(User $user): static
+    public function forLinkedUser(User $user): static
     {
         return $this->state(fn (array $attributes) => [
-            'user_id' => $user->id,
+            'linked_user_id' => $user->id,
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\MetricsService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -22,6 +23,10 @@ class RouteReports extends Component
 
     public string $endDate = '';
 
+    public string $startDateBr = '';
+
+    public string $endDateBr = '';
+
     public ?int $filterVehicleId = null;
 
     public ?int $filterDriverId = null;
@@ -32,16 +37,76 @@ class RouteReports extends Component
 
         $this->startDate = now()->startOfMonth()->toDateString();
         $this->endDate = now()->endOfMonth()->toDateString();
+        $this->syncBrFromIso();
+    }
+
+    protected function syncBrFromIso(): void
+    {
+        $this->startDateBr = Carbon::parse($this->startDate)->format('d/m/Y');
+        $this->endDateBr = Carbon::parse($this->endDate)->format('d/m/Y');
     }
 
     public function applyFilters(): void
     {
+        $this->validate([
+            'startDateBr' => ['required', 'date_format:d/m/Y'],
+            'endDateBr' => ['required', 'date_format:d/m/Y'],
+        ], [], [
+            'startDateBr' => __('De'),
+            'endDateBr' => __('Até'),
+        ]);
+
+        try {
+            $start = Carbon::createFromFormat('d/m/Y', $this->startDateBr)->startOfDay();
+            $end = Carbon::createFromFormat('d/m/Y', $this->endDateBr)->startOfDay();
+        } catch (\Throwable) {
+            $this->addError('startDateBr', __('Datas inválidas. Use dd/mm/aaaa.'));
+
+            return;
+        }
+
+        if ($end->lt($start)) {
+            $this->addError('endDateBr', __('A data final deve ser igual ou posterior à inicial.'));
+
+            return;
+        }
+
+        $this->startDate = $start->toDateString();
+        $this->endDate = $end->toDateString();
         $this->resetPage();
+    }
+
+    public function updatedStartDateBr(string $value): void
+    {
+        if (strlen($value) < 10) {
+            return;
+        }
+
+        try {
+            $this->startDate = Carbon::createFromFormat('d/m/Y', $value)->toDateString();
+            $this->resetPage();
+        } catch (\Throwable) {
+            //
+        }
+    }
+
+    public function updatedEndDateBr(string $value): void
+    {
+        if (strlen($value) < 10) {
+            return;
+        }
+
+        try {
+            $this->endDate = Carbon::createFromFormat('d/m/Y', $value)->toDateString();
+            $this->resetPage();
+        } catch (\Throwable) {
+            //
+        }
     }
 
     public function updating($name): void
     {
-        if (str_starts_with((string) $name, 'filter') || str_ends_with((string) $name, 'Date')) {
+        if (str_starts_with((string) $name, 'filter') || str_ends_with((string) $name, 'DateBr')) {
             $this->resetPage();
         }
     }

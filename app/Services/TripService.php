@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Enums\ExpenseType;
 use App\Enums\TripStatus;
 use App\Enums\UserRole;
+use App\Models\Driver;
+use App\Models\GasStation;
 use App\Models\Trip;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -73,6 +76,7 @@ class TripService
      *   liters: float|int|string,
      *   price_per_liter: float|int|string,
      *   station?: ?string,
+     *   gas_station_id?: int|null,
      *   toll: float|int|string,
      *   assistant: float|int|string,
      *   food: float|int|string,
@@ -110,6 +114,13 @@ class TripService
 
         $status = $payload['status'] ?? TripStatus::Completed;
 
+        Vehicle::query()->findOrFail((int) $payload['vehicle_id']);
+        Driver::query()->findOrFail($driverId);
+
+        if (isset($payload['gas_station_id']) && $payload['gas_station_id'] !== null) {
+            GasStation::query()->findOrFail((int) $payload['gas_station_id']);
+        }
+
         return DB::transaction(function () use ($payload, $kmTotal, $kmStart, $kmEnd, $driverId, $status) {
             $trip = Trip::query()->create([
                 'date' => $payload['date'],
@@ -123,6 +134,7 @@ class TripService
             ]);
 
             $trip->fuel()->create([
+                'gas_station_id' => $payload['gas_station_id'] ?? null,
                 'liters' => $payload['liters'],
                 'price_per_liter' => $payload['price_per_liter'],
                 'station' => $payload['station'] ?? null,

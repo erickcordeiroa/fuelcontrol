@@ -60,18 +60,28 @@
             <section class="rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-sm">
                 <h2 class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Abastecimento') }}</h2>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Posto cadastrado') }}</label>
+                        <select wire:model.live="gas_station_id" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20">
+                            <option value="">{{ __('Selecione ou informe manualmente abaixo') }}</option>
+                            @foreach ($gasStations as $gs)
+                                <option value="{{ $gs->id }}">{{ $gs->name }} @if ((float) $gs->price_per_liter > 0) — R$ {{ number_format((float) $gs->price_per_liter, 4, ',', '.') }}/L @endif</option>
+                            @endforeach
+                        </select>
+                        @error('gas_station_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                    </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Litros total') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="liters" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input type="text" inputmode="decimal" wire:model.live="liters" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('liters') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Valor por litro (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="price_per_liter" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input type="text" inputmode="decimal" wire:model.live="price_per_liter" placeholder="0,0000" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Posto / Convênio') }}</label>
+                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Posto / Convênio (nome ou observação)') }}</label>
                         <input type="text" wire:model.live="station" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('station') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
@@ -84,17 +94,17 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Pedágio (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="toll" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input type="text" inputmode="decimal" wire:model.live="toll" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('toll') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Ajudante (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="assistant" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input type="text" inputmode="decimal" wire:model.live="assistant" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('assistant') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Alimentação (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="food" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input type="text" inputmode="decimal" wire:model.live="food" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
                         @error('food') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                 </div>

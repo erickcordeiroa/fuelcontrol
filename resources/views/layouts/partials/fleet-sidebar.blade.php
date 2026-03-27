@@ -1,11 +1,17 @@
 @php
-    $isAdmin = auth()->user()->isAdmin();
+    $user = auth()->user();
+    $isAdmin = $user->isAdmin();
 @endphp
 
 <aside class="hidden w-64 shrink-0 flex-col border-r border-fleet-border bg-fleet-sidebar lg:flex">
     <div class="px-6 py-8">
         <p class="text-xs font-semibold uppercase tracking-wider text-fleet-muted">Fleet Command</p>
-        <p class="mt-1 text-sm font-semibold text-fleet-ink">{{ $isAdmin ? __('Função Administrador') : __('Motorista') }}</p>
+        @if ($isAdmin && filled($user->company_name))
+            <p class="mt-1 text-sm font-semibold text-fleet-ink">{{ $user->company_name }}</p>
+            <p class="mt-0.5 text-xs text-fleet-secondary">{{ __('Administrador') }}</p>
+        @else
+            <p class="mt-1 text-sm font-semibold text-fleet-ink">{{ $isAdmin ? __('Função Administrador') : __('Motorista') }}</p>
+        @endif
     </div>
 
     <nav class="flex-1 space-y-1 px-3">
@@ -21,13 +27,31 @@
 
         @if ($isAdmin)
             <a
-                href="{{ route('assets.vehicles') }}"
+                href="{{ route('vehicles.index') }}"
                 wire:navigate
                 class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                    {{ request()->routeIs('assets.vehicles') || request()->routeIs('assets.drivers') ? 'bg-white text-fleet-ink shadow-sm' : 'text-fleet-secondary hover:bg-white/70' }}"
+                    {{ request()->routeIs('vehicles.*') ? 'bg-white text-fleet-ink shadow-sm' : 'text-fleet-secondary hover:bg-white/70' }}"
             >
                 <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fleet-page text-fleet-ink">◆</span>
-                {{ __('Ativos') }}
+                {{ __('Veículos') }}
+            </a>
+            <a
+                href="{{ route('drivers.index') }}"
+                wire:navigate
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
+                    {{ request()->routeIs('drivers.*') ? 'bg-white text-fleet-ink shadow-sm' : 'text-fleet-secondary hover:bg-white/70' }}"
+            >
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fleet-page text-fleet-ink">☷</span>
+                {{ __('Motoristas') }}
+            </a>
+            <a
+                href="{{ route('gas-stations.index') }}"
+                wire:navigate
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
+                    {{ request()->routeIs('gas-stations.*') ? 'bg-white text-fleet-ink shadow-sm' : 'text-fleet-secondary hover:bg-white/70' }}"
+            >
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fleet-page text-fleet-ink">⛽</span>
+                {{ __('Postos') }}
             </a>
         @endif
 

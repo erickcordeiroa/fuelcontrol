@@ -6,6 +6,7 @@ use App\Models\Trip;
 use App\Models\Vehicle;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -47,8 +48,13 @@ class MetricsService
      */
     public function getAggregates(string $startDate, string $endDate, ?int $vehicleId = null, ?int $driverId = null): array
     {
+        $tenantSegment = Auth::check()
+            ? (string) Auth::user()->tenantOwnerId()
+            : '0';
+
         $cacheKey = implode(':', [
             'fleet_metrics',
+            $tenantSegment,
             $startDate,
             $endDate,
             (string) ($vehicleId ?? 'all'),
@@ -158,7 +164,7 @@ class MetricsService
 
         for ($day = $start; $day->lte($end); $day = $day->addDay()) {
             $key = $day->format('Y-m-d');
-            $labels[] = $day->format('d/m');
+            $labels[] = $day->format('d/m/Y');
 
             $dayTrips = $trips->filter(fn (Trip $t) => $t->date->format('Y-m-d') === $key);
 

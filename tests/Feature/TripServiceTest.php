@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Driver;
+use App\Models\GasStation;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\TripService;
@@ -18,8 +18,10 @@ class TripServiceTest extends TestCase
     public function test_create_trip_persists_fuel_and_expenses(): void
     {
         $admin = User::factory()->admin()->create();
-        $vehicle = Vehicle::factory()->create();
-        $driver = Driver::factory()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($admin);
 
         $service = app(TripService::class);
 
@@ -43,11 +45,43 @@ class TripServiceTest extends TestCase
         $this->assertCount(3, $trip->expenses);
     }
 
+    public function test_create_trip_persists_gas_station_id_on_fuel(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+        $station = GasStation::factory()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($admin);
+
+        $service = app(TripService::class);
+
+        $trip = $service->createTrip($admin, [
+            'date' => now()->toDateString(),
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'km_start' => 1000,
+            'km_end' => 1620,
+            'revenue' => 0,
+            'liters' => 100,
+            'price_per_liter' => 6,
+            'station' => $station->name,
+            'gas_station_id' => $station->id,
+            'toll' => 0,
+            'assistant' => 0,
+            'food' => 0,
+        ]);
+
+        $this->assertSame($station->id, $trip->fuel?->gas_station_id);
+    }
+
     public function test_km_end_must_exceed_km_start(): void
     {
         $admin = User::factory()->admin()->create();
-        $vehicle = Vehicle::factory()->create();
-        $driver = Driver::factory()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($admin);
 
         $service = app(TripService::class);
 
@@ -70,10 +104,13 @@ class TripServiceTest extends TestCase
 
     public function test_driver_cannot_create_trip_for_another_driver(): void
     {
+        $admin = User::factory()->admin()->create();
         $user = User::factory()->driverRole()->create();
-        $driverA = Driver::factory()->forUser($user)->create();
-        $driverB = Driver::factory()->create();
-        $vehicle = Vehicle::factory()->create();
+        $driverA = Driver::factory()->forLinkedUser($user)->create(['user_id' => $admin->id]);
+        $driverB = Driver::factory()->create(['user_id' => $admin->id]);
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($user);
 
         $service = app(TripService::class);
 

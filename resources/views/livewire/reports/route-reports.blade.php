@@ -18,11 +18,27 @@
         <div class="grid gap-4 lg:grid-cols-5">
             <div>
                 <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('De') }}</label>
-                <input type="date" wire:model.live="startDate" class="mt-1 w-full rounded-xl border-fleet-border text-sm" />
+                <input
+                    type="text"
+                    wire:model.live="startDateBr"
+                    placeholder="dd/mm/aaaa"
+                    maxlength="10"
+                    autocomplete="off"
+                    class="mt-1 w-full rounded-xl border-fleet-border text-sm"
+                />
+                @error('startDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Até') }}</label>
-                <input type="date" wire:model.live="endDate" class="mt-1 w-full rounded-xl border-fleet-border text-sm" />
+                <input
+                    type="text"
+                    wire:model.live="endDateBr"
+                    placeholder="dd/mm/aaaa"
+                    maxlength="10"
+                    autocomplete="off"
+                    class="mt-1 w-full rounded-xl border-fleet-border text-sm"
+                />
+                @error('endDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             @if (auth()->user()->isAdmin())
                 <div>

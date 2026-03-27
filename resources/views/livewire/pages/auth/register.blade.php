@@ -1,32 +1,38 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component
 {
+    public string $company_name = '';
+
     public string $name = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     /**
-     * Handle an incoming registration request.
+     * Cadastro de empresa: cria o usuário administrador (dono do tenant).
      */
     public function register(): void
     {
         $validated = $this->validate([
+            'company_name' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $validated['role'] = UserRole::Admin;
 
         event(new Registered($user = User::create($validated)));
 
@@ -37,51 +43,58 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
+    <div class="mb-6 text-center">
+        <h1 class="text-lg font-semibold text-gray-900">{{ __('Cadastrar empresa') }}</h1>
+        <p class="mt-2 text-sm text-gray-600">{{ __('Crie a conta da sua empresa para gerenciar frota, diário de bordo e relatórios.') }}</p>
+    </div>
+
     <form wire:submit="register">
-        <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
+            <x-input-label for="company_name" :value="__('Nome da empresa')" />
+            <x-text-input wire:model="company_name" id="company_name" class="mt-1 block w-full" type="text" name="company_name" required autofocus autocomplete="organization" />
+            <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
+        </div>
+
+        <div class="mt-4">
+            <x-input-label for="name" :value="__('Seu nome (responsável)')" />
+            <x-text-input wire:model="name" id="name" class="mt-1 block w-full" type="text" name="name" required autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
+            <x-input-label for="email" :value="__('E-mail corporativo')" />
+            <x-text-input wire:model="email" id="email" class="mt-1 block w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" :value="__('Senha')" />
 
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <x-text-input wire:model="password" id="password" class="mt-1 block w-full"
+                type="password"
+                name="password"
+                required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="password_confirmation" :value="__('Confirmar senha')" />
 
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="mt-1 block w-full"
+                type="password"
+                name="password_confirmation" required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}" wire:navigate>
-                {{ __('Already registered?') }}
+        <div class="mt-6 flex items-center justify-end">
+            <a class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" href="{{ route('login') }}" wire:navigate>
+                {{ __('Já tem conta? Entrar') }}
             </a>
 
             <x-primary-button class="ms-4">
-                {{ __('Register') }}
+                {{ __('Cadastrar empresa') }}
             </x-primary-button>
         </div>
     </form>

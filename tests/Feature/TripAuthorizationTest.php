@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\TripStatus;
 use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\User;
@@ -15,14 +16,22 @@ class TripAuthorizationTest extends TestCase
 
     public function test_driver_cannot_view_another_drivers_trip(): void
     {
-        $vehicle = Vehicle::factory()->create();
+        $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
         $user = User::factory()->driverRole()->create();
-        Driver::factory()->forUser($user)->create();
-        $otherDriver = Driver::factory()->create();
+        Driver::factory()->forLinkedUser($user)->create(['user_id' => $admin->id]);
+        $otherDriver = Driver::factory()->create(['user_id' => $admin->id]);
 
-        $trip = Trip::factory()->create([
+        $trip = Trip::query()->create([
+            'user_id' => $admin->id,
+            'date' => now()->toDateString(),
             'vehicle_id' => $vehicle->id,
             'driver_id' => $otherDriver->id,
+            'km_start' => 0,
+            'km_end' => 100,
+            'km_total' => 100,
+            'revenue' => 0,
+            'status' => TripStatus::Completed,
         ]);
 
         $this->assertFalse($user->can('view', $trip));
@@ -30,8 +39,21 @@ class TripAuthorizationTest extends TestCase
 
     public function test_admin_can_view_any_trip(): void
     {
-        $trip = Trip::factory()->create();
         $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+
+        $trip = Trip::query()->create([
+            'user_id' => $admin->id,
+            'date' => now()->toDateString(),
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'km_start' => 0,
+            'km_end' => 100,
+            'km_total' => 100,
+            'revenue' => 0,
+            'status' => TripStatus::Completed,
+        ]);
 
         $this->assertTrue($admin->can('view', $trip));
     }

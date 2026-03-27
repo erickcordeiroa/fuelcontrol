@@ -15,6 +15,10 @@ class TripPolicy
 
     public function view(User $user, Trip $trip): bool
     {
+        if ((int) ($trip->user_id ?? 0) !== $user->tenantOwnerId()) {
+            return false;
+        }
+
         if ($user->role === UserRole::Admin) {
             return true;
         }

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'company_name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -33,11 +33,29 @@ class User extends Authenticatable
 
     public function driver(): HasOne
     {
-        return $this->hasOne(Driver::class);
+        return $this->hasOne(Driver::class, 'linked_user_id');
     }
 
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    /**
+     * ID do usuário dono do tenant (frotas, viagens, etc.). Admin = próprio id; motorista = user_id do cadastro de motorista.
+     */
+    public function tenantOwnerId(): int
+    {
+        if ($this->isAdmin()) {
+            return $this->id;
+        }
+
+        $driver = Driver::withoutGlobalScopes()->where('linked_user_id', $this->id)->first();
+
+        if ($driver !== null && $driver->user_id !== null) {
+            return (int) $driver->user_id;
+        }
+
+        return $this->id;
     }
 }

@@ -15,7 +15,7 @@ class VehiclePolicy
 
     public function view(User $user, Vehicle $vehicle): bool
     {
-        return true;
+        return (int) ($vehicle->user_id ?? 0) === $user->tenantOwnerId();
     }
 
     public function create(User $user): bool
@@ -25,12 +25,14 @@ class VehiclePolicy
 
     public function update(User $user, Vehicle $vehicle): bool
     {
-        return $user->role === UserRole::Admin;
+        return $user->role === UserRole::Admin
+            && (int) ($vehicle->user_id ?? 0) === $user->tenantOwnerId();
     }
 
     public function delete(User $user, Vehicle $vehicle): bool
     {
-        return $user->role === UserRole::Admin;
+        return $user->role === UserRole::Admin
+            && (int) ($vehicle->user_id ?? 0) === $user->tenantOwnerId();
     }
 
     public function restore(User $user, Vehicle $vehicle): bool
