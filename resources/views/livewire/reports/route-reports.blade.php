@@ -1,4 +1,10 @@
 <div class="space-y-8">
+    @if (session('status'))
+        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit">
+            {{ session('status') }}
+        </div>
+    @endif
+
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <h1 class="fleet-page-title">{{ __('Relatórios de Rotas') }}</h1>
@@ -131,8 +137,8 @@
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
-        <div class="border-b border-fleet-border px-4 py-3">
+    <div class="rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
+        <div class="rounded-t-2xl border-b border-fleet-border px-4 py-3">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Detalhamento de viagens') }}</h3>
         </div>
         <div class="overflow-x-auto">
@@ -153,6 +159,7 @@
                         <th class="px-4 py-3">{{ __('Alimentação') }}</th>
                         <th class="px-4 py-3">{{ __('Total operacional') }}</th>
                         <th class="px-4 py-3">{{ __('Status') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('Ações') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-fleet-border">
@@ -212,17 +219,96 @@
                                     <span class="rounded-full bg-fleet-primary/15 px-2 py-1 text-xs font-semibold uppercase text-fleet-primary">{{ __('Em curso') }}</span>
                                 @endif
                             </td>
+                            <td class="px-4 py-3 text-right">
+                                <x-fleet.trip-row-actions :trip="$trip" />
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="14" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhuma viagem no período.') }}</td>
+                            <td colspan="15" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhuma viagem no período.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="border-t border-fleet-border px-4 py-3">
+        <div class="rounded-b-2xl border-t border-fleet-border px-4 py-3">
             {{ $trips->links() }}
         </div>
     </div>
+
+    @if ($historyTripId !== null)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center bg-fleet-ink/50 p-4"
+            wire:click="closeTripHistory"
+            wire:key="trip-history-modal"
+        >
+            <div
+                class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet"
+                wire:click.stop
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="trip-history-title"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <h3 id="trip-history-title" class="text-lg font-semibold text-fleet-ink">
+                        {{ __('Histórico de alterações do diário') }}
+                    </h3>
+                    <button
+                        type="button"
+                        wire:click="closeTripHistory"
+                        class="rounded-lg p-1 text-fleet-muted hover:bg-fleet-page hover:text-fleet-ink"
+                        aria-label="{{ __('Fechar') }}"
+                    >
+                        <span class="sr-only">{{ __('Fechar') }}</span>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <p class="mt-1 text-sm text-fleet-muted">{{ __('Registro #:id', ['id' => $historyTripId]) }}</p>
+
+                <div class="mt-6 space-y-6">
+                    @forelse ($tripChangeLogs as $log)
+                        <div class="rounded-xl border border-fleet-border bg-fleet-page/40 p-4">
+                            <p class="text-xs text-fleet-muted">
+                                {{ $log->created_at->timezone(config('app.timezone'))->format('d/m/Y H:i') }}
+                                — {{ $log->user?->name ?? __('Usuário removido') }}
+                            </p>
+                            @php
+                                $pairs = $log->diffSnapshots();
+                            @endphp
+                            @if (count($pairs) === 0)
+                                <p class="mt-2 text-sm text-fleet-secondary">{{ __('Nenhum campo alterado (registro de salvamento).') }}</p>
+                            @else
+                                <table class="mt-3 w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="text-xs uppercase text-fleet-muted">
+                                            <th class="pb-2 pr-2 font-medium">{{ __('Campo') }}</th>
+                                            <th class="pb-2 pr-2 font-medium">{{ __('Antes') }}</th>
+                                            <th class="pb-2 font-medium">{{ __('Depois') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-fleet-border">
+                                        @foreach ($pairs as $field => $pair)
+                                            <tr>
+                                                <td class="py-2 pr-2 align-top text-fleet-ink">
+                                                    {{ \App\Models\TripChangeLog::labelForField($field) }}
+                                                </td>
+                                                <td class="py-2 pr-2 align-top text-fleet-secondary">
+                                                    {{ $this->formatSnapshotValue($field, $pair['before'], $vehiclePlates, $driverNames) }}
+                                                </td>
+                                                <td class="py-2 align-top text-fleet-ink">
+                                                    {{ $this->formatSnapshotValue($field, $pair['after'], $vehiclePlates, $driverNames) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-sm text-fleet-secondary">{{ __('Ainda não há alterações registradas para esta viagem.') }}</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

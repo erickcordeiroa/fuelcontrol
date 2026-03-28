@@ -12,7 +12,7 @@ Route::view('/', 'welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', FleetDashboard::class)->name('dashboard');
-    Route::get('/diario', TripLogForm::class)->name('logbook');
+    Route::get('/diario/{trip?}', TripLogForm::class)->name('logbook');
     Route::get('/relatorios', RouteReports::class)->name('reports');
 
     Route::middleware('admin')->group(function () {

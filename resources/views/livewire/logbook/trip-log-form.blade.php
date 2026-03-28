@@ -6,8 +6,27 @@
     @endif
 
     <div>
-        <h1 class="fleet-page-title">{{ __('Diário de Bordo') }}</h1>
-        <p class="fleet-page-lead">{{ __('Registre rota, abastecimento e despesas em um único fluxo.') }}</p>
+        <h1 class="fleet-page-title">
+            @if ($editingTripId)
+                {{ __('Editar registro do diário') }}
+            @else
+                {{ __('Diário de Bordo') }}
+            @endif
+        </h1>
+        <p class="fleet-page-lead">
+            @if ($editingTripId)
+                {{ __('Ajuste os dados da viagem. Ao salvar, as alterações ficam registradas no histórico do relatório.') }}
+            @else
+                {{ __('Registre rota, abastecimento e despesas em um único fluxo.') }}
+            @endif
+        </p>
+        @if ($editingTripId)
+            <p class="mt-2">
+                <a href="{{ route('reports') }}" wire:navigate class="text-sm font-medium text-fleet-primary hover:underline">
+                    {{ __('Voltar aos relatórios') }}
+                </a>
+            </p>
+        @endif
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
@@ -178,57 +197,74 @@
 
             <section class="fleet-panel">
                 <h2 class="fleet-section-title">{{ __('Outras despesas') }}</h2>
-                <p class="mt-1 text-xs text-fleet-muted">{{ __('Pedágio, ajudante e alimentação (opcional).') }}</p>
-                <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="fleet-label">{{ __('Pedágio (R$)') }}</label>
+                <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-fleet-border bg-fleet-page/40 p-3 sm:max-w-xl">
                         <input
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            x-data="fleetBrlMoneyField('toll', 2)"
-                            x-bind:value="format()"
-                            x-on:keydown="onKeydown($event)"
-                            x-on:beforeinput="onBeforeInput($event)"
-                            x-on:paste="onPaste($event)"
-                            placeholder="0,00"
-                            class="fleet-field"
+                            type="checkbox"
+                            wire:model.live="is_daily_operation"
+                            class="mt-0.5 h-4 w-4 shrink-0 rounded border-fleet-border text-fleet-primary focus:ring-fleet-primary/30"
                         />
-                        @error('toll') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="fleet-label">{{ __('Ajudante (R$)') }}</label>
-                        <input
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            x-data="fleetBrlMoneyField('assistant', 2)"
-                            x-bind:value="format()"
-                            x-on:keydown="onKeydown($event)"
-                            x-on:beforeinput="onBeforeInput($event)"
-                            x-on:paste="onPaste($event)"
-                            placeholder="0,00"
-                            class="fleet-field"
-                        />
-                        @error('assistant') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="fleet-label">{{ __('Alimentação (R$)') }}</label>
-                        <input
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            x-data="fleetBrlMoneyField('food', 2)"
-                            x-bind:value="format()"
-                            x-on:keydown="onKeydown($event)"
-                            x-on:beforeinput="onBeforeInput($event)"
-                            x-on:paste="onPaste($event)"
-                            placeholder="0,00"
-                            class="fleet-field"
-                        />
-                        @error('food') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
+                        <span>
+                            <span class="block text-sm font-medium text-fleet-ink">{{ __('Operação diária') }}</span>
+                            <span class="mt-0.5 block text-xs text-fleet-muted">
+                                {{ __('Marque se este registro inclui pedágio, ajudante e alimentação. Desmarcado, esses valores ficam zerados.') }}
+                            </span>
+                        </span>
+                    </label>
                 </div>
+                @if ($is_daily_operation)
+                    <p class="mt-3 text-xs text-fleet-muted">{{ __('Informe os valores ou deixe em zero quando não houver despesa.') }}</p>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="fleet-label">{{ __('Pedágio (R$)') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetBrlMoneyField('toll', 2)"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0,00"
+                                class="fleet-field"
+                            />
+                            @error('toll') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="fleet-label">{{ __('Ajudante (R$)') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetBrlMoneyField('assistant', 2)"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0,00"
+                                class="fleet-field"
+                            />
+                            @error('assistant') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="fleet-label">{{ __('Alimentação (R$)') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetBrlMoneyField('food', 2)"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0,00"
+                                class="fleet-field"
+                            />
+                            @error('food') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                @endif
             </section>
         </div>
 
@@ -271,7 +307,11 @@
             >
                 <span wire:loading.remove wire:target="save" class="inline-flex items-center justify-center gap-2">
                     <x-icons.check class="h-5 w-5 shrink-0" />
-                    {{ __('Finalizar registro') }}
+                    @if ($editingTripId)
+                        {{ __('Salvar alterações') }}
+                    @else
+                        {{ __('Finalizar registro') }}
+                    @endif
                 </span>
                 <span wire:loading wire:target="save">{{ __('Salvando…') }}</span>
             </button>

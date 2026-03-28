@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Reports;
 
+use App\Enums\FuelType;
 use App\Models\Driver;
 use App\Models\Trip;
+use App\Models\TripChangeLog;
 use App\Models\Vehicle;
 use App\Services\MetricsService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -30,6 +33,8 @@ class RouteReports extends Component
     public ?int $filterVehicleId = null;
 
     public ?int $filterDriverId = null;
+
+    public ?int $historyTripId = null;
 
     public function mount(): void
     {
@@ -111,6 +116,78 @@ class RouteReports extends Component
         }
     }
 
+    public function openTripHistory(int $tripId): void
+    {
+        $trip = Trip::query()->findOrFail($tripId);
+        Gate::authorize('view', $trip);
+        $this->historyTripId = $tripId;
+    }
+
+    public function closeTripHistory(): void
+    {
+        $this->historyTripId = null;
+    }
+
+    public function formatSnapshotScalar(string $field, mixed $value): string
+    {
+        if ($value === null) {
+            return '—';
+        }
+
+        if ($field === 'fuel_type' && is_string($value)) {
+            $enum = FuelType::tryFrom($value);
+
+            return $enum !== null ? $enum->label() : $value;
+        }
+
+        if (is_float($value) || is_int($value)) {
+            if (in_array($field, ['liters', 'price_per_liter'], true)) {
+                return number_format((float) $value, 2, ',', '.');
+            }
+
+            if (in_array($field, ['toll', 'assistant', 'food', 'revenue'], true)) {
+                return 'R$ '.number_format((float) $value, 2, ',', '.');
+            }
+        }
+
+        if (is_string($value) && $field === 'date') {
+            try {
+                return Carbon::parse($value)->format('d/m/Y');
+            } catch (\Throwable) {
+                return $value;
+            }
+        }
+
+        return is_scalar($value) ? (string) $value : json_encode($value);
+    }
+
+    /**
+     * @param  Collection<int, string>|iterable<int|string, string>  $vehiclePlates
+     * @param  Collection<int, string>|iterable<int|string, string>  $driverNames
+     */
+    public function formatSnapshotValue(string $field, mixed $value, iterable $vehiclePlates, iterable $driverNames): string
+    {
+        if ($value === null) {
+            return '—';
+        }
+
+        if ($field === 'vehicle_id' && is_numeric($value)) {
+            $id = (int) $value;
+            $plate = $vehiclePlates[$id] ?? null;
+
+            return $plate !== null ? (string) $plate : '#'.$id;
+        }
+
+        if ($field === 'driver_id' && is_numeric($value)) {
+            $id = (int) $value;
+            $name = $driverNames[$id] ?? null;
+
+            return $name !== null ? (string) $name : '#'.$id;
+        }
+
+        return $this->formatSnapshotScalar($field, $value);
+    }
+
     public function render()
     {
         $user = auth()->user();
@@ -181,11 +258,25 @@ class RouteReports extends Component
             ? Driver::query()->orderBy('name')->get()
             : collect();
 
+        $tripChangeLogs = $this->historyTripId === null
+            ? collect()
+            : TripChangeLog::query()
+                ->where('trip_id', $this->historyTripId)
+                ->with('user')
+                ->latest()
+                ->get();
+
+        $vehiclePlates = Vehicle::query()->orderBy('plate')->pluck('plate', 'id');
+        $driverNames = Driver::query()->orderBy('name')->pluck('name', 'id');
+
         return view('livewire.reports.route-reports', [
             'metrics' => $metrics,
             'trips' => $trips,
             'vehicles' => $vehicles,
             'drivers' => $drivers,
+            'tripChangeLogs' => $tripChangeLogs,
+            'vehiclePlates' => $vehiclePlates,
+            'driverNames' => $driverNames,
         ]);
     }
 }

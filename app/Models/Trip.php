@@ -98,6 +98,14 @@ class Trip extends Model
         return $this->hasMany(Expense::class);
     }
 
+    /**
+     * @return HasMany<TripChangeLog, $this>
+     */
+    public function changeLogs(): HasMany
+    {
+        return $this->hasMany(TripChangeLog::class);
+    }
+
     public function fuelCost(): float
     {
         if ($this->fuel === null) {

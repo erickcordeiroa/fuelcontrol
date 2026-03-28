@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Logbook;
 
+use App\Enums\ExpenseType;
 use App\Enums\FuelType;
 use App\Models\Driver;
 use App\Models\GasStation;
@@ -16,13 +17,13 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-#[Title('Diário de Bordo')]
 class TripLogForm extends Component
 {
+    public ?int $editingTripId = null;
+
     public string $date = '';
 
     public ?int $vehicle_id = null;
@@ -43,14 +44,25 @@ class TripLogForm extends Component
 
     public string $station = '';
 
+    /** Quando verdadeiro, pedágio, ajudante e alimentação podem ser informados. */
+    public bool $is_daily_operation = false;
+
     public string $toll = '0,00';
 
     public string $assistant = '0,00';
 
     public string $food = '0,00';
 
-    public function mount(): void
+    public function mount(?Trip $trip = null): void
     {
+        if ($trip !== null) {
+            Gate::authorize('update', $trip);
+            $this->editingTripId = $trip->id;
+            $this->fillFromTrip($trip);
+
+            return;
+        }
+
         Gate::authorize('create', Trip::class);
 
         $this->date = now()->toDateString();
@@ -59,6 +71,57 @@ class TripLogForm extends Component
         if (! $user->isAdmin() && $user->driver !== null) {
             $this->driver_id = $user->driver->id;
         }
+    }
+
+    private function fillFromTrip(Trip $trip): void
+    {
+        $trip->loadMissing(['fuel', 'expenses']);
+        $fuel = $trip->fuel;
+
+        if ($fuel === null) {
+            abort(404);
+        }
+
+        $this->date = $trip->date->toDateString();
+        $this->vehicle_id = $trip->vehicle_id;
+        $this->driver_id = $trip->driver_id;
+        $this->km_start = $trip->km_start;
+        $this->km_end = $trip->km_end;
+        $this->gas_station_id = $fuel->gas_station_id;
+        $this->gas_station_fuel_offering_id = $fuel->gas_station_fuel_offering_id;
+        $this->liters = BrazilianNumber::format((float) $fuel->liters, 2);
+        $this->price_per_liter = BrazilianNumber::format((float) $fuel->price_per_liter, 2);
+        $this->station = $fuel->station ?? '';
+
+        $toll = $trip->expenseAmountFor(ExpenseType::Toll);
+        $assistant = $trip->expenseAmountFor(ExpenseType::Assistant);
+        $food = $trip->expenseAmountFor(ExpenseType::Food);
+
+        $this->is_daily_operation = $toll > 0 || $assistant > 0 || $food > 0;
+        $this->toll = BrazilianNumber::format($toll, 2);
+        $this->assistant = BrazilianNumber::format($assistant, 2);
+        $this->food = BrazilianNumber::format($food, 2);
+    }
+
+    public function updatedVehicleId(?int $value): void
+    {
+        if ($this->editingTripId !== null) {
+            return;
+        }
+
+        if ($value === null) {
+            $this->km_start = null;
+
+            return;
+        }
+
+        $lastKmEnd = Trip::query()
+            ->where('vehicle_id', $value)
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->value('km_end');
+
+        $this->km_start = $lastKmEnd !== null ? (int) $lastKmEnd : null;
     }
 
     public function updatedGasStationId(?int $value): void
@@ -98,11 +161,24 @@ class TripLogForm extends Component
         }
     }
 
+    public function updatedIsDailyOperation(mixed $value): void
+    {
+        if (! filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
+            $this->toll = '0,00';
+            $this->assistant = '0,00';
+            $this->food = '0,00';
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
     protected function normalizedPayload(): array
     {
+        $toll = $this->is_daily_operation ? BrazilianNumber::parse($this->toll) : 0.0;
+        $assistant = $this->is_daily_operation ? BrazilianNumber::parse($this->assistant) : 0.0;
+        $food = $this->is_daily_operation ? BrazilianNumber::parse($this->food) : 0.0;
+
         return [
             'date' => $this->date,
             'vehicle_id' => $this->vehicle_id,
@@ -115,9 +191,9 @@ class TripLogForm extends Component
             'liters' => BrazilianNumber::parse($this->liters),
             'price_per_liter' => $this->resolvedPricePerLiterForPayload(),
             'station' => $this->station,
-            'toll' => BrazilianNumber::parse($this->toll),
-            'assistant' => BrazilianNumber::parse($this->assistant),
-            'food' => BrazilianNumber::parse($this->food),
+            'toll' => $toll,
+            'assistant' => $assistant,
+            'food' => $food,
         ];
     }
 
@@ -188,10 +264,22 @@ class TripLogForm extends Component
             'liters' => ['required', 'numeric', 'min:0'],
             'price_per_liter' => ['required', 'numeric', 'min:0'],
             'station' => ['nullable', 'string', 'max:255'],
-            'toll' => ['required', 'numeric', 'min:0'],
-            'assistant' => ['required', 'numeric', 'min:0'],
-            'food' => ['required', 'numeric', 'min:0'],
+            'toll' => $this->dailyExpenseFieldRules(),
+            'assistant' => $this->dailyExpenseFieldRules(),
+            'food' => $this->dailyExpenseFieldRules(),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function dailyExpenseFieldRules(): array
+    {
+        if ($this->is_daily_operation) {
+            return ['required', 'numeric', 'min:0'];
+        }
+
+        return ['sometimes', 'numeric', 'min:0'];
     }
 
     /**
@@ -218,7 +306,37 @@ class TripLogForm extends Component
     {
         $validated = Validator::make($this->normalizedPayload(), $this->rulesForNormalizedPayload())->validate();
 
-        app(TripService::class)->createTrip(auth()->user(), [
+        $user = auth()->user();
+
+        if ($this->editingTripId !== null) {
+            $trip = Trip::query()->findOrFail($this->editingTripId);
+            Gate::authorize('update', $trip);
+
+            app(TripService::class)->updateTrip($user, $trip, [
+                'date' => $validated['date'],
+                'vehicle_id' => (int) $validated['vehicle_id'],
+                'driver_id' => (int) $validated['driver_id'],
+                'km_start' => (int) $validated['km_start'],
+                'km_end' => (int) $validated['km_end'],
+                'revenue' => $trip->revenue,
+                'liters' => $validated['liters'],
+                'price_per_liter' => $validated['price_per_liter'],
+                'fuel_type' => $validated['fuel_type'],
+                'station' => $validated['station'] !== '' ? $validated['station'] : null,
+                'gas_station_id' => $validated['gas_station_id'] ?? null,
+                'gas_station_fuel_offering_id' => $validated['gas_station_fuel_offering_id'] ?? null,
+                'toll' => $validated['toll'],
+                'assistant' => $validated['assistant'],
+                'food' => $validated['food'],
+            ]);
+
+            session()->flash('status', __('Registro atualizado com sucesso. O histórico de alterações foi salvo.'));
+            $this->redirect(route('reports'), navigate: true);
+
+            return;
+        }
+
+        app(TripService::class)->createTrip($user, [
             'date' => $validated['date'],
             'vehicle_id' => (int) $validated['vehicle_id'],
             'driver_id' => (int) $validated['driver_id'],
@@ -252,10 +370,14 @@ class TripLogForm extends Component
 
         $gasStations = GasStation::query()->with('fuelOfferings')->orderBy('name')->get();
 
+        $pageTitle = $this->editingTripId !== null
+            ? __('Editar registro do diário')
+            : __('Diário de Bordo');
+
         return view('livewire.logbook.trip-log-form', [
             'vehicles' => $vehicles,
             'drivers' => $drivers,
             'gasStations' => $gasStations,
-        ]);
+        ])->title($pageTitle);
     }
 }
