@@ -1,3 +1,5 @@
+import { findLivewireComponentRoot, getWireProperty, resolveLivewireWire } from './livewire-resolve-wire';
+
 /**
  * Block typing of non-digit characters. Allows navigation, editing keys, and Ctrl/Cmd shortcuts (e.g. paste).
  *
@@ -47,7 +49,7 @@ function setWireProperty(wire, property, value) {
  * Syncs formatted string to Livewire via $wire.set(property, ...).
  *
  * @param {string} property Livewire public property name (e.g. 'toll')
- * @param {number} fractionDigits 2 for R$/liters, 4 for price per liter (R$/L)
+ * @param {number} fractionDigits 2 for valores em R$ (padrão brasileiro)
  */
 export function fleetBrlMoneyField(property, fractionDigits) {
     return {
@@ -64,22 +66,7 @@ export function fleetBrlMoneyField(property, fractionDigits) {
         },
 
         resolveWire() {
-            const root = this.$el?.closest('[wire\\:id]');
-            if (! root) {
-                return null;
-            }
-
-            const component = root.__livewire;
-            if (component?.$wire) {
-                return component.$wire;
-            }
-
-            const id = root.getAttribute('wire:id');
-            if (! id || typeof window.Livewire?.find !== 'function') {
-                return null;
-            }
-
-            return window.Livewire.find(id);
+            return resolveLivewireWire(this.$el);
         },
 
         syncMinorFromWire() {
@@ -88,7 +75,7 @@ export function fleetBrlMoneyField(property, fractionDigits) {
                 return;
             }
 
-            this.minor = this.parseMinor(wire[property]);
+            this.minor = this.parseMinor(getWireProperty(wire, property));
         },
 
         init() {
@@ -98,7 +85,7 @@ export function fleetBrlMoneyField(property, fractionDigits) {
                     return;
                 }
 
-                const componentId = this.$el?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                const componentId = findLivewireComponentRoot(this.$el)?.getAttribute('wire:id');
 
                 this.syncMinorFromWire();
 
@@ -107,7 +94,7 @@ export function fleetBrlMoneyField(property, fractionDigits) {
                 const watchGetter = () => {
                     const w = this.resolveWire();
 
-                    return w === null ? undefined : w[property];
+                    return w === null ? undefined : getWireProperty(w, property);
                 };
                 const watchCallback = (value) => {
                     this.minor = this.parseMinor(value);
@@ -238,7 +225,7 @@ export function fleetBrlMoneyField(property, fractionDigits) {
  * Brazilian currency-style formatting from digit input (right-aligned minor units).
  *
  * @param {string} raw
- * @param {number} fractionDigits 2 for R$ amounts, 4 for price per liter
+ * @param {number} fractionDigits usualmente 2 (centavos)
  * @returns {string}
  */
 export function formatBrlFromDigits(raw, fractionDigits) {

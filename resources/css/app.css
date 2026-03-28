@@ -16,3 +16,126 @@
         backdrop-filter: blur(20px);
     }
 }
+
+@layer base {
+    html {
+        @apply antialiased;
+    }
+
+    body {
+        @apply text-fleet-ink;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+}
+
+@layer components {
+    /* —— Tipografia —— */
+    .fleet-page-title {
+        @apply text-2xl font-bold tracking-tight text-fleet-ink;
+    }
+
+    .fleet-page-lead {
+        @apply mt-1 text-sm font-medium text-fleet-secondary;
+    }
+
+    .fleet-section-title {
+        @apply text-xs font-semibold uppercase tracking-wide text-fleet-muted;
+    }
+
+    .fleet-modal-title {
+        @apply text-fleet-modal text-fleet-ink;
+    }
+
+    .fleet-label {
+        @apply mb-0 block text-fleet-label uppercase text-fleet-secondary;
+    }
+
+    .fleet-label--compact {
+        @apply mb-0 block text-[10px] font-semibold uppercase tracking-wide text-fleet-muted;
+    }
+
+    .fleet-table-head {
+        @apply bg-fleet-page text-left text-fleet-label uppercase text-fleet-muted;
+    }
+
+    /* —— Campos (inputs, selects) —— */
+    .fleet-field {
+        @apply mt-1 block w-full rounded-xl border border-fleet-border bg-white px-3 py-2 text-fleet-body text-fleet-ink shadow-sm;
+        @apply placeholder:text-fleet-muted;
+        @apply focus:border-fleet-primary focus:outline-none focus:ring-2 focus:ring-fleet-primary/20;
+    }
+
+    .fleet-search-field {
+        @apply w-full rounded-xl border border-fleet-border bg-fleet-primary/[0.07] py-2.5 pl-10 pr-3 text-fleet-body text-fleet-ink shadow-sm;
+        @apply placeholder:text-fleet-muted;
+        @apply focus:border-fleet-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-fleet-primary/20;
+    }
+
+    /* —— Botões —— */
+    .fleet-btn {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition;
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary/35 focus-visible:ring-offset-2;
+        @apply disabled:pointer-events-none disabled:opacity-45;
+    }
+
+    .fleet-btn--primary {
+        @apply fleet-btn border border-transparent bg-fleet-primary text-white hover:opacity-90 active:opacity-100;
+        @apply focus-visible:ring-fleet-primary/45;
+    }
+
+    .fleet-btn--secondary {
+        @apply fleet-btn border border-transparent bg-fleet-primary/10 text-fleet-primary hover:bg-fleet-primary/[0.16];
+    }
+
+    .fleet-btn--outline {
+        @apply fleet-btn border-2 border-fleet-primary bg-white text-fleet-primary hover:bg-fleet-primary/[0.06];
+    }
+
+    .fleet-btn--muted {
+        @apply fleet-btn border border-fleet-border bg-white text-fleet-secondary hover:bg-fleet-page;
+    }
+
+    .fleet-btn--danger {
+        @apply fleet-btn border border-transparent bg-fleet-danger text-white hover:opacity-90;
+        @apply focus-visible:ring-fleet-danger/40;
+    }
+
+    .fleet-btn--block {
+        @apply w-full;
+    }
+
+    .fleet-btn--lg {
+        @apply px-5 py-3;
+    }
+
+    .fleet-btn--sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .fleet-btn-text {
+        @apply inline-flex items-center gap-1 text-xs font-semibold text-fleet-primary hover:underline;
+    }
+
+    /* Botões só ícone (ações em tabela, fechar modal) */
+    .fleet-icon-btn {
+        @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-transparent text-fleet-primary transition;
+        @apply hover:bg-fleet-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary/30;
+    }
+
+    .fleet-icon-btn--danger {
+        @apply text-fleet-danger hover:bg-fleet-danger/10 focus-visible:ring-fleet-danger/30;
+    }
+
+    .fleet-icon-btn--ghost {
+        @apply text-fleet-muted hover:bg-fleet-page hover:text-fleet-ink;
+    }
+
+    /* Painéis */
+    .fleet-panel {
+        @apply rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet;
+    }
+
+    .fleet-panel--inverted {
+        @apply rounded-2xl bg-fleet-primary p-6 text-white shadow-fleet-card;
+    }
+}

@@ -1,3 +1,5 @@
+import { findLivewireComponentRoot, getWireProperty, resolveLivewireWire } from './livewire-resolve-wire';
+
 /**
  * Brazilian vehicle plate mask: old AAA-9999 or Mercosul AAA-9A99 (hyphen after 3 letters).
  *
@@ -106,22 +108,7 @@ export function fleetBrPlateField(property) {
         },
 
         resolveWire() {
-            const root = this.$el?.closest('[wire\\:id]');
-            if (! root) {
-                return null;
-            }
-
-            const component = root.__livewire;
-            if (component?.$wire) {
-                return component.$wire;
-            }
-
-            const id = root.getAttribute('wire:id');
-            if (! id || typeof window.Livewire?.find !== 'function') {
-                return null;
-            }
-
-            return window.Livewire.find(id);
+            return resolveLivewireWire(this.$el);
         },
 
         syncCharsFromWire() {
@@ -130,7 +117,7 @@ export function fleetBrPlateField(property) {
                 return;
             }
 
-            this.chars = normalizeBrPlateChars(wire[property]);
+            this.chars = normalizeBrPlateChars(getWireProperty(wire, property));
         },
 
         init() {
@@ -140,14 +127,14 @@ export function fleetBrPlateField(property) {
                     return;
                 }
 
-                const componentId = this.$el?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                const componentId = findLivewireComponentRoot(this.$el)?.getAttribute('wire:id');
 
                 this.syncCharsFromWire();
 
                 const watchGetter = () => {
                     const w = this.resolveWire();
 
-                    return w === null ? undefined : w[property];
+                    return w === null ? undefined : getWireProperty(w, property);
                 };
                 const watchCallback = (value) => {
                     this.chars = normalizeBrPlateChars(value);

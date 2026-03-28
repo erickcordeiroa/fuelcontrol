@@ -1,3 +1,5 @@
+import { findLivewireComponentRoot, getWireProperty, resolveLivewireWire } from './livewire-resolve-wire';
+
 /**
  * Brazilian phone: up to 11 digits (DDD + number). Mobile uses 9 as first digit after DDD (9XXXX-XXXX); landline uses 8 digits (XXXX-XXXX).
  *
@@ -86,22 +88,7 @@ export function fleetBrPhoneField(property) {
         },
 
         resolveWire() {
-            const root = this.$el?.closest('[wire\\:id]');
-            if (! root) {
-                return null;
-            }
-
-            const component = root.__livewire;
-            if (component?.$wire) {
-                return component.$wire;
-            }
-
-            const id = root.getAttribute('wire:id');
-            if (! id || typeof window.Livewire?.find !== 'function') {
-                return null;
-            }
-
-            return window.Livewire.find(id);
+            return resolveLivewireWire(this.$el);
         },
 
         syncDigitsFromWire() {
@@ -110,7 +97,7 @@ export function fleetBrPhoneField(property) {
                 return;
             }
 
-            this.digits = normalizeBrPhoneDigits(wire[property]);
+            this.digits = normalizeBrPhoneDigits(getWireProperty(wire, property));
         },
 
         init() {
@@ -120,14 +107,14 @@ export function fleetBrPhoneField(property) {
                     return;
                 }
 
-                const componentId = this.$el?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                const componentId = findLivewireComponentRoot(this.$el)?.getAttribute('wire:id');
 
                 this.syncDigitsFromWire();
 
                 const watchGetter = () => {
                     const w = this.resolveWire();
 
-                    return w === null ? undefined : w[property];
+                    return w === null ? undefined : getWireProperty(w, property);
                 };
                 const watchCallback = (value) => {
                     this.digits = normalizeBrPhoneDigits(value);

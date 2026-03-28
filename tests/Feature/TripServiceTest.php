@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\FuelType;
 use App\Models\Driver;
 use App\Models\GasStation;
 use App\Models\User;
@@ -34,6 +35,7 @@ class TripServiceTest extends TestCase
             'revenue' => 5000,
             'liters' => 100,
             'price_per_liter' => 6,
+            'fuel_type' => FuelType::GasolinaComum,
             'station' => 'Test Station',
             'toll' => 50,
             'assistant' => 30,
@@ -51,6 +53,9 @@ class TripServiceTest extends TestCase
         $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
         $driver = Driver::factory()->create(['user_id' => $admin->id]);
         $station = GasStation::factory()->create(['user_id' => $admin->id]);
+        $station->load('fuelOfferings');
+        $offering = $station->fuelOfferings->first();
+        $this->assertNotNull($offering);
 
         $this->actingAs($admin);
 
@@ -64,15 +69,19 @@ class TripServiceTest extends TestCase
             'km_end' => 1620,
             'revenue' => 0,
             'liters' => 100,
-            'price_per_liter' => 6,
+            'price_per_liter' => (float) $offering->price_per_liter,
+            'fuel_type' => $offering->fuel_type,
             'station' => $station->name,
             'gas_station_id' => $station->id,
+            'gas_station_fuel_offering_id' => $offering->id,
             'toll' => 0,
             'assistant' => 0,
             'food' => 0,
         ]);
 
         $this->assertSame($station->id, $trip->fuel?->gas_station_id);
+        $this->assertSame($offering->id, $trip->fuel?->gas_station_fuel_offering_id);
+        $this->assertTrue($offering->fuel_type === $trip->fuel?->fuel_type);
     }
 
     public function test_km_end_must_exceed_km_start(): void
@@ -96,6 +105,7 @@ class TripServiceTest extends TestCase
             'revenue' => 0,
             'liters' => 0,
             'price_per_liter' => 0,
+            'fuel_type' => FuelType::GasolinaComum,
             'toll' => 0,
             'assistant' => 0,
             'food' => 0,
@@ -125,6 +135,7 @@ class TripServiceTest extends TestCase
             'revenue' => 0,
             'liters' => 0,
             'price_per_liter' => 0,
+            'fuel_type' => FuelType::GasolinaComum,
             'toll' => 0,
             'assistant' => 0,
             'food' => 0,

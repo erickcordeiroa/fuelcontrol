@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\FuelType;
 use App\Models\GasStation;
+use App\Models\GasStationFuelOffering;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,7 +21,21 @@ class GasStationFactory extends Factory
             'name' => fake()->company().' Posto',
             'phone' => fake()->optional()->numerify('(##) #####-####'),
             'address' => fake()->optional()->streetAddress(),
-            'price_per_liter' => fake()->randomFloat(4, 4, 8),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (GasStation $station): void {
+            GasStationFuelOffering::query()->firstOrCreate(
+                [
+                    'gas_station_id' => $station->id,
+                    'fuel_type' => FuelType::GasolinaComum,
+                ],
+                [
+                    'price_per_liter' => fake()->randomFloat(2, 4, 8),
+                ]
+            );
+        });
     }
 }

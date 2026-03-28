@@ -13,7 +13,9 @@ class BrazilianNumber
             return 0.0;
         }
 
-        $s = trim(str_replace(' ', '', $input));
+        $s = trim($input);
+        $s = preg_replace('/^\s*R\$\s*/u', '', $s) ?? $s;
+        $s = str_replace(' ', '', $s);
         if ($s === '') {
             return 0.0;
         }

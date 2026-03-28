@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ExpenseType;
+use App\Enums\FuelType;
 use App\Enums\TripStatus;
 use App\Models\Driver;
 use App\Models\Expense;
@@ -44,6 +45,7 @@ class MetricsServiceTest extends TestCase
 
         Fuel::query()->create([
             'trip_id' => $trip->id,
+            'fuel_type' => FuelType::GasolinaComum,
             'liters' => 20,
             'price_per_liter' => 5,
             'station' => null,
@@ -87,6 +89,7 @@ class MetricsServiceTest extends TestCase
         ]);
         Fuel::query()->create([
             'trip_id' => $tripA->id,
+            'fuel_type' => FuelType::GasolinaComum,
             'liters' => 20,
             'price_per_liter' => 5,
             'station' => null,
@@ -104,6 +107,7 @@ class MetricsServiceTest extends TestCase
         ]);
         Fuel::query()->create([
             'trip_id' => $tripB->id,
+            'fuel_type' => FuelType::GasolinaComum,
             'liters' => 50,
             'price_per_liter' => 4,
             'station' => null,

@@ -6,23 +6,23 @@
     @endif
 
     <div>
-        <h1 class="text-2xl font-bold text-fleet-ink">{{ __('Diário de Bordo') }}</h1>
-        <p class="mt-1 text-sm text-fleet-secondary">{{ __('Registre rota, abastecimento e despesas em um único fluxo.') }}</p>
+        <h1 class="fleet-page-title">{{ __('Diário de Bordo') }}</h1>
+        <p class="fleet-page-lead">{{ __('Registre rota, abastecimento e despesas em um único fluxo.') }}</p>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
-            <section class="rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-sm">
-                <h2 class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Informações de rota') }}</h2>
+            <section class="fleet-panel">
+                <h2 class="fleet-section-title">{{ __('Informações de rota') }}</h2>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Data') }}</label>
-                        <input type="date" wire:model.live="date" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <label class="fleet-label">{{ __('Data') }}</label>
+                        <input type="date" wire:model.live="date" class="fleet-field" />
                         @error('date') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Placa do veículo') }}</label>
-                        <select wire:model.live="vehicle_id" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20">
+                        <label class="fleet-label">{{ __('Placa do veículo') }}</label>
+                        <select wire:model.live="vehicle_id" class="fleet-field">
                             <option value="">{{ __('Selecione') }}</option>
                             @foreach ($vehicles as $vehicle)
                                 <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
@@ -32,8 +32,8 @@
                     </div>
                     @if (auth()->user()->isAdmin())
                         <div class="sm:col-span-2">
-                            <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Motorista') }}</label>
-                            <select wire:model.live="driver_id" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20">
+                            <label class="fleet-label">{{ __('Motorista') }}</label>
+                            <select wire:model.live="driver_id" class="fleet-field">
                                 <option value="">{{ __('Selecione') }}</option>
                                 @foreach ($drivers as $driver)
                                     <option value="{{ $driver->id }}">{{ $driver->name }}</option>
@@ -45,7 +45,7 @@
                         <input type="hidden" wire:model="driver_id" />
                     @endif
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('KM inicial') }}</label>
+                        <label class="fleet-label">{{ __('KM inicial') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -56,12 +56,12 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm tabular-nums focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field tabular-nums"
                         />
                         @error('km_start') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('KM final') }}</label>
+                        <label class="fleet-label">{{ __('KM final') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -72,28 +72,47 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm tabular-nums focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field tabular-nums"
                         />
                         @error('km_end') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-sm">
-                <h2 class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Abastecimento') }}</h2>
+            <section class="fleet-panel">
+                <h2 class="fleet-section-title">{{ __('Abastecimento') }}</h2>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div class="sm:col-span-2">
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Posto cadastrado') }}</label>
-                        <select wire:model.live="gas_station_id" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20">
-                            <option value="">{{ __('Selecione ou informe manualmente abaixo') }}</option>
+                        <label class="fleet-label">{{ __('Posto cadastrado') }}</label>
+                        <select wire:model.live="gas_station_id" class="fleet-field">
+                            <option value="">{{ __('Nenhum — abastecimento sem posto cadastrado') }}</option>
                             @foreach ($gasStations as $gs)
-                                <option value="{{ $gs->id }}">{{ $gs->name }} @if ((float) $gs->price_per_liter > 0) — R$ {{ number_format((float) $gs->price_per_liter, 4, ',', '.') }}/L @endif</option>
+                                <option value="{{ $gs->id }}">{{ $gs->name }}</option>
                             @endforeach
                         </select>
                         @error('gas_station_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
+                    @if ($gas_station_id)
+                        @php
+                            $selectedGasStation = $gasStations->firstWhere('id', $gas_station_id);
+                        @endphp
+                        <div class="sm:col-span-2">
+                            <label class="fleet-label">{{ __('Combustível no posto') }}</label>
+                            <select wire:model.live="gas_station_fuel_offering_id" class="fleet-field">
+                                <option value="">{{ __('Selecione o combustível') }}</option>
+                                @foreach ($selectedGasStation?->fuelOfferings ?? [] as $offering)
+                                    <option value="{{ $offering->id }}">
+                                        {{ $offering->fuel_type->label() }}
+                                        — R$ {{ number_format((float) $offering->price_per_liter, 2, ',', '.') }}/L
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('gas_station_fuel_offering_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            @error('fuel_type') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                    @endif
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Litros total') }}</label>
+                        <label class="fleet-label">{{ __('Litros total') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -104,44 +123,65 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0,00"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field"
                         />
                         @error('liters') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
-                    <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Valor por litro (R$)') }}</label>
-                        <input
-                            type="text"
-                            inputmode="decimal"
-                            wire:model.live="price_per_liter"
-                            placeholder="0,0000"
-                            @if ($gas_station_id)
+                    @if ($gas_station_id)
+                        <div>
+                            <label class="fleet-label">{{ __('Valor por litro (R$)') }}</label>
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                wire:model.live="price_per_liter"
+                                placeholder="0,00"
                                 readonly
-                            @endif
-                            @class([
-                                'mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20',
-                                'cursor-not-allowed bg-fleet-page/60 text-fleet-secondary' => $gas_station_id,
-                            ])
-                        />
-                        @if ($gas_station_id)
-                            <p class="mt-1 text-xs text-fleet-muted">{{ __('Preço do posto selecionado; Valor deve ser alterado no menu Postos.') }}</p>
-                        @endif
-                        @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Posto / Convênio (nome ou observação)') }}</label>
-                        <input type="text" wire:model.live="station" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
-                        @error('station') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
+                                @class([
+                                    'fleet-field',
+                                    'cursor-not-allowed bg-fleet-page/60 text-fleet-secondary',
+                                ])
+                            />
+                            <p class="mt-1 text-xs text-fleet-muted">
+                                @if ($gas_station_fuel_offering_id)
+                                    {{ __('Preço conforme cadastro do posto; altere em Postos se necessário.') }}
+                                @else
+                                    {{ __('Selecione o combustível para carregar o preço cadastrado.') }}
+                                @endif
+                            </p>
+                            @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                    @else
+                        <div>
+                            <label class="fleet-label">{{ __('Valor por litro (R$)') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetBrlMoneyField('price_per_liter', 2)"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0,00"
+                                class="fleet-field"
+                            />
+                            @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="fleet-label">{{ __('Posto / Convênio (nome ou observação)') }}</label>
+                            <input type="text" wire:model.live="station" class="fleet-field" />
+                            @error('station') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                    @endif
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-sm">
-                <h2 class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Outras despesas') }}</h2>
+            <section class="fleet-panel">
+                <h2 class="fleet-section-title">{{ __('Outras despesas') }}</h2>
                 <p class="mt-1 text-xs text-fleet-muted">{{ __('Pedágio, ajudante e alimentação (opcional).') }}</p>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Pedágio (R$)') }}</label>
+                        <label class="fleet-label">{{ __('Pedágio (R$)') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -152,12 +192,12 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0,00"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field"
                         />
                         @error('toll') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Ajudante (R$)') }}</label>
+                        <label class="fleet-label">{{ __('Ajudante (R$)') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -168,12 +208,12 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0,00"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field"
                         />
                         @error('assistant') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Alimentação (R$)') }}</label>
+                        <label class="fleet-label">{{ __('Alimentação (R$)') }}</label>
                         <input
                             type="text"
                             inputmode="numeric"
@@ -184,7 +224,7 @@
                             x-on:beforeinput="onBeforeInput($event)"
                             x-on:paste="onPaste($event)"
                             placeholder="0,00"
-                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                            class="fleet-field"
                         />
                         @error('food') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
@@ -193,7 +233,7 @@
         </div>
 
         <div class="space-y-6">
-            <div class="rounded-2xl bg-fleet-dark p-6 text-white shadow-lg">
+            <div class="fleet-panel--inverted shadow-fleet-card">
                 <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Resumo da viagem') }}</p>
                 <p class="mt-4 text-3xl font-bold">
                     @if ($this->preview['km_total'] !== null)
@@ -227,9 +267,12 @@
                 type="button"
                 wire:click="save"
                 wire:loading.attr="disabled"
-                class="flex w-full items-center justify-center gap-2 rounded-xl bg-fleet-dark px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                class="fleet-btn--primary fleet-btn--block fleet-btn--lg disabled:opacity-50"
             >
-                <span wire:loading.remove wire:target="save">{{ __('Finalizar registro') }}</span>
+                <span wire:loading.remove wire:target="save" class="inline-flex items-center justify-center gap-2">
+                    <x-icons.check class="h-5 w-5 shrink-0" />
+                    {{ __('Finalizar registro') }}
+                </span>
                 <span wire:loading wire:target="save">{{ __('Salvando…') }}</span>
             </button>
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Vehicles;
 
+use App\Livewire\Concerns\ConfirmsDeletes;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,7 @@ use Livewire\WithPagination;
 #[Title('Veículos')]
 class VehicleIndex extends Component
 {
+    use ConfirmsDeletes;
     use WithPagination;
 
     public bool $showModal = false;

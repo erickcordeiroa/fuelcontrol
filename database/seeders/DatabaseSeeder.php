@@ -3,12 +3,14 @@
 namespace Database\Seeders;
 
 use App\Enums\ExpenseType;
+use App\Enums\FuelType;
 use App\Enums\TripStatus;
 use App\Enums\UserRole;
 use App\Models\Driver;
 use App\Models\Expense;
 use App\Models\Fuel;
 use App\Models\GasStation;
+use App\Models\GasStationFuelOffering;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -47,11 +49,55 @@ class DatabaseSeeder extends Seeder
             ['plate' => 'QWE-4C88', 'model' => 'Mercedes Actros', 'capacity' => 32000, 'fuel_type' => 'Diesel S10'],
         ])->map(fn (array $row) => Vehicle::query()->create([...$row, 'user_id' => $tenantId]));
 
-        $gasStations = collect([
-            ['name' => 'Ipiranga RodoSul', 'phone' => '(11) 3000-1000', 'address' => 'Rod. Anhanguera, km 42 — Campinas/SP', 'price_per_liter' => 6.299],
-            ['name' => 'Shell BR', 'phone' => '(11) 4000-2000', 'address' => 'Av. Brasil, 1500 — São Paulo/SP', 'price_per_liter' => 6.459],
-            ['name' => 'BR Distribuidora', 'phone' => null, 'address' => 'BR-116, posto 12', 'price_per_liter' => 6.189],
-        ])->map(fn (array $row) => GasStation::query()->create([...$row, 'user_id' => $tenantId]));
+        $gasStationConfigs = [
+            [
+                'name' => 'Ipiranga RodoSul',
+                'phone' => '(11) 3000-1000',
+                'address' => 'Rod. Anhanguera, km 42 — Campinas/SP',
+                'offerings' => [
+                    [FuelType::DieselS10, 6.299],
+                    [FuelType::GasolinaComum, 6.089],
+                ],
+            ],
+            [
+                'name' => 'Shell BR',
+                'phone' => '(11) 4000-2000',
+                'address' => 'Av. Brasil, 1500 — São Paulo/SP',
+                'offerings' => [
+                    [FuelType::DieselS10, 6.459],
+                    [FuelType::GasolinaComum, 6.259],
+                    [FuelType::Etanol, 4.199],
+                ],
+            ],
+            [
+                'name' => 'BR Distribuidora',
+                'phone' => null,
+                'address' => 'BR-116, posto 12',
+                'offerings' => [
+                    [FuelType::DieselS10, 6.189],
+                ],
+            ],
+        ];
+
+        $gasStations = collect($gasStationConfigs)->map(function (array $config) use ($tenantId) {
+            $offerings = $config['offerings'];
+            unset($config['offerings']);
+
+            $station = GasStation::query()->create([
+                ...$config,
+                'user_id' => $tenantId,
+            ]);
+
+            foreach ($offerings as [$fuelType, $price]) {
+                GasStationFuelOffering::query()->create([
+                    'gas_station_id' => $station->id,
+                    'fuel_type' => $fuelType,
+                    'price_per_liter' => $price,
+                ]);
+            }
+
+            return $station->load('fuelOfferings');
+        });
 
         $driverLinked = Driver::query()->create([
             'name' => 'Ricardo Oliveira',
@@ -86,16 +132,18 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $liters = random_int(80, 220) + (random_int(0, 99) / 100);
-            $price = 5 + (random_int(50, 150) / 100);
 
             $station = $gasStations->random();
+            $offering = $station->fuelOfferings->random();
 
             Fuel::query()->create([
                 'user_id' => $tenantId,
                 'trip_id' => $trip->id,
                 'gas_station_id' => $station->id,
+                'gas_station_fuel_offering_id' => $offering->id,
+                'fuel_type' => $offering->fuel_type,
                 'liters' => $liters,
-                'price_per_liter' => $price,
+                'price_per_liter' => (float) $offering->price_per_liter,
                 'station' => $station->name,
             ]);
 

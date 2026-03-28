@@ -1,49 +1,49 @@
 <div class="space-y-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-fleet-ink">{{ __('Relatórios de Rotas') }}</h1>
-            <p class="mt-1 text-sm text-fleet-secondary">{{ __('Combustível, despesas e desempenho por viagem e veículo.') }}</p>
+            <h1 class="fleet-page-title">{{ __('Relatórios de Rotas') }}</h1>
+            <p class="fleet-page-lead">{{ __('Combustível, despesas e desempenho por viagem e veículo.') }}</p>
         </div>
         <div class="flex gap-2">
-            <button type="button" disabled class="cursor-not-allowed rounded-xl border border-fleet-border bg-fleet-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-fleet-muted">
+            <button type="button" disabled class="fleet-btn--outline fleet-btn--sm cursor-not-allowed opacity-50">
                 {{ __('Export PDF') }}
             </button>
-            <button type="button" disabled class="cursor-not-allowed rounded-xl border border-fleet-border bg-fleet-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-fleet-muted">
+            <button type="button" disabled class="fleet-btn--outline fleet-btn--sm cursor-not-allowed opacity-50">
                 {{ __('Export Excel') }}
             </button>
         </div>
     </div>
 
-    <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-sm">
+    <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
         <div class="grid gap-4 lg:grid-cols-5">
             <div>
-                <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('De') }}</label>
+                <label class="fleet-label">{{ __('De') }}</label>
                 <input
                     type="text"
                     wire:model.live="startDateBr"
                     placeholder="dd/mm/aaaa"
                     maxlength="10"
                     autocomplete="off"
-                    class="mt-1 w-full rounded-xl border-fleet-border text-sm"
+                    class="fleet-field"
                 />
                 @error('startDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Até') }}</label>
+                <label class="fleet-label">{{ __('Até') }}</label>
                 <input
                     type="text"
                     wire:model.live="endDateBr"
                     placeholder="dd/mm/aaaa"
                     maxlength="10"
                     autocomplete="off"
-                    class="mt-1 w-full rounded-xl border-fleet-border text-sm"
+                    class="fleet-field"
                 />
                 @error('endDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             @if (auth()->user()->isAdmin())
                 <div>
-                    <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Veículo') }}</label>
-                    <select wire:model.live="filterVehicleId" class="mt-1 w-full rounded-xl border-fleet-border text-sm">
+                    <label class="fleet-label">{{ __('Veículo') }}</label>
+                    <select wire:model.live="filterVehicleId" class="fleet-field">
                         <option value="">{{ __('Todos') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}">{{ $vehicle->plate }}</option>
@@ -51,8 +51,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Motorista') }}</label>
-                    <select wire:model.live="filterDriverId" class="mt-1 w-full rounded-xl border-fleet-border text-sm">
+                    <label class="fleet-label">{{ __('Motorista') }}</label>
+                    <select wire:model.live="filterDriverId" class="fleet-field">
                         <option value="">{{ __('Todos') }}</option>
                         @foreach ($drivers as $driver)
                             <option value="{{ $driver->id }}">{{ $driver->name }}</option>
@@ -61,7 +61,7 @@
                 </div>
             @endif
             <div class="flex items-end">
-                <button type="button" wire:click="applyFilters" class="w-full rounded-xl bg-fleet-dark px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90">
+                <button type="button" wire:click="applyFilters" class="fleet-btn--primary fleet-btn--block">
                     {{ __('Filtrar') }}
                 </button>
             </div>
@@ -69,26 +69,26 @@
     </div>
 
     <div class="grid gap-4 lg:grid-cols-4">
-        <div class="rounded-2xl bg-fleet-dark p-5 text-white shadow-sm">
+        <div class="fleet-panel--inverted !p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Custo combustível') }}</p>
             <p class="mt-2 text-2xl font-bold">R$ {{ number_format($metrics['total_fuel_cost'], 2, ',', '.') }}</p>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Outras despesas') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_other_expenses'], 2, ',', '.') }}</p>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Total operacional') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_operational_cost'], 2, ',', '.') }}</p>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Litros') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">{{ number_format($metrics['total_liters'], 2, ',', '.') }} L</p>
         </div>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Consumo médio (por diário)') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">
                 @if ($metrics['efficiency_km_per_liter'] !== null)
@@ -99,7 +99,7 @@
             </p>
             <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do km/L de cada registro do diário de bordo no período') }}</p>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Preço médio por KM (por diário)') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">
                 @if ($metrics['cost_per_km'] !== null)
@@ -110,20 +110,20 @@
             </p>
             <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do R$/km (só combustível) de cada registro do diário') }}</p>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('KM rodados (período)') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">{{ number_format($metrics['total_km'], 0, ',', '.') }} km</p>
         </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Custos diários (combustível vs. outras despesas)') }}</h3>
             <div class="mt-4 h-64" wire:ignore>
                 <canvas id="reportLine"></canvas>
             </div>
         </div>
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-sm">
+        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Consumo médio por veículo (km/L)') }}</h3>
             <div class="mt-4 h-64" wire:ignore>
                 <canvas id="reportBars"></canvas>
@@ -131,13 +131,13 @@
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-fleet-border bg-fleet-card shadow-sm">
+    <div class="overflow-hidden rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
         <div class="border-b border-fleet-border px-4 py-3">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Detalhamento de viagens') }}</h3>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-fleet-border text-sm">
-                <thead class="bg-fleet-page text-left text-xs font-semibold uppercase text-fleet-muted">
+            <table class="min-w-full divide-y divide-fleet-border text-fleet-body">
+                <thead class="fleet-table-head">
                     <tr>
                         <th class="px-4 py-3">{{ __('Data') }}</th>
                         <th class="px-4 py-3">{{ __('Veículo / motorista') }}</th>
@@ -178,7 +178,7 @@
                             </td>
                             <td class="px-4 py-3 text-fleet-secondary">
                                 @if ($trip->fuel !== null)
-                                    R$ {{ number_format((float) $trip->fuel->price_per_liter, 3, ',', '.') }}
+                                    {{ $trip->fuel->fuel_type->label() }} · R$ {{ number_format((float) $trip->fuel->price_per_liter, 2, ',', '.') }}
                                 @else
                                     —
                                 @endif

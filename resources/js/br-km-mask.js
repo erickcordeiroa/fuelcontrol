@@ -1,3 +1,5 @@
+import { findLivewireComponentRoot, getWireProperty, resolveLivewireWire } from './livewire-resolve-wire';
+
 const MAX_KM_DIGITS = 12;
 
 /**
@@ -61,22 +63,7 @@ export function fleetKmField(property) {
         },
 
         resolveWire() {
-            const root = this.$el?.closest('[wire\\:id]');
-            if (! root) {
-                return null;
-            }
-
-            const component = root.__livewire;
-            if (component?.$wire) {
-                return component.$wire;
-            }
-
-            const id = root.getAttribute('wire:id');
-            if (! id || typeof window.Livewire?.find !== 'function') {
-                return null;
-            }
-
-            return window.Livewire.find(id);
+            return resolveLivewireWire(this.$el);
         },
 
         wireIntToDigits(value) {
@@ -111,7 +98,7 @@ export function fleetKmField(property) {
                 return;
             }
 
-            this.digits = this.wireIntToDigits(wire[property]);
+            this.digits = this.wireIntToDigits(getWireProperty(wire, property));
         },
 
         init() {
@@ -121,14 +108,14 @@ export function fleetKmField(property) {
                     return;
                 }
 
-                const componentId = this.$el?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                const componentId = findLivewireComponentRoot(this.$el)?.getAttribute('wire:id');
 
                 this.syncDigitsFromWire();
 
                 const watchGetter = () => {
                     const w = this.resolveWire();
 
-                    return w === null ? undefined : w[property];
+                    return w === null ? undefined : getWireProperty(w, property);
                 };
                 const watchCallback = (value) => {
                     this.digits = this.wireIntToDigits(value);

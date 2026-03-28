@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Logbook;
 
+use App\Enums\FuelType;
 use App\Models\Driver;
 use App\Models\GasStation;
+use App\Models\GasStationFuelOffering;
 use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\TripService;
@@ -11,6 +13,7 @@ use App\Support\BrazilianNumber;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -32,9 +35,11 @@ class TripLogForm extends Component
 
     public ?int $gas_station_id = null;
 
+    public ?int $gas_station_fuel_offering_id = null;
+
     public string $liters = '0,00';
 
-    public string $price_per_liter = '0,0000';
+    public string $price_per_liter = '0,00';
 
     public string $station = '';
 
@@ -58,14 +63,38 @@ class TripLogForm extends Component
 
     public function updatedGasStationId(?int $value): void
     {
+        $this->gas_station_fuel_offering_id = null;
+        $this->price_per_liter = '0,00';
+
         if ($value === null) {
+            $this->station = '';
+
             return;
         }
 
         $gasStation = GasStation::query()->find($value);
         if ($gasStation !== null) {
-            $this->price_per_liter = BrazilianNumber::format((float) $gasStation->price_per_liter, 4);
             $this->station = $gasStation->name;
+        }
+    }
+
+    public function updatedGasStationFuelOfferingId(?int $value): void
+    {
+        if ($value === null || $this->gas_station_id === null) {
+            $this->price_per_liter = '0,00';
+
+            return;
+        }
+
+        $offering = GasStationFuelOffering::query()
+            ->whereKey($value)
+            ->where('gas_station_id', $this->gas_station_id)
+            ->first();
+
+        if ($offering !== null) {
+            $this->price_per_liter = BrazilianNumber::format((float) $offering->price_per_liter, 2);
+        } else {
+            $this->price_per_liter = '0,00';
         }
     }
 
@@ -81,6 +110,8 @@ class TripLogForm extends Component
             'km_start' => $this->km_start,
             'km_end' => $this->km_end,
             'gas_station_id' => $this->gas_station_id ? (int) $this->gas_station_id : null,
+            'gas_station_fuel_offering_id' => $this->gas_station_id ? $this->gas_station_fuel_offering_id : null,
+            'fuel_type' => $this->resolvedFuelTypeValue(),
             'liters' => BrazilianNumber::parse($this->liters),
             'price_per_liter' => $this->resolvedPricePerLiterForPayload(),
             'station' => $this->station,
@@ -90,28 +121,51 @@ class TripLogForm extends Component
         ];
     }
 
-    /**
-     * When a registered posto is selected, the price always comes from the database (field is read-only in the UI).
-     */
-    private function resolvedPricePerLiterForPayload(): float
+    private function resolvedFuelTypeValue(): string
     {
-        if ($this->gas_station_id === null) {
-            return BrazilianNumber::parse($this->price_per_liter);
+        if ($this->gas_station_id !== null) {
+            if ($this->gas_station_fuel_offering_id === null) {
+                return '';
+            }
+
+            $offering = GasStationFuelOffering::query()
+                ->whereKey($this->gas_station_fuel_offering_id)
+                ->where('gas_station_id', $this->gas_station_id)
+                ->first();
+
+            return $offering !== null ? $offering->fuel_type->value : '';
         }
 
-        $gasStation = GasStation::query()->find($this->gas_station_id);
+        return FuelType::Outro->value;
+    }
 
-        return $gasStation !== null
-            ? (float) $gasStation->price_per_liter
-            : BrazilianNumber::parse($this->price_per_liter);
+    private function resolvedPricePerLiterForPayload(): float
+    {
+        if ($this->gas_station_id !== null && $this->gas_station_fuel_offering_id !== null) {
+            $offering = GasStationFuelOffering::query()
+                ->whereKey($this->gas_station_fuel_offering_id)
+                ->where('gas_station_id', $this->gas_station_id)
+                ->first();
+
+            return $offering !== null ? (float) $offering->price_per_liter : 0.0;
+        }
+
+        return BrazilianNumber::parse($this->price_per_liter);
     }
 
     /**
-     * @return array<string, array<int, string|\Closure>>
+     * @return array<string, array<int, string|Enum|\Closure>>
      */
     protected function rulesForNormalizedPayload(): array
     {
         $tenantId = auth()->user()->tenantOwnerId();
+
+        $gasOfferingRules = ['nullable', 'integer'];
+        if ($this->gas_station_id !== null) {
+            $gasOfferingRules[] = 'required';
+            $gasOfferingRules[] = Rule::exists('gas_station_fuel_offerings', 'id')
+                ->where('gas_station_id', (int) $this->gas_station_id);
+        }
 
         return [
             'date' => ['required', 'date'],
@@ -129,6 +183,8 @@ class TripLogForm extends Component
                 'nullable',
                 Rule::exists('gas_stations', 'id')->where(fn ($q) => $q->where('user_id', $tenantId)),
             ],
+            'gas_station_fuel_offering_id' => $gasOfferingRules,
+            'fuel_type' => ['required', Rule::enum(FuelType::class)],
             'liters' => ['required', 'numeric', 'min:0'],
             'price_per_liter' => ['required', 'numeric', 'min:0'],
             'station' => ['nullable', 'string', 'max:255'],
@@ -171,8 +227,10 @@ class TripLogForm extends Component
             'revenue' => 0,
             'liters' => $validated['liters'],
             'price_per_liter' => $validated['price_per_liter'],
+            'fuel_type' => $validated['fuel_type'],
             'station' => $validated['station'] !== '' ? $validated['station'] : null,
             'gas_station_id' => $validated['gas_station_id'] ?? null,
+            'gas_station_fuel_offering_id' => $validated['gas_station_fuel_offering_id'] ?? null,
             'toll' => $validated['toll'],
             'assistant' => $validated['assistant'],
             'food' => $validated['food'],
@@ -192,7 +250,7 @@ class TripLogForm extends Component
             ->orderBy('name')
             ->get();
 
-        $gasStations = GasStation::query()->orderBy('name')->get();
+        $gasStations = GasStation::query()->with('fuelOfferings')->orderBy('name')->get();
 
         return view('livewire.logbook.trip-log-form', [
             'vehicles' => $vehicles,

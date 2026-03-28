@@ -23,6 +23,12 @@ class BrazilianNumberTest extends TestCase
         $this->assertSame(0.0, BrazilianNumber::parse('   '));
     }
 
+    public function test_parse_strips_real_prefix_and_spaces(): void
+    {
+        $this->assertSame(100.0, BrazilianNumber::parse('R$ 100,00'));
+        $this->assertSame(100.0, BrazilianNumber::parse('R$100,00'));
+    }
+
     public function test_format_outputs_pt_br(): void
     {
         $this->assertSame('1.234,56', BrazilianNumber::format(1234.56, 2));

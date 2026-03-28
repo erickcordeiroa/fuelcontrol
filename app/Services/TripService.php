@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ExpenseType;
+use App\Enums\FuelType;
 use App\Enums\TripStatus;
 use App\Enums\UserRole;
 use App\Models\Driver;
@@ -77,6 +78,8 @@ class TripService
      *   price_per_liter: float|int|string,
      *   station?: ?string,
      *   gas_station_id?: int|null,
+     *   gas_station_fuel_offering_id?: int|null,
+     *   fuel_type: FuelType|string,
      *   toll: float|int|string,
      *   assistant: float|int|string,
      *   food: float|int|string,
@@ -133,8 +136,14 @@ class TripService
                 'status' => $status,
             ]);
 
+            $fuelType = $payload['fuel_type'] instanceof FuelType
+                ? $payload['fuel_type']
+                : FuelType::from((string) $payload['fuel_type']);
+
             $trip->fuel()->create([
                 'gas_station_id' => $payload['gas_station_id'] ?? null,
+                'gas_station_fuel_offering_id' => $payload['gas_station_fuel_offering_id'] ?? null,
+                'fuel_type' => $fuelType,
                 'liters' => $payload['liters'],
                 'price_per_liter' => $payload['price_per_liter'],
                 'station' => $payload['station'] ?? null,

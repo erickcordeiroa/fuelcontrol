@@ -2,6 +2,7 @@
 
 namespace App\Casts;
 
+use App\Support\BrazilianNumber;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,8 +31,30 @@ class MoneyBrlCentsCast implements CastsAttributes
             return [$key => 0];
         }
 
-        $float = is_numeric($value) ? (float) $value : 0.0;
+        $float = $this->toFloat($value);
 
         return [$key => (int) round($float * 100)];
+    }
+
+    private function toFloat(mixed $value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return 0.0;
+            }
+
+            if (is_numeric($trimmed)) {
+                return (float) $trimmed;
+            }
+
+            return BrazilianNumber::parse($trimmed);
+        }
+
+        return 0.0;
     }
 }

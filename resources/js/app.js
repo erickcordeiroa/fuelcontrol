@@ -41,16 +41,16 @@ window.fleetCharts = {
                     {
                         label: 'Combustível (R$)',
                         data: fuelCost,
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                        borderColor: '#002B5C',
+                        backgroundColor: 'rgba(0, 43, 92, 0.08)',
                         tension: 0.35,
                         fill: true,
                     },
                     {
                         label: 'Outras despesas (R$)',
                         data: otherExpenses,
-                        borderColor: '#475569',
-                        backgroundColor: 'rgba(71, 85, 105, 0.08)',
+                        borderColor: '#64748B',
+                        backgroundColor: 'rgba(100, 116, 139, 0.08)',
                         tension: 0.35,
                         fill: true,
                     },
@@ -93,10 +93,10 @@ window.fleetCharts = {
                 return '#10b981';
             }
             if (v >= 2) {
-                return '#2563eb';
+                return '#002B5C';
             }
 
-            return '#f97316';
+            return '#F97316';
         });
 
         this.instances[id] = new Chart(canvas.getContext('2d'), {

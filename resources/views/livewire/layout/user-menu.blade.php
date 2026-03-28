@@ -2,7 +2,7 @@
     <button
         type="button"
         @click="open = !open"
-        class="flex items-center gap-2 rounded-xl border border-fleet-border bg-fleet-card px-3 py-2 text-sm font-medium text-fleet-ink shadow-sm"
+        class="flex items-center gap-2 rounded-xl border border-fleet-border bg-fleet-card px-3 py-2 text-sm font-medium text-fleet-ink shadow-fleet hover:bg-fleet-page"
     >
         <span>{{ auth()->user()->name }}</span>
         <svg class="h-4 w-4 text-fleet-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

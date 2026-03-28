@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Casts\PricePerLiterMicrosCast;
+use App\Casts\MoneyBrlCentsCast;
+use App\Enums\FuelType;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\FuelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,8 @@ class Fuel extends Model
         'user_id',
         'trip_id',
         'gas_station_id',
+        'gas_station_fuel_offering_id',
+        'fuel_type',
         'liters',
         'price_per_liter',
         'station',
@@ -50,8 +53,9 @@ class Fuel extends Model
     protected function casts(): array
     {
         return [
+            'fuel_type' => FuelType::class,
             'liters' => 'decimal:2',
-            'price_per_liter' => PricePerLiterMicrosCast::class,
+            'price_per_liter' => MoneyBrlCentsCast::class,
         ];
     }
 
@@ -69,5 +73,13 @@ class Fuel extends Model
     public function gasStation(): BelongsTo
     {
         return $this->belongsTo(GasStation::class);
+    }
+
+    /**
+     * @return BelongsTo<GasStationFuelOffering, $this>
+     */
+    public function gasStationFuelOffering(): BelongsTo
+    {
+        return $this->belongsTo(GasStationFuelOffering::class);
     }
 }

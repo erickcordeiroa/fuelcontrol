@@ -3,6 +3,7 @@
 namespace App\Livewire\Drivers;
 
 use App\Enums\UserRole;
+use App\Livewire\Concerns\ConfirmsDeletes;
 use App\Models\Driver;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
 #[Title('Motoristas')]
 class DriverIndex extends Component
 {
+    use ConfirmsDeletes;
     use WithPagination;
 
     public bool $showModal = false;

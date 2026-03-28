@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Casts\PricePerLiterMicrosCast;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\GasStationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,23 +21,22 @@ class GasStation extends Model
         'name',
         'phone',
         'address',
-        'price_per_liter',
     ];
 
     /**
-     * @return array<string, string>
+     * @return HasMany<GasStationFuelOffering, $this>
      */
-    protected function casts(): array
+    public function fuelOfferings(): HasMany
     {
-        return [
-            'price_per_liter' => PricePerLiterMicrosCast::class,
-        ];
+        return $this->hasMany(GasStationFuelOffering::class)->orderBy('fuel_type');
     }
 
     /**
+     * Registros de abastecimento de viagens vinculados a este posto.
+     *
      * @return HasMany<Fuel, $this>
      */
-    public function fuels(): HasMany
+    public function tripFuels(): HasMany
     {
         return $this->hasMany(Fuel::class);
     }
