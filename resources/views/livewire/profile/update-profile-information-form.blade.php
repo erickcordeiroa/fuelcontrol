@@ -9,6 +9,7 @@ use Livewire\Volt\Component;
 new class extends Component
 {
     public string $name = '';
+
     public string $email = '';
 
     /**
@@ -62,53 +63,57 @@ new class extends Component
     }
 }; ?>
 
-<section>
+<section class="flex h-full flex-col">
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
+        <h2 class="text-lg font-semibold text-fleet-ink">
+            {{ __('Informações do perfil') }}
         </h2>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
+        <p class="mt-1 text-sm text-fleet-secondary">
+            {{ __('Atualize o nome e o e-mail da sua conta.') }}
         </p>
     </header>
 
-    <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
-        </div>
+    <form wire:submit="updateProfileInformation" class="mt-6 flex flex-1 flex-col">
+        <div class="flex-1 space-y-6">
+            <div>
+                <label for="name" class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Nome') }}</label>
+                <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" required autofocus autocomplete="name" />
+                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            </div>
 
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <div>
+                <label for="email" class="text-xs font-medium uppercase text-fleet-secondary">{{ __('E-mail') }}</label>
+                <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" required autocomplete="username" />
+                <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
-            @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
+                @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
+                    <div>
+                        <p class="mt-2 text-sm text-fleet-secondary">
+                            {{ __('Seu endereço de e-mail ainda não foi verificado.') }}
 
-                        <button wire:click.prevent="sendVerification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
+                            <button wire:click.prevent="sendVerification" type="button" class="text-sm font-medium text-fleet-primary underline decoration-fleet-primary/30 hover:text-fleet-ink">
+                                {{ __('Clique aqui para reenviar o e-mail de verificação.') }}
+                            </button>
                         </p>
-                    @endif
-                </div>
-            @endif
+
+                        @if (session('status') === 'verification-link-sent')
+                            <p class="mt-2 text-sm font-medium text-fleet-profit">
+                                {{ __('Um novo link de verificação foi enviado para o seu e-mail.') }}
+                            </p>
+                        @endif
+                    </div>
+                @endif
+            </div>
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+        <div class="mt-6 flex flex-wrap items-center gap-4 border-t border-fleet-border pt-6">
+            <button type="submit" class="rounded-xl bg-fleet-dark px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">
+                {{ __('Salvar') }}
+            </button>
 
-            <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
+            <x-action-message class="text-sm text-fleet-profit" on="profile-updated">
+                {{ __('Salvo.') }}
             </x-action-message>
         </div>
     </form>
