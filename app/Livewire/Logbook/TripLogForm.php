@@ -82,12 +82,28 @@ class TripLogForm extends Component
             'km_end' => $this->km_end,
             'gas_station_id' => $this->gas_station_id ? (int) $this->gas_station_id : null,
             'liters' => BrazilianNumber::parse($this->liters),
-            'price_per_liter' => BrazilianNumber::parse($this->price_per_liter),
+            'price_per_liter' => $this->resolvedPricePerLiterForPayload(),
             'station' => $this->station,
             'toll' => BrazilianNumber::parse($this->toll),
             'assistant' => BrazilianNumber::parse($this->assistant),
             'food' => BrazilianNumber::parse($this->food),
         ];
+    }
+
+    /**
+     * When a registered posto is selected, the price always comes from the database (field is read-only in the UI).
+     */
+    private function resolvedPricePerLiterForPayload(): float
+    {
+        if ($this->gas_station_id === null) {
+            return BrazilianNumber::parse($this->price_per_liter);
+        }
+
+        $gasStation = GasStation::query()->find($this->gas_station_id);
+
+        return $gasStation !== null
+            ? (float) $gasStation->price_per_liter
+            : BrazilianNumber::parse($this->price_per_liter);
     }
 
     /**

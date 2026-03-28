@@ -46,12 +46,34 @@
                     @endif
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('KM inicial') }}</label>
-                        <input type="number" wire:model.live="km_start" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" min="0" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetKmField('km_start')"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm tabular-nums focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('km_start') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('KM final') }}</label>
-                        <input type="number" wire:model.live="km_end" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" min="0" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetKmField('km_end')"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm tabular-nums focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('km_end') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -72,12 +94,38 @@
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Litros total') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="liters" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetBrlMoneyField('liters', 2)"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0,00"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('liters') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Valor por litro (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="price_per_liter" placeholder="0,0000" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input
+                            type="text"
+                            inputmode="decimal"
+                            wire:model.live="price_per_liter"
+                            placeholder="0,0000"
+                            @if ($gas_station_id)
+                                readonly
+                            @endif
+                            @class([
+                                'mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20',
+                                'cursor-not-allowed bg-fleet-page/60 text-fleet-secondary' => $gas_station_id,
+                            ])
+                        />
+                        @if ($gas_station_id)
+                            <p class="mt-1 text-xs text-fleet-muted">{{ __('Preço do posto selecionado; Valor deve ser alterado no menu Postos.') }}</p>
+                        @endif
                         @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div class="sm:col-span-2">
@@ -94,17 +142,50 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Pedágio (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="toll" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetBrlMoneyField('toll', 2)"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0,00"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('toll') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Ajudante (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="assistant" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetBrlMoneyField('assistant', 2)"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0,00"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('assistant') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Alimentação (R$)') }}</label>
-                        <input type="text" inputmode="decimal" wire:model.live="food" placeholder="0,00" class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20" />
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data="fleetBrlMoneyField('food', 2)"
+                            x-bind:value="format()"
+                            x-on:keydown="onKeydown($event)"
+                            x-on:beforeinput="onBeforeInput($event)"
+                            x-on:paste="onPaste($event)"
+                            placeholder="0,00"
+                            class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                        />
                         @error('food') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                 </div>

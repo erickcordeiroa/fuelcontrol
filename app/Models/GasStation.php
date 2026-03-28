@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PricePerLiterMicrosCast;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\GasStationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,7 +31,7 @@ class GasStation extends Model
     protected function casts(): array
     {
         return [
-            'price_per_liter' => 'decimal:4',
+            'price_per_liter' => PricePerLiterMicrosCast::class,
         ];
     }
 
