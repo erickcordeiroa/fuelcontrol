@@ -1,5 +1,19 @@
 import './bootstrap';
 import Chart from 'chart.js/auto';
+import { allowDigitsOnlyKeydown, fleetBrlMoneyField, formatBrlFromDigits } from './brl-money-mask';
+import { fleetBrPhoneField, formatBrPhoneFromDigits } from './br-phone-mask';
+import { fleetBrPlateField, formatBrPlateFromChars } from './br-plate-mask';
+import { fleetKmField, formatKmFromDigits } from './br-km-mask';
+
+window.fleetFormatBrlDigits = formatBrlFromDigits;
+window.fleetAllowDigitsOnlyKeydown = allowDigitsOnlyKeydown;
+window.fleetBrlMoneyField = fleetBrlMoneyField;
+window.fleetBrPhoneField = fleetBrPhoneField;
+window.fleetFormatBrPhoneFromDigits = formatBrPhoneFromDigits;
+window.fleetBrPlateField = fleetBrPlateField;
+window.fleetFormatBrPlateFromChars = formatBrPlateFromChars;
+window.fleetKmField = fleetKmField;
+window.fleetFormatKmFromDigits = formatKmFromDigits;
 
 window.fleetCharts = {
     instances: {},

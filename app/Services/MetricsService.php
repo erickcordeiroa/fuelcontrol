@@ -83,15 +83,15 @@ class MetricsService
 
             $fuelRow = DB::table('fuels')
                 ->whereIn('trip_id', $tripIds)
-                ->selectRaw('COALESCE(SUM(liters * price_per_liter), 0) as fuel_cost, COALESCE(SUM(liters), 0) as liters')
+                ->selectRaw('COALESCE(SUM(CAST(liters AS REAL) * price_per_liter / 10000.0), 0) as fuel_cost, COALESCE(SUM(liters), 0) as liters')
                 ->first();
 
             $totalFuelCost = (float) ($fuelRow->fuel_cost ?? 0);
             $totalLiters = (float) ($fuelRow->liters ?? 0);
 
-            $totalOtherExpenses = (float) DB::table('expenses')
+            $totalOtherExpenses = ((float) DB::table('expenses')
                 ->whereIn('trip_id', $tripIds)
-                ->sum('amount');
+                ->sum('amount')) / 100;
 
             $totalOperational = $totalFuelCost + $totalOtherExpenses;
 

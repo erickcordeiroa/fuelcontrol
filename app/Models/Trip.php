@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyBrlCentsCast;
 use App\Enums\ExpenseType;
 use App\Enums\TripStatus;
 use App\Models\Concerns\BelongsToTenant;
@@ -60,7 +61,7 @@ class Trip extends Model
             'km_start' => 'integer',
             'km_end' => 'integer',
             'km_total' => 'integer',
-            'revenue' => 'decimal:2',
+            'revenue' => MoneyBrlCentsCast::class,
             'status' => TripStatus::class,
         ];
     }

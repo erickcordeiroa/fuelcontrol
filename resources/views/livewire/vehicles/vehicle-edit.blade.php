@@ -9,7 +9,20 @@
         <form wire:submit="save" class="grid gap-4 sm:grid-cols-2">
             <div>
                 <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Placa') }}</label>
-                <input type="text" wire:model="plate" class="mt-1 w-full rounded-xl border-fleet-border text-sm uppercase" />
+                <input
+                    type="text"
+                    inputmode="text"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    x-data="fleetBrPlateField('plate')"
+                    x-bind:value="format()"
+                    x-on:keydown="onKeydown($event)"
+                    x-on:beforeinput="onBeforeInput($event)"
+                    x-on:paste="onPaste($event)"
+                    placeholder="ABC-1234"
+                    class="mt-1 w-full rounded-xl border-fleet-border font-mono text-sm uppercase focus:border-fleet-primary focus:ring-fleet-primary/20"
+                />
                 @error('plate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>

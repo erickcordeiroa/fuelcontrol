@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyBrlCentsCast;
 use App\Enums\ExpenseType;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\ExpenseFactory;
@@ -49,7 +50,7 @@ class Expense extends Model
     {
         return [
             'type' => ExpenseType::class,
-            'amount' => 'decimal:2',
+            'amount' => MoneyBrlCentsCast::class,
         ];
     }
 

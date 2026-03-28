@@ -14,12 +14,34 @@
             </div>
             <div>
                 <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Telefone') }}</label>
-                <input type="text" wire:model="phone" class="mt-1 w-full rounded-xl border-fleet-border text-sm" />
+                <input
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    x-data="fleetBrPhoneField('phone')"
+                    x-bind:value="format()"
+                    x-on:keydown="onKeydown($event)"
+                    x-on:beforeinput="onBeforeInput($event)"
+                    x-on:paste="onPaste($event)"
+                    placeholder="(00) 00000-0000"
+                    class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                />
                 @error('phone') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-xs font-medium uppercase text-fleet-secondary">{{ __('Valor do litro (R$)') }}</label>
-                <input type="text" inputmode="decimal" wire:model="price_per_liter" class="mt-1 w-full rounded-xl border-fleet-border text-sm" placeholder="0,0000" />
+                <input
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    x-data="fleetBrlMoneyField('price_per_liter', 4)"
+                    x-bind:value="format()"
+                    x-on:keydown="onKeydown($event)"
+                    x-on:beforeinput="onBeforeInput($event)"
+                    x-on:paste="onPaste($event)"
+                    placeholder="0,0000"
+                    class="mt-1 w-full rounded-xl border-fleet-border text-sm focus:border-fleet-primary focus:ring-fleet-primary/20"
+                />
                 @error('price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div class="sm:col-span-2">

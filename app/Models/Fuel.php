@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PricePerLiterMicrosCast;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\FuelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -50,7 +51,7 @@ class Fuel extends Model
     {
         return [
             'liters' => 'decimal:2',
-            'price_per_liter' => 'decimal:4',
+            'price_per_liter' => PricePerLiterMicrosCast::class,
         ];
     }
 

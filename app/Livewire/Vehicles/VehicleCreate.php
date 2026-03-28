@@ -32,6 +32,7 @@ class VehicleCreate extends Component
                 'required',
                 'string',
                 'max:32',
+                'regex:/^([A-Za-z]{3}-[0-9]{4}|[A-Za-z]{3}-[0-9][A-Za-z][0-9]{2})$/',
                 Rule::unique('vehicles', 'plate')->where(fn ($q) => $q->where('user_id', $tenantId)),
             ],
             'model' => ['required', 'string', 'max:255'],
