@@ -68,19 +68,23 @@
     </div>
 
     @if ($showModal)
-        <div
-            class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-            role="dialog"
-            aria-modal="true"
-            x-data
-            x-on:keydown.escape.window="$wire.closeModal()"
-        >
-            <div class="absolute inset-0 bg-fleet-ink/50 backdrop-blur-[1px]" wire:click="closeModal"></div>
+        @teleport('body')
             <div
-                class="relative z-10 w-full max-w-2xl rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-xl"
-                wire:click.stop
-                wire:key="vehicle-modal-{{ $editingId ?? 'new' }}"
+                class="fixed inset-0 z-[60]"
+                role="dialog"
+                aria-modal="true"
+                x-data
+                x-on:keydown.escape.window="$wire.closeModal()"
             >
+                <div class="absolute inset-0 bg-fleet-ink/50 backdrop-blur-[1px]" wire:click="closeModal"></div>
+                <div
+                    class="relative z-10 flex min-h-full items-start justify-center overflow-y-auto px-4 pb-10 pt-32 sm:px-4 sm:pb-10 sm:pt-36 lg:pt-40"
+                >
+                    <div
+                        class="w-full max-w-2xl rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-xl"
+                        wire:click.stop
+                        wire:key="vehicle-modal-{{ $editingId ?? 'new' }}"
+                    >
                 <div class="mb-4 flex items-start justify-between gap-4">
                     <div>
                         <h2 class="text-lg font-bold text-fleet-ink">
@@ -146,7 +150,9 @@
                         </button>
                     </div>
                 </form>
+                    </div>
+                </div>
             </div>
-        </div>
+        @endteleport
     @endif
 </div>
