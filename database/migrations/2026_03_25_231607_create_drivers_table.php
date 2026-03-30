@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('license_number');
             $table->string('phone')->nullable();
-            $table->foreignId('user_id')->nullable()->unique()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('linked_user_id')->nullable()->unique()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }
