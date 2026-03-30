@@ -14,6 +14,7 @@ return new class extends Migration
     {
         Schema::create('gas_station_fuel_offerings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->foreignId('gas_station_id')->constrained()->cascadeOnDelete();
             $table->string('fuel_type', 32);
             $table->unsignedBigInteger('price_per_liter')->default(0);

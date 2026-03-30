@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('fuels', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->foreignId('trip_id')->constrained()->cascadeOnDelete();
             $table->decimal('liters', 10, 2)->default(0);
             $table->decimal('price_per_liter', 10, 4)->default(0);
