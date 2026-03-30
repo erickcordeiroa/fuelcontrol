@@ -12,9 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vehicles', function (Blueprint $table) {
-            $table->dropUnique(['plate']);
-        });
+        $this->dropUniquePlateIndexIfExists();
 
         Schema::table('vehicles', function (Blueprint $table) {
             $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
@@ -93,5 +91,24 @@ return new class extends Migration
         Schema::table('drivers', function (Blueprint $table) {
             $table->renameColumn('linked_user_id', 'user_id');
         });
+    }
+
+    /**
+     * Remove the legacy single-column unique index on `plate` when present.
+     *
+     * Production databases may use a different index name than Laravel's
+     * conventional `vehicles_plate_unique`, which causes `dropUnique(['plate'])` to fail.
+     */
+    private function dropUniquePlateIndexIfExists(): void
+    {
+        foreach (Schema::getIndexes('vehicles') as $index) {
+            if ($index['unique'] && ! $index['primary'] && $index['columns'] === ['plate']) {
+                Schema::table('vehicles', function (Blueprint $table) use ($index) {
+                    $table->dropUnique($index['name']);
+                });
+
+                return;
+            }
+        }
     }
 };
