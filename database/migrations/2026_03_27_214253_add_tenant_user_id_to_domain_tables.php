@@ -14,34 +14,24 @@ return new class extends Migration
     {
         $this->dropUniquePlateIndexIfExists();
 
-        Schema::table('vehicles', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
-            $table->unique(['user_id', 'plate']);
-        });
+        if (! Schema::hasColumn('vehicles', 'user_id')) {
+            Schema::table('vehicles', function (Blueprint $table) {
+                $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
+            });
+        }
 
-        Schema::table('gas_stations', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
-        });
+        if (! Schema::hasIndex('vehicles', ['user_id', 'plate'], 'unique')) {
+            Schema::table('vehicles', function (Blueprint $table) {
+                $table->unique(['user_id', 'plate']);
+            });
+        }
 
-        Schema::table('trips', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
-        });
+        $this->addForeignUserIdIfMissing('gas_stations', 'id');
+        $this->addForeignUserIdIfMissing('trips', 'id');
+        $this->addForeignUserIdIfMissing('fuels', 'trip_id');
+        $this->addForeignUserIdIfMissing('expenses', 'trip_id');
 
-        Schema::table('fuels', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('trip_id')->constrained()->cascadeOnDelete();
-        });
-
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('trip_id')->constrained()->cascadeOnDelete();
-        });
-
-        Schema::table('drivers', function (Blueprint $table) {
-            $table->renameColumn('user_id', 'linked_user_id');
-        });
-
-        Schema::table('drivers', function (Blueprint $table) {
-            $table->foreignId('user_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
-        });
+        $this->migrateDriversForTenancy();
 
         $ownerId = DB::table('users')->orderBy('id')->value('id');
         if ($ownerId !== null) {
@@ -91,6 +81,43 @@ return new class extends Migration
         Schema::table('drivers', function (Blueprint $table) {
             $table->renameColumn('linked_user_id', 'user_id');
         });
+    }
+
+    /**
+     * Add nullable tenant `user_id` when missing (safe after failed partial migrations).
+     */
+    private function addForeignUserIdIfMissing(string $tableName, string $afterColumn): void
+    {
+        if (Schema::hasColumn($tableName, 'user_id')) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($afterColumn) {
+            $table->foreignId('user_id')->nullable()->after($afterColumn)->constrained()->cascadeOnDelete();
+        });
+    }
+
+    /**
+     * Rename legacy `user_id` (driver account link) to `linked_user_id`, then add tenant `user_id`.
+     */
+    private function migrateDriversForTenancy(): void
+    {
+        if (Schema::hasColumn('drivers', 'linked_user_id') && Schema::hasColumn('drivers', 'user_id')) {
+            return;
+        }
+
+        if (Schema::hasColumn('drivers', 'linked_user_id') && ! Schema::hasColumn('drivers', 'user_id')) {
+            $this->addForeignUserIdIfMissing('drivers', 'id');
+
+            return;
+        }
+
+        if (Schema::hasColumn('drivers', 'user_id') && ! Schema::hasColumn('drivers', 'linked_user_id')) {
+            Schema::table('drivers', function (Blueprint $table) {
+                $table->renameColumn('user_id', 'linked_user_id');
+            });
+            $this->addForeignUserIdIfMissing('drivers', 'id');
+        }
     }
 
     /**
