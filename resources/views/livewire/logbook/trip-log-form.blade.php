@@ -34,27 +34,27 @@
             <section class="fleet-panel">
                 <h2 class="fleet-section-title">{{ __('Informações de rota') }}</h2>
                 <div class="mt-4 space-y-4">
-                    <div class="grid grid-cols-4 gap-4 sm:grid-cols-1">
-                        <div class="sm:col-span-4">
+                    <div class="grid min-w-0 grid-cols-2 gap-4">
+                        <div class="min-w-0">
                             <label class="fleet-label">{{ __('Data') }}</label>
-                            <input type="date" wire:model.live="date" class="fleet-field" />
+                            <input type="date" wire:model.live="date" class="fleet-field w-full min-w-0" />
                             @error('date') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
-                        <div class="sm:col-span-1">
+                        <div class="min-w-0">
                             <label class="fleet-label">{{ __('Hora do lançamento') }}</label>
-                            <input type="time" wire:model.live="trip_time" step="60" class="fleet-field" />
+                            <input type="time" wire:model.live="trip_time" step="60" class="fleet-field w-full min-w-0" />
                             @error('trip_time') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="fleet-label">{{ __('Placa do veículo') }}</label>
-                            <select wire:model.live="vehicle_id" class="fleet-field">
-                                <option value="">{{ __('Selecione') }}</option>
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
-                                @endforeach
-                            </select>
-                            @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                        </div>
+                    </div>
+                    <div>
+                        <label class="fleet-label">{{ __('Placa do veículo') }}</label>
+                        <select wire:model.live="vehicle_id" class="fleet-field">
+                            <option value="">{{ __('Selecione') }}</option>
+                            @foreach ($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
+                            @endforeach
+                        </select>
+                        @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                     @if (auth()->user()->isAdmin())
