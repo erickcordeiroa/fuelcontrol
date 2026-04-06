@@ -84,6 +84,36 @@ class TripServiceTest extends TestCase
         $this->assertTrue($offering->fuel_type === $trip->fuel?->fuel_type);
     }
 
+    public function test_create_trip_persists_trip_time_and_notes(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($admin);
+
+        $trip = app(TripService::class)->createTrip($admin, [
+            'date' => now()->toDateString(),
+            'trip_time' => '08:15',
+            'notes' => 'Ajudante Carlos; rota Centro — Zona Sul',
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'km_start' => 1000,
+            'km_end' => 1500,
+            'revenue' => 0,
+            'liters' => 40,
+            'price_per_liter' => 6,
+            'fuel_type' => FuelType::GasolinaComum,
+            'station' => 'Posto',
+            'toll' => 0,
+            'assistant' => 0,
+            'food' => 0,
+        ]);
+
+        $this->assertSame('08:15', $trip->trip_time);
+        $this->assertSame('Ajudante Carlos; rota Centro — Zona Sul', $trip->notes);
+    }
+
     public function test_km_end_must_exceed_km_start(): void
     {
         $admin = User::factory()->admin()->create();

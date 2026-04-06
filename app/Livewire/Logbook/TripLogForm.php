@@ -26,6 +26,10 @@ class TripLogForm extends Component
 
     public string $date = '';
 
+    public string $trip_time = '';
+
+    public string $notes = '';
+
     public ?int $vehicle_id = null;
 
     public ?int $driver_id = null;
@@ -66,6 +70,7 @@ class TripLogForm extends Component
         Gate::authorize('create', Trip::class);
 
         $this->date = now()->toDateString();
+        $this->trip_time = now()->format('H:i');
 
         $user = auth()->user();
         if (! $user->isAdmin() && $user->driver !== null) {
@@ -83,6 +88,8 @@ class TripLogForm extends Component
         }
 
         $this->date = $trip->date->toDateString();
+        $this->trip_time = $trip->trip_time ? (string) $trip->trip_time : '';
+        $this->notes = $trip->notes ?? '';
         $this->vehicle_id = $trip->vehicle_id;
         $this->driver_id = $trip->driver_id;
         $this->km_start = $trip->km_start;
@@ -181,6 +188,8 @@ class TripLogForm extends Component
 
         return [
             'date' => $this->date,
+            'trip_time' => $this->normalizedTripTime(),
+            'notes' => $this->normalizedNotes(),
             'vehicle_id' => $this->vehicle_id,
             'driver_id' => $this->driver_id,
             'km_start' => $this->km_start,
@@ -195,6 +204,27 @@ class TripLogForm extends Component
             'assistant' => $assistant,
             'food' => $food,
         ];
+    }
+
+    private function normalizedTripTime(): ?string
+    {
+        $t = trim($this->trip_time);
+        if ($t === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{2}:\d{2}):\d{2}$/', $t, $m)) {
+            return $m[1];
+        }
+
+        return $t;
+    }
+
+    private function normalizedNotes(): ?string
+    {
+        $n = trim($this->notes);
+
+        return $n === '' ? null : $n;
     }
 
     private function resolvedFuelTypeValue(): string
@@ -245,6 +275,8 @@ class TripLogForm extends Component
 
         return [
             'date' => ['required', 'date'],
+            'trip_time' => ['nullable', 'date_format:H:i'],
+            'notes' => ['nullable', 'string', 'max:2000'],
             'vehicle_id' => [
                 'required',
                 Rule::exists('vehicles', 'id')->where(fn ($q) => $q->where('user_id', $tenantId)),
@@ -314,6 +346,8 @@ class TripLogForm extends Component
 
             app(TripService::class)->updateTrip($user, $trip, [
                 'date' => $validated['date'],
+                'trip_time' => $validated['trip_time'] ?? null,
+                'notes' => $validated['notes'] ?? null,
                 'vehicle_id' => (int) $validated['vehicle_id'],
                 'driver_id' => (int) $validated['driver_id'],
                 'km_start' => (int) $validated['km_start'],
@@ -338,6 +372,8 @@ class TripLogForm extends Component
 
         app(TripService::class)->createTrip($user, [
             'date' => $validated['date'],
+            'trip_time' => $validated['trip_time'] ?? null,
+            'notes' => $validated['notes'] ?? null,
             'vehicle_id' => (int) $validated['vehicle_id'],
             'driver_id' => (int) $validated['driver_id'],
             'km_start' => (int) $validated['km_start'],

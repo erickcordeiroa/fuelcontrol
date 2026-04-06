@@ -170,7 +170,15 @@
                             $expenseFood = $trip->expenseAmountFor(\App\Enums\ExpenseType::Food);
                         @endphp
                         <tr wire:key="trip-{{ $trip->id }}">
-                            <td class="px-4 py-3 text-fleet-secondary">{{ $trip->date->format('d/m/Y') }}</td>
+                            <td class="px-4 py-3 text-fleet-secondary">
+                                <div>{{ $trip->date->format('d/m/Y') }}</div>
+                                @if ($trip->trip_time)
+                                    <div class="text-xs text-fleet-muted">{{ $trip->trip_time }}</div>
+                                @endif
+                                @if ($trip->notes)
+                                    <div class="mt-0.5 max-w-[14rem] truncate text-xs text-fleet-muted" title="{{ $trip->notes }}">{{ $trip->notes }}</div>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="font-medium text-fleet-ink">{{ $trip->vehicle?->plate }}</div>
                                 <div class="text-xs text-fleet-muted">{{ $trip->driver?->name }}</div>

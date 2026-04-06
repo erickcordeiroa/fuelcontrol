@@ -84,6 +84,8 @@ class TripService
      *   toll: float|int|string,
      *   assistant: float|int|string,
      *   food: float|int|string,
+     *   trip_time?: ?string,
+     *   notes?: ?string,
      *   status?: TripStatus
      * }  $payload
      */
@@ -128,6 +130,8 @@ class TripService
         return DB::transaction(function () use ($payload, $kmTotal, $kmStart, $kmEnd, $driverId, $status) {
             $trip = Trip::query()->create([
                 'date' => $payload['date'],
+                'trip_time' => $payload['trip_time'] ?? null,
+                'notes' => $payload['notes'] ?? null,
                 'vehicle_id' => (int) $payload['vehicle_id'],
                 'driver_id' => $driverId,
                 'km_start' => $kmStart,
@@ -172,6 +176,8 @@ class TripService
 
         return [
             'date' => $trip->date->toDateString(),
+            'trip_time' => $trip->trip_time,
+            'notes' => $trip->notes,
             'vehicle_id' => $trip->vehicle_id,
             'driver_id' => $trip->driver_id,
             'km_start' => $trip->km_start,
@@ -206,6 +212,8 @@ class TripService
      *   toll: float|int|string,
      *   assistant: float|int|string,
      *   food: float|int|string,
+     *   trip_time?: ?string,
+     *   notes?: ?string,
      *   status?: TripStatus
      * }  $payload
      */
@@ -258,6 +266,8 @@ class TripService
         return DB::transaction(function () use ($user, $trip, $payload, $kmTotal, $kmStart, $kmEnd, $driverId, $before) {
             $trip->update([
                 'date' => $payload['date'],
+                'trip_time' => $payload['trip_time'] ?? null,
+                'notes' => $payload['notes'] ?? null,
                 'vehicle_id' => (int) $payload['vehicle_id'],
                 'driver_id' => $driverId,
                 'km_start' => $kmStart,
