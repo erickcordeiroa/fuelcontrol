@@ -10,6 +10,8 @@ new class extends Component
 {
     public string $name = '';
 
+    public string $company_name = '';
+
     public string $email = '';
 
     /**
@@ -18,6 +20,7 @@ new class extends Component
     public function mount(): void
     {
         $this->name = Auth::user()->name;
+        $this->company_name = Auth::user()->company_name ?? '';
         $this->email = Auth::user()->email;
     }
 
@@ -30,6 +33,7 @@ new class extends Component
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
         ]);
 
@@ -70,21 +74,29 @@ new class extends Component
         </h2>
 
         <p class="mt-2 text-sm font-medium text-fleet-secondary">
-            {{ __('Atualize o nome e o e-mail da sua conta.') }}
+            {{ __('Atualize o nome, a empresa e o e-mail da sua conta.') }}
         </p>
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 flex flex-1 flex-col">
         <div class="flex-1 space-y-6">
-            <div>
-                <label for="name" class="fleet-label">{{ __('Nome') }}</label>
-                <x-text-input wire:model="name" id="name" name="name" type="text" class="max-w-md" required autofocus autocomplete="name" />
-                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <div class="grid gap-6 md:grid-cols-2">
+                <div>
+                    <label for="name" class="fleet-label">{{ __('Nome') }}</label>
+                    <x-text-input wire:model="name" id="name" name="name" type="text" class="w-full" required autofocus autocomplete="name" />
+                    <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                </div>
+
+                <div>
+                    <label for="company_name" class="fleet-label">{{ __('Nome da empresa') }}</label>
+                    <x-text-input wire:model="company_name" id="company_name" name="company_name" type="text" class="w-full" autocomplete="organization" />
+                    <x-input-error class="mt-2" :messages="$errors->get('company_name')" />
+                </div>
             </div>
 
             <div>
                 <label for="email" class="fleet-label">{{ __('E-mail') }}</label>
-                <x-text-input wire:model="email" id="email" name="email" type="email" class="max-w-md" required autocomplete="username" />
+                <x-text-input wire:model="email" id="email" name="email" type="email" class="w-full" required autocomplete="username" />
                 <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
