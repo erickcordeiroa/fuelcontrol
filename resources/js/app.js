@@ -15,6 +15,107 @@ window.fleetFormatBrPlateFromChars = formatBrPlateFromChars;
 window.fleetKmField = fleetKmField;
 window.fleetFormatKmFromDigits = formatKmFromDigits;
 
+const normalizeFleetSearchText = (value = '') =>
+    value
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+window.fleetPageSearch = (pages = []) => ({
+    pages,
+    query: '',
+    open: false,
+    activeIndex: 0,
+
+    get normalizedQuery() {
+        return normalizeFleetSearchText(this.query);
+    },
+
+    get filteredPages() {
+        if (this.normalizedQuery === '') {
+            return [];
+        }
+
+        return this.pages.filter((page) => {
+            const haystack = normalizeFleetSearchText([page.label, page.description ?? ''].join(' '));
+
+            return haystack.includes(this.normalizedQuery);
+        });
+    },
+
+    onFocus() {
+        this.syncDropdown();
+    },
+
+    onInput() {
+        this.activeIndex = 0;
+        this.syncDropdown();
+    },
+
+    onEscape() {
+        this.open = false;
+    },
+
+    selectNext() {
+        if (this.filteredPages.length === 0) {
+            return;
+        }
+
+        this.open = true;
+        this.activeIndex = (this.activeIndex + 1) % this.filteredPages.length;
+    },
+
+    selectPrevious() {
+        if (this.filteredPages.length === 0) {
+            return;
+        }
+
+        this.open = true;
+        this.activeIndex = (this.activeIndex - 1 + this.filteredPages.length) % this.filteredPages.length;
+    },
+
+    selectIndex(index) {
+        this.activeIndex = index;
+    },
+
+    goToActive() {
+        const page = this.filteredPages[this.activeIndex];
+
+        if (!page) {
+            return;
+        }
+
+        this.goToPage(page);
+    },
+
+    goToPage(page) {
+        this.open = false;
+        this.query = '';
+
+        if (window.Livewire?.navigate) {
+            window.Livewire.navigate(page.url);
+
+            return;
+        }
+
+        window.location.assign(page.url);
+    },
+
+    syncDropdown() {
+        const hasResults = this.filteredPages.length > 0;
+
+        if (!hasResults) {
+            this.activeIndex = 0;
+        } else if (this.activeIndex >= this.filteredPages.length) {
+            this.activeIndex = 0;
+        }
+
+        this.open = hasResults;
+    },
+});
+
 window.fleetCharts = {
     instances: {},
 

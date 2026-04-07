@@ -11,7 +11,6 @@
 
 <aside class="hidden w-64 shrink-0 flex-col border-r border-fleet-border bg-fleet-sidebar lg:flex">
     <div class="px-6 py-8">
-        <p class="text-fleet-label text-fleet-muted">{{ __('Fleet Command') }}</p>
         @if ($isAdmin && filled($user->company_name))
             <p class="mt-2 text-sm font-semibold text-fleet-ink">{{ $user->company_name }}</p>
             <p class="mt-0.5 text-fleet-body text-fleet-secondary">{{ __('Administrador') }}</p>
@@ -106,8 +105,8 @@
         </a>
     </nav>
 
-    <div class="mt-auto space-y-1 border-t border-fleet-border px-3 py-4">
-        <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Configurações') }}</div>
-        <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Suporte') }}</div>
-    </div>
+    <!-- <div class="mt-auto space-y-1 border-t border-fleet-border px-3 py-4"> -->
+        <!-- <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Configurações') }}</div> -->
+        <!-- <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Suporte') }}</div> -->
+    <!-- </div> -->
 </aside>
