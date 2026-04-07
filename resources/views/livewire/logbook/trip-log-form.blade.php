@@ -34,31 +34,58 @@
             <section class="fleet-panel">
                 <h2 class="fleet-section-title">{{ __('Informações de rota') }}</h2>
                 <div class="mt-4 space-y-4">
-                    <div class="grid min-w-0 grid-cols-2 gap-4">
+                    <div class="grid gap-4 sm:grid-cols-3">
                         <div class="min-w-0">
                             <label class="fleet-label">{{ __('Data') }}</label>
                             <input type="date" wire:model.live="date" class="fleet-field w-full min-w-0" />
                             @error('date') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
-                        <div class="min-w-0">
-                            <label class="fleet-label">{{ __('Hora do lançamento') }}</label>
-                            <input type="time" wire:model.live="trip_time" step="60" class="fleet-field w-full min-w-0" />
-                            @error('trip_time') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        <div>
+                            <label class="fleet-label">{{ __('KM inicial') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetKmField('km_start')"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0"
+                                class="fleet-field tabular-nums"
+                            />
+                            @error('km_start') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="fleet-label">{{ __('KM final') }}</label>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetKmField('km_end')"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
+                                placeholder="0"
+                                class="fleet-field tabular-nums"
+                            />
+                            @error('km_end') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                    <div>
-                        <label class="fleet-label">{{ __('Placa do veículo') }}</label>
-                        <select wire:model.live="vehicle_id" class="fleet-field">
-                            <option value="">{{ __('Selecione') }}</option>
-                            @foreach ($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
-                            @endforeach
-                        </select>
-                        @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
                     <div class="grid gap-4 sm:grid-cols-2">
+                        <div @class(['sm:col-span-2' => ! auth()->user()->isAdmin()])>
+                            <label class="fleet-label">{{ __('Placa do veículo') }}</label>
+                            <select wire:model.live="vehicle_id" class="fleet-field">
+                                <option value="">{{ __('Selecione') }}</option>
+                                @foreach ($vehicles as $vehicle)
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
+                                @endforeach
+                            </select>
+                            @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
                     @if (auth()->user()->isAdmin())
-                        <div class="sm:col-span-2">
+                        <div>
                             <label class="fleet-label">{{ __('Motorista') }}</label>
                             <select wire:model.live="driver_id" class="fleet-field">
                                 <option value="">{{ __('Selecione') }}</option>
@@ -71,38 +98,6 @@
                     @else
                         <input type="hidden" wire:model="driver_id" />
                     @endif
-                    <div>
-                        <label class="fleet-label">{{ __('KM inicial') }}</label>
-                        <input
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            x-data="fleetKmField('km_start')"
-                            x-bind:value="format()"
-                            x-on:keydown="onKeydown($event)"
-                            x-on:beforeinput="onBeforeInput($event)"
-                            x-on:paste="onPaste($event)"
-                            placeholder="0"
-                            class="fleet-field tabular-nums"
-                        />
-                        @error('km_start') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="fleet-label">{{ __('KM final') }}</label>
-                        <input
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            x-data="fleetKmField('km_end')"
-                            x-bind:value="format()"
-                            x-on:keydown="onKeydown($event)"
-                            x-on:beforeinput="onBeforeInput($event)"
-                            x-on:paste="onPaste($event)"
-                            placeholder="0"
-                            class="fleet-field tabular-nums"
-                        />
-                        @error('km_end') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
                     <div class="sm:col-span-2">
                         <label class="fleet-label">{{ __('Observações') }}</label>
                         <textarea
@@ -121,7 +116,7 @@
             <section class="fleet-panel">
                 <h2 class="fleet-section-title">{{ __('Abastecimento') }}</h2>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
+                    <div>
                         <label class="fleet-label">{{ __('Posto cadastrado') }}</label>
                         <select wire:model.live="gas_station_id" class="fleet-field">
                             <option value="">{{ __('Nenhum — abastecimento sem posto cadastrado') }}</option>
@@ -130,6 +125,11 @@
                             @endforeach
                         </select>
                         @error('gas_station_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="fleet-label">{{ __('Hora do abastecimento') }}</label>
+                        <input type="time" wire:model.live="trip_time" step="60" class="fleet-field w-full min-w-0" />
+                        @error('trip_time') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                     </div>
                     @if ($gas_station_id)
                         @php
@@ -335,11 +335,6 @@
                 </span>
                 <span wire:loading wire:target="save">{{ __('Salvando…') }}</span>
             </button>
-
-            <div class="rounded-2xl border border-fleet-border bg-fleet-ink p-4 text-white shadow-inner">
-                <p class="text-xs font-medium text-white/70">{{ __('Mapa (MVP)') }}</p>
-                <p class="mt-2 text-sm text-white/90">{{ __('Pré-visualização estática — integração GPS fora do escopo do MVP.') }}</p>
-            </div>
         </div>
     </div>
 </div>
