@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Logbook\TripLogForm;
 use App\Models\Driver;
+use App\Models\GasStation;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -140,5 +141,21 @@ class TripLogFormTest extends TestCase
         Livewire::test(TripLogForm::class)
             ->set('vehicle_id', $vehicle->id)
             ->assertSet('km_start', null);
+    }
+
+    public function test_selecting_gas_station_offering_loads_current_price_into_form(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $station = GasStation::factory()->create(['user_id' => $admin->id]);
+        $station->load('fuelOfferings');
+        $offering = $station->fuelOfferings->first();
+
+        $this->assertNotNull($offering);
+        $this->actingAs($admin);
+
+        Livewire::test(TripLogForm::class)
+            ->set('gas_station_id', $station->id)
+            ->set('gas_station_fuel_offering_id', $offering->id)
+            ->assertSet('price_per_liter', number_format((float) $offering->price_per_liter, 2, ',', '.'));
     }
 }

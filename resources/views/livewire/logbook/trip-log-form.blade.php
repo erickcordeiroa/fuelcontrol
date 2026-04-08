@@ -171,18 +171,19 @@
                             <label class="fleet-label">{{ __('Valor por litro (R$)') }}</label>
                             <input
                                 type="text"
-                                inputmode="decimal"
-                                wire:model.live="price_per_liter"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data="fleetBrlMoneyField('price_per_liter', 2)"
+                                x-bind:value="format()"
+                                x-on:keydown="onKeydown($event)"
+                                x-on:beforeinput="onBeforeInput($event)"
+                                x-on:paste="onPaste($event)"
                                 placeholder="0,00"
-                                readonly
-                                @class([
-                                    'fleet-field',
-                                    'cursor-not-allowed bg-fleet-page/60 text-fleet-secondary',
-                                ])
+                                class="fleet-field"
                             />
                             <p class="mt-1 text-xs text-fleet-muted">
                                 @if ($gas_station_fuel_offering_id)
-                                    {{ __('Preço conforme cadastro do posto; altere em Postos se necessário.') }}
+                                    {{ __('Preço carregado do cadastro do posto. Se alterar aqui, você poderá atualizar o cadastro ao salvar.') }}
                                 @else
                                     {{ __('Selecione o combustível para carregar o preço cadastrado.') }}
                                 @endif
@@ -337,4 +338,55 @@
             </button>
         </div>
     </div>
+
+    @if ($showPriceUpdateModal)
+        @teleport('body')
+            <div
+                class="fixed inset-0 z-[70]"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="price-update-confirm-title"
+                x-data
+                x-on:keydown.escape.window="$wire.cancelPriceUpdate()"
+            >
+                <div class="absolute inset-0 bg-fleet-ink/60 backdrop-blur-sm" wire:click="cancelPriceUpdate"></div>
+                <div class="relative z-10 flex min-h-full items-center justify-center p-4">
+                    <div
+                        class="w-full max-w-lg rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet-card"
+                        onclick="event.stopPropagation()"
+                    >
+                        <div class="flex gap-4">
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-fleet-primary/10 text-fleet-primary" aria-hidden="true">
+                                <x-icons.clipboard-document class="h-6 w-6" />
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 id="price-update-confirm-title" class="fleet-modal-title">
+                                    {{ __('Salvar novo preço no posto?') }}
+                                </h3>
+                                <p class="mt-2 text-sm font-medium text-fleet-secondary">
+                                    {{ __('O lançamento será salvo com o valor informado abaixo. Se quiser, você também pode atualizar o cadastro do posto para os próximos lançamentos.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 rounded-2xl border border-fleet-border bg-fleet-page/50 p-4 text-sm text-fleet-ink">
+                            <p><span class="font-semibold">{{ __('Posto:') }}</span> {{ $priceUpdateStationName }}</p>
+                            <p class="mt-1"><span class="font-semibold">{{ __('Combustível:') }}</span> {{ $priceUpdateFuelName }}</p>
+                            <p class="mt-3"><span class="font-semibold">{{ __('De:') }}</span> R$ {{ $priceUpdateFrom }}/L</p>
+                            <p class="mt-1"><span class="font-semibold">{{ __('Para:') }}</span> R$ {{ $priceUpdateTo }}/L</p>
+                        </div>
+
+                        <div class="mt-6 flex flex-wrap justify-end gap-2">
+                            <button type="button" wire:click="cancelPriceUpdate" class="fleet-btn--muted fleet-btn--lg">
+                                {{ __('Cancelar') }}
+                            </button>
+                            <button type="button" wire:click="confirmPriceUpdate" class="fleet-btn--primary fleet-btn--lg">
+                                {{ __('Salvar preço') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
 </div>
