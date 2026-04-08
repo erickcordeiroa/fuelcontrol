@@ -11,6 +11,7 @@ use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\TripService;
 use App\Support\BrazilianNumber;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -46,6 +47,8 @@ class TripLogForm extends Component
 
     public string $price_per_liter = '0,00';
 
+    public string $original_price_per_liter = '0,00';
+
     public string $station = '';
 
     /** Quando verdadeiro, pedágio, ajudante e alimentação podem ser informados. */
@@ -56,6 +59,21 @@ class TripLogForm extends Component
     public string $assistant = '0,00';
 
     public string $food = '0,00';
+
+    public bool $showPriceUpdateModal = false;
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $pendingSavePayload = [];
+
+    public string $priceUpdateStationName = '';
+
+    public string $priceUpdateFuelName = '';
+
+    public string $priceUpdateFrom = '0,00';
+
+    public string $priceUpdateTo = '0,00';
 
     public function mount(?Trip $trip = null): void
     {
@@ -98,6 +116,7 @@ class TripLogForm extends Component
         $this->gas_station_fuel_offering_id = $fuel->gas_station_fuel_offering_id;
         $this->liters = BrazilianNumber::format((float) $fuel->liters, 2);
         $this->price_per_liter = BrazilianNumber::format((float) $fuel->price_per_liter, 2);
+        $this->original_price_per_liter = $this->price_per_liter;
         $this->station = $fuel->station ?? '';
 
         $toll = $trip->expenseAmountFor(ExpenseType::Toll);
@@ -135,6 +154,7 @@ class TripLogForm extends Component
     {
         $this->gas_station_fuel_offering_id = null;
         $this->price_per_liter = '0,00';
+        $this->original_price_per_liter = '0,00';
 
         if ($value === null) {
             $this->station = '';
@@ -156,15 +176,14 @@ class TripLogForm extends Component
             return;
         }
 
-        $offering = GasStationFuelOffering::query()
-            ->whereKey($value)
-            ->where('gas_station_id', $this->gas_station_id)
-            ->first();
+        $offering = $this->selectedGasStationFuelOffering();
 
         if ($offering !== null) {
             $this->price_per_liter = BrazilianNumber::format((float) $offering->price_per_liter, 2);
+            $this->original_price_per_liter = $this->price_per_liter;
         } else {
             $this->price_per_liter = '0,00';
+            $this->original_price_per_liter = '0,00';
         }
     }
 
@@ -234,10 +253,7 @@ class TripLogForm extends Component
                 return '';
             }
 
-            $offering = GasStationFuelOffering::query()
-                ->whereKey($this->gas_station_fuel_offering_id)
-                ->where('gas_station_id', $this->gas_station_id)
-                ->first();
+            $offering = $this->selectedGasStationFuelOffering();
 
             return $offering !== null ? $offering->fuel_type->value : '';
         }
@@ -247,16 +263,19 @@ class TripLogForm extends Component
 
     private function resolvedPricePerLiterForPayload(): float
     {
-        if ($this->gas_station_id !== null && $this->gas_station_fuel_offering_id !== null) {
-            $offering = GasStationFuelOffering::query()
-                ->whereKey($this->gas_station_fuel_offering_id)
-                ->where('gas_station_id', $this->gas_station_id)
-                ->first();
+        return BrazilianNumber::parse($this->price_per_liter);
+    }
 
-            return $offering !== null ? (float) $offering->price_per_liter : 0.0;
+    private function selectedGasStationFuelOffering(): ?GasStationFuelOffering
+    {
+        if ($this->gas_station_id === null || $this->gas_station_fuel_offering_id === null) {
+            return null;
         }
 
-        return BrazilianNumber::parse($this->price_per_liter);
+        return GasStationFuelOffering::query()
+            ->whereKey($this->gas_station_fuel_offering_id)
+            ->where('gas_station_id', $this->gas_station_id)
+            ->first();
     }
 
     /**
@@ -338,13 +357,82 @@ class TripLogForm extends Component
     {
         $validated = Validator::make($this->normalizedPayload(), $this->rulesForNormalizedPayload())->validate();
 
+        if ($this->shouldConfirmGasStationPriceUpdate($validated)) {
+            $this->openPriceUpdateModal($validated);
+
+            return;
+        }
+
+        $this->persistTrip($validated);
+    }
+
+    public function cancelPriceUpdate(): void
+    {
+        if ($this->pendingSavePayload === []) {
+            $this->closePriceUpdateModal();
+
+            return;
+        }
+
+        $validated = $this->pendingSavePayload;
+        $this->closePriceUpdateModal();
+        $this->persistTrip($validated);
+    }
+
+    public function confirmPriceUpdate(): void
+    {
+        if ($this->pendingSavePayload === []) {
+            $this->closePriceUpdateModal();
+
+            return;
+        }
+
+        $validated = $this->pendingSavePayload;
+        $this->closePriceUpdateModal();
+        $this->persistTrip($validated, true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function persistTrip(array $validated, bool $updateGasStationPrice = false): void
+    {
         $user = auth()->user();
 
-        if ($this->editingTripId !== null) {
-            $trip = Trip::query()->findOrFail($this->editingTripId);
-            Gate::authorize('update', $trip);
+        DB::transaction(function () use ($validated, $user, $updateGasStationPrice): void {
+            if ($this->editingTripId !== null) {
+                $trip = Trip::query()->findOrFail($this->editingTripId);
+                Gate::authorize('update', $trip);
 
-            app(TripService::class)->updateTrip($user, $trip, [
+                app(TripService::class)->updateTrip($user, $trip, [
+                    'date' => $validated['date'],
+                    'trip_time' => $validated['trip_time'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'vehicle_id' => (int) $validated['vehicle_id'],
+                    'driver_id' => (int) $validated['driver_id'],
+                    'km_start' => (int) $validated['km_start'],
+                    'km_end' => (int) $validated['km_end'],
+                    'revenue' => $trip->revenue,
+                    'liters' => $validated['liters'],
+                    'price_per_liter' => $validated['price_per_liter'],
+                    'fuel_type' => $validated['fuel_type'],
+                    'station' => $validated['station'] !== '' ? $validated['station'] : null,
+                    'gas_station_id' => $validated['gas_station_id'] ?? null,
+                    'gas_station_fuel_offering_id' => $validated['gas_station_fuel_offering_id'] ?? null,
+                    'toll' => $validated['toll'],
+                    'assistant' => $validated['assistant'],
+                    'food' => $validated['food'],
+                ]);
+
+                $this->syncGasStationOfferingPriceWhenConfirmed($validated, $updateGasStationPrice);
+
+                session()->flash('status', __('Registro atualizado com sucesso. O histórico de alterações foi salvo.'));
+                $this->redirect(route('reports'), navigate: true);
+
+                return;
+            }
+
+            app(TripService::class)->createTrip($user, [
                 'date' => $validated['date'],
                 'trip_time' => $validated['trip_time'] ?? null,
                 'notes' => $validated['notes'] ?? null,
@@ -352,7 +440,7 @@ class TripLogForm extends Component
                 'driver_id' => (int) $validated['driver_id'],
                 'km_start' => (int) $validated['km_start'],
                 'km_end' => (int) $validated['km_end'],
-                'revenue' => $trip->revenue,
+                'revenue' => 0,
                 'liters' => $validated['liters'],
                 'price_per_liter' => $validated['price_per_liter'],
                 'fuel_type' => $validated['fuel_type'],
@@ -364,34 +452,93 @@ class TripLogForm extends Component
                 'food' => $validated['food'],
             ]);
 
-            session()->flash('status', __('Registro atualizado com sucesso. O histórico de alterações foi salvo.'));
-            $this->redirect(route('reports'), navigate: true);
+            $this->syncGasStationOfferingPriceWhenConfirmed($validated, $updateGasStationPrice);
+
+            session()->flash('status', __('Registro salvo com sucesso.'));
+            $this->redirect(route('logbook'), navigate: true);
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function shouldConfirmGasStationPriceUpdate(array $validated): bool
+    {
+        if (($validated['gas_station_id'] ?? null) === null || ($validated['gas_station_fuel_offering_id'] ?? null) === null) {
+            return false;
+        }
+
+        $originalPricePerLiter = BrazilianNumber::parse($this->original_price_per_liter);
+
+        if (round($originalPricePerLiter, 2) === round((float) $validated['price_per_liter'], 2)) {
+            return false;
+        }
+
+        $offering = $this->selectedGasStationFuelOffering();
+
+        if ($offering === null) {
+            return false;
+        }
+
+        return round((float) $offering->price_per_liter, 2) !== round((float) $validated['price_per_liter'], 2);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function openPriceUpdateModal(array $validated): void
+    {
+        $offering = $this->selectedGasStationFuelOffering();
+
+        if ($offering === null) {
+            $this->persistTrip($validated);
 
             return;
         }
 
-        app(TripService::class)->createTrip($user, [
-            'date' => $validated['date'],
-            'trip_time' => $validated['trip_time'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'vehicle_id' => (int) $validated['vehicle_id'],
-            'driver_id' => (int) $validated['driver_id'],
-            'km_start' => (int) $validated['km_start'],
-            'km_end' => (int) $validated['km_end'],
-            'revenue' => 0,
-            'liters' => $validated['liters'],
-            'price_per_liter' => $validated['price_per_liter'],
-            'fuel_type' => $validated['fuel_type'],
-            'station' => $validated['station'] !== '' ? $validated['station'] : null,
-            'gas_station_id' => $validated['gas_station_id'] ?? null,
-            'gas_station_fuel_offering_id' => $validated['gas_station_fuel_offering_id'] ?? null,
-            'toll' => $validated['toll'],
-            'assistant' => $validated['assistant'],
-            'food' => $validated['food'],
-        ]);
+        $this->pendingSavePayload = $validated;
+        $this->priceUpdateStationName = $this->station !== '' ? $this->station : ($offering->gasStation?->name ?? '');
+        $this->priceUpdateFuelName = $offering->fuel_type->label();
+        $this->priceUpdateFrom = BrazilianNumber::format((float) $offering->price_per_liter, 2);
+        $this->priceUpdateTo = BrazilianNumber::format((float) $validated['price_per_liter'], 2);
+        $this->showPriceUpdateModal = true;
+    }
 
-        session()->flash('status', __('Registro salvo com sucesso.'));
-        $this->redirect(route('logbook'), navigate: true);
+    private function closePriceUpdateModal(): void
+    {
+        $this->showPriceUpdateModal = false;
+        $this->pendingSavePayload = [];
+        $this->priceUpdateStationName = '';
+        $this->priceUpdateFuelName = '';
+        $this->priceUpdateFrom = '0,00';
+        $this->priceUpdateTo = '0,00';
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function syncGasStationOfferingPriceWhenConfirmed(array $validated, bool $updateGasStationPrice): void
+    {
+        if (! $updateGasStationPrice) {
+            return;
+        }
+
+        if (($validated['gas_station_id'] ?? null) === null || ($validated['gas_station_fuel_offering_id'] ?? null) === null) {
+            return;
+        }
+
+        $offering = GasStationFuelOffering::query()
+            ->whereKey((int) $validated['gas_station_fuel_offering_id'])
+            ->where('gas_station_id', (int) $validated['gas_station_id'])
+            ->first();
+
+        if ($offering === null) {
+            return;
+        }
+
+        $offering->update([
+            'price_per_liter' => round((float) $validated['price_per_liter'], 2),
+        ]);
     }
 
     public function render()
