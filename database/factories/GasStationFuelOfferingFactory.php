@@ -20,7 +20,7 @@ class GasStationFuelOfferingFactory extends Factory
         return [
             'gas_station_id' => GasStation::factory(),
             'fuel_type' => FuelType::GasolinaComum,
-            'price_per_liter' => fake()->randomFloat(2, 4, 8),
+            'price_per_liter' => fake()->randomFloat(4, 4, 8),
         ];
     }
 }

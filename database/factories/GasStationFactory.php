@@ -33,7 +33,7 @@ class GasStationFactory extends Factory
                     'fuel_type' => FuelType::GasolinaComum,
                 ],
                 [
-                    'price_per_liter' => fake()->randomFloat(2, 4, 8),
+                    'price_per_liter' => fake()->randomFloat(4, 4, 8),
                 ]
             );
         });

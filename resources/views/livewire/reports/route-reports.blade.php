@@ -193,7 +193,7 @@
                             </td>
                             <td class="px-4 py-3 text-fleet-secondary">
                                 @if ($trip->fuel !== null)
-                                    {{ $trip->fuel->fuel_type->label() }} · R$ {{ number_format((float) $trip->fuel->price_per_liter, 2, ',', '.') }}
+                                    {{ $trip->fuel->fuel_type->label() }} · R$ {{ number_format((float) $trip->fuel->price_per_liter, 4, ',', '.') }}
                                 @else
                                     —
                                 @endif

@@ -8,6 +8,7 @@ use App\Models\Trip;
 use App\Models\TripChangeLog;
 use App\Models\Vehicle;
 use App\Services\MetricsService;
+use App\Support\PricePerLiter;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -141,7 +142,11 @@ class RouteReports extends Component
         }
 
         if (is_float($value) || is_int($value)) {
-            if (in_array($field, ['liters', 'price_per_liter'], true)) {
+            if ($field === 'price_per_liter') {
+                return PricePerLiter::format((float) $value);
+            }
+
+            if ($field === 'liters') {
                 return number_format((float) $value, 2, ',', '.');
             }
 

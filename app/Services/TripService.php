@@ -12,6 +12,7 @@ use App\Models\Trip;
 use App\Models\TripChangeLog;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Support\PricePerLiter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -34,8 +35,8 @@ class TripService
         }
 
         $liters = (float) ($input['liters'] ?? 0);
-        $pricePerLiter = (float) ($input['price_per_liter'] ?? 0);
-        $fuelCost = $liters * $pricePerLiter;
+        $pricePerLiter = PricePerLiter::normalize($input['price_per_liter'] ?? 0);
+        $fuelCost = PricePerLiter::fuelCost($liters, $pricePerLiter);
 
         $toll = (float) ($input['toll'] ?? 0);
         $assistant = (float) ($input['assistant'] ?? 0);

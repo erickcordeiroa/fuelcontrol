@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Casts\MoneyBrlCentsCast;
+use App\Casts\PricePerLiterCast;
 use App\Enums\FuelType;
 use Database\Factories\GasStationFuelOfferingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,7 +31,7 @@ class GasStationFuelOffering extends Model
     {
         return [
             'fuel_type' => FuelType::class,
-            'price_per_liter' => MoneyBrlCentsCast::class,
+            'price_per_liter' => PricePerLiterCast::class,
         ];
     }
 

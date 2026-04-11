@@ -47,7 +47,7 @@ class MetricsServiceTest extends TestCase
             'trip_id' => $trip->id,
             'fuel_type' => FuelType::GasolinaComum,
             'liters' => 20,
-            'price_per_liter' => 5,
+            'price_per_liter' => 5.1234,
             'station' => null,
         ]);
 
@@ -63,12 +63,12 @@ class MetricsServiceTest extends TestCase
 
         $agg = $service->getAggregates($start, $end);
 
-        $this->assertSame(100.0, $agg['total_fuel_cost']);
+        $this->assertSame(102.47, $agg['total_fuel_cost']);
         $this->assertSame(50.0, $agg['total_other_expenses']);
-        $this->assertSame(150.0, $agg['total_operational_cost']);
+        $this->assertSame(152.47, $agg['total_operational_cost']);
         $this->assertSame(100, $agg['total_km']);
         $this->assertSame(5.0, $agg['efficiency_km_per_liter']);
-        $this->assertSame(1.0, $agg['cost_per_km']);
+        $this->assertSame(1.02, $agg['cost_per_km']);
     }
 
     public function test_efficiency_and_cost_per_km_are_averaged_per_logbook_entry(): void

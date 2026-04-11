@@ -177,13 +177,13 @@ class TripLogEditTest extends TestCase
         ]);
 
         Livewire::test(TripLogForm::class, ['trip' => $trip])
-            ->set('price_per_liter', '8,99')
+            ->set('price_per_liter', '8,9901')
             ->call('save')
             ->assertSet('showPriceUpdateModal', true)
             ->assertSet('priceUpdateStationName', $station->name)
             ->assertSet('priceUpdateFuelName', $offering->fuel_type->label())
-            ->assertSet('priceUpdateFrom', number_format((float) $offering->price_per_liter, 2, ',', '.'))
-            ->assertSet('priceUpdateTo', '8,99');
+            ->assertSet('priceUpdateFrom', number_format((float) $offering->price_per_liter, 4, ',', '.'))
+            ->assertSet('priceUpdateTo', '8,9901');
     }
 
     public function test_canceling_price_update_modal_saves_trip_but_keeps_station_price(): void
@@ -219,7 +219,7 @@ class TripLogEditTest extends TestCase
         ]);
 
         Livewire::test(TripLogForm::class, ['trip' => $trip])
-            ->set('price_per_liter', '8,99')
+            ->set('price_per_liter', '8,9901')
             ->call('save')
             ->call('cancelPriceUpdate')
             ->assertRedirect(route('reports'));
@@ -227,7 +227,7 @@ class TripLogEditTest extends TestCase
         $trip->refresh();
         $trip->load('fuel');
 
-        $this->assertEqualsWithDelta(8.99, (float) $trip->fuel->price_per_liter, 0.0001);
+        $this->assertEqualsWithDelta(8.9901, (float) $trip->fuel->price_per_liter, 0.0001);
         $this->assertEqualsWithDelta($originalPrice, (float) $offering->fresh()->price_per_liter, 0.0001);
     }
 
@@ -262,7 +262,7 @@ class TripLogEditTest extends TestCase
         ]);
 
         Livewire::test(TripLogForm::class, ['trip' => $trip])
-            ->set('price_per_liter', '8,99')
+            ->set('price_per_liter', '8,9901')
             ->call('save')
             ->call('confirmPriceUpdate')
             ->assertRedirect(route('reports'));
@@ -270,7 +270,7 @@ class TripLogEditTest extends TestCase
         $trip->refresh();
         $trip->load('fuel');
 
-        $this->assertEqualsWithDelta(8.99, (float) $trip->fuel->price_per_liter, 0.0001);
-        $this->assertEqualsWithDelta(8.99, (float) $offering->fresh()->price_per_liter, 0.0001);
+        $this->assertEqualsWithDelta(8.9901, (float) $trip->fuel->price_per_liter, 0.0001);
+        $this->assertEqualsWithDelta(8.9901, (float) $offering->fresh()->price_per_liter, 0.0001);
     }
 }
