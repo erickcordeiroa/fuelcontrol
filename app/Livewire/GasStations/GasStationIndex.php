@@ -7,6 +7,7 @@ use App\Livewire\Concerns\ConfirmsDeletes;
 use App\Models\GasStation;
 use App\Models\GasStationFuelOffering;
 use App\Support\BrazilianNumber;
+use App\Support\PricePerLiter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -67,7 +68,7 @@ class GasStationIndex extends Component
             $rows[(string) Str::uuid()] = [
                 'id' => $o->id,
                 'fuel_type' => $o->fuel_type->value,
-                'price_per_liter' => BrazilianNumber::format((float) $o->price_per_liter, 2),
+                'price_per_liter' => PricePerLiter::format((float) $o->price_per_liter),
             ];
         }
 
@@ -90,7 +91,7 @@ class GasStationIndex extends Component
         $this->fuel_offerings[(string) Str::uuid()] = [
             'id' => null,
             'fuel_type' => FuelType::GasolinaComum->value,
-            'price_per_liter' => '0,00',
+            'price_per_liter' => '0,0000',
         ];
     }
 
@@ -120,7 +121,7 @@ class GasStationIndex extends Component
             (string) Str::uuid() => [
                 'id' => null,
                 'fuel_type' => FuelType::GasolinaComum->value,
-                'price_per_liter' => '0,00',
+                'price_per_liter' => '0,0000',
             ],
         ];
     }
@@ -173,7 +174,7 @@ class GasStationIndex extends Component
             $keptIds = [];
 
             foreach ($validated['fuel_offerings'] as $row) {
-                $price = round(BrazilianNumber::parse($row['price_per_liter']), 2);
+                $price = PricePerLiter::normalize($row['price_per_liter']);
                 $fuelType = FuelType::from($row['fuel_type']);
 
                 if (! empty($row['id'])) {

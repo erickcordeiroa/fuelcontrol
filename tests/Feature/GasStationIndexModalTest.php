@@ -31,7 +31,7 @@ class GasStationIndexModalTest extends TestCase
                 $rowKey => [
                     'id' => null,
                     'fuel_type' => FuelType::GasolinaComum->value,
-                    'price_per_liter' => '5,90',
+                    'price_per_liter' => '5,9012',
                 ],
             ])
             ->call('save')
@@ -48,7 +48,7 @@ class GasStationIndexModalTest extends TestCase
         $this->assertNotNull($station);
         $station->load('fuelOfferings');
         $this->assertCount(1, $station->fuelOfferings);
-        $this->assertEqualsWithDelta(5.9, (float) $station->fuelOfferings->first()->price_per_liter, 0.01);
+        $this->assertEqualsWithDelta(5.9012, (float) $station->fuelOfferings->first()->price_per_liter, 0.0001);
     }
 
     public function test_admin_can_update_gas_station_from_modal(): void
@@ -68,7 +68,7 @@ class GasStationIndexModalTest extends TestCase
         $this->assertNotNull($rowKey);
 
         $fuelOfferings = $test->get('fuel_offerings');
-        $fuelOfferings[$rowKey]['price_per_liter'] = '6,00';
+        $fuelOfferings[$rowKey]['price_per_liter'] = '6,0045';
 
         $test->set('name', 'Novo Nome')
             ->set('fuel_offerings', $fuelOfferings)
@@ -77,7 +77,7 @@ class GasStationIndexModalTest extends TestCase
 
         $station->refresh()->load('fuelOfferings');
         $this->assertSame('Novo Nome', $station->name);
-        $this->assertEqualsWithDelta(6.0, (float) $station->fuelOfferings->first()->price_per_liter, 0.0001);
+        $this->assertEqualsWithDelta(6.0045, (float) $station->fuelOfferings->first()->price_per_liter, 0.0001);
     }
 
     public function test_admin_can_delete_gas_station_after_confirming_in_modal(): void

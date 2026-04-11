@@ -21,7 +21,7 @@ class FuelFactory extends Factory
             'trip_id' => Trip::factory(),
             'fuel_type' => FuelType::GasolinaComum,
             'liters' => fake()->randomFloat(2, 20, 400),
-            'price_per_liter' => fake()->randomFloat(2, 4.5, 7.5),
+            'price_per_liter' => fake()->randomFloat(4, 4.5, 7.5),
             'station' => fake()->company(),
         ];
     }

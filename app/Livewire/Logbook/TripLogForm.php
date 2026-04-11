@@ -11,6 +11,7 @@ use App\Models\Trip;
 use App\Models\Vehicle;
 use App\Services\TripService;
 use App\Support\BrazilianNumber;
+use App\Support\PricePerLiter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -45,9 +46,9 @@ class TripLogForm extends Component
 
     public string $liters = '0,00';
 
-    public string $price_per_liter = '0,00';
+    public string $price_per_liter = '0,0000';
 
-    public string $original_price_per_liter = '0,00';
+    public string $original_price_per_liter = '0,0000';
 
     public string $station = '';
 
@@ -71,9 +72,9 @@ class TripLogForm extends Component
 
     public string $priceUpdateFuelName = '';
 
-    public string $priceUpdateFrom = '0,00';
+    public string $priceUpdateFrom = '0,0000';
 
-    public string $priceUpdateTo = '0,00';
+    public string $priceUpdateTo = '0,0000';
 
     public function mount(?Trip $trip = null): void
     {
@@ -115,7 +116,7 @@ class TripLogForm extends Component
         $this->gas_station_id = $fuel->gas_station_id;
         $this->gas_station_fuel_offering_id = $fuel->gas_station_fuel_offering_id;
         $this->liters = BrazilianNumber::format((float) $fuel->liters, 2);
-        $this->price_per_liter = BrazilianNumber::format((float) $fuel->price_per_liter, 2);
+        $this->price_per_liter = PricePerLiter::format((float) $fuel->price_per_liter);
         $this->original_price_per_liter = $this->price_per_liter;
         $this->station = $fuel->station ?? '';
 
@@ -153,8 +154,8 @@ class TripLogForm extends Component
     public function updatedGasStationId(?int $value): void
     {
         $this->gas_station_fuel_offering_id = null;
-        $this->price_per_liter = '0,00';
-        $this->original_price_per_liter = '0,00';
+        $this->price_per_liter = '0,0000';
+        $this->original_price_per_liter = '0,0000';
 
         if ($value === null) {
             $this->station = '';
@@ -171,7 +172,7 @@ class TripLogForm extends Component
     public function updatedGasStationFuelOfferingId(?int $value): void
     {
         if ($value === null || $this->gas_station_id === null) {
-            $this->price_per_liter = '0,00';
+            $this->price_per_liter = '0,0000';
 
             return;
         }
@@ -179,11 +180,11 @@ class TripLogForm extends Component
         $offering = $this->selectedGasStationFuelOffering();
 
         if ($offering !== null) {
-            $this->price_per_liter = BrazilianNumber::format((float) $offering->price_per_liter, 2);
+            $this->price_per_liter = PricePerLiter::format((float) $offering->price_per_liter);
             $this->original_price_per_liter = $this->price_per_liter;
         } else {
-            $this->price_per_liter = '0,00';
-            $this->original_price_per_liter = '0,00';
+            $this->price_per_liter = '0,0000';
+            $this->original_price_per_liter = '0,0000';
         }
     }
 
@@ -263,7 +264,7 @@ class TripLogForm extends Component
 
     private function resolvedPricePerLiterForPayload(): float
     {
-        return BrazilianNumber::parse($this->price_per_liter);
+        return PricePerLiter::normalize($this->price_per_liter);
     }
 
     private function selectedGasStationFuelOffering(): ?GasStationFuelOffering
@@ -470,7 +471,7 @@ class TripLogForm extends Component
 
         $originalPricePerLiter = BrazilianNumber::parse($this->original_price_per_liter);
 
-        if (round($originalPricePerLiter, 2) === round((float) $validated['price_per_liter'], 2)) {
+        if (PricePerLiter::equals($originalPricePerLiter, (float) $validated['price_per_liter'])) {
             return false;
         }
 
@@ -480,7 +481,7 @@ class TripLogForm extends Component
             return false;
         }
 
-        return round((float) $offering->price_per_liter, 2) !== round((float) $validated['price_per_liter'], 2);
+        return ! PricePerLiter::equals((float) $offering->price_per_liter, (float) $validated['price_per_liter']);
     }
 
     /**
@@ -499,8 +500,8 @@ class TripLogForm extends Component
         $this->pendingSavePayload = $validated;
         $this->priceUpdateStationName = $this->station !== '' ? $this->station : ($offering->gasStation?->name ?? '');
         $this->priceUpdateFuelName = $offering->fuel_type->label();
-        $this->priceUpdateFrom = BrazilianNumber::format((float) $offering->price_per_liter, 2);
-        $this->priceUpdateTo = BrazilianNumber::format((float) $validated['price_per_liter'], 2);
+        $this->priceUpdateFrom = PricePerLiter::format((float) $offering->price_per_liter);
+        $this->priceUpdateTo = PricePerLiter::format((float) $validated['price_per_liter']);
         $this->showPriceUpdateModal = true;
     }
 
@@ -510,8 +511,8 @@ class TripLogForm extends Component
         $this->pendingSavePayload = [];
         $this->priceUpdateStationName = '';
         $this->priceUpdateFuelName = '';
-        $this->priceUpdateFrom = '0,00';
-        $this->priceUpdateTo = '0,00';
+        $this->priceUpdateFrom = '0,0000';
+        $this->priceUpdateTo = '0,0000';
     }
 
     /**
@@ -537,7 +538,7 @@ class TripLogForm extends Component
         }
 
         $offering->update([
-            'price_per_liter' => round((float) $validated['price_per_liter'], 2),
+            'price_per_liter' => PricePerLiter::normalize($validated['price_per_liter']),
         ]);
     }
 

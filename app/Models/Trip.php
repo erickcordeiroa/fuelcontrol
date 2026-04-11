@@ -6,6 +6,7 @@ use App\Casts\MoneyBrlCentsCast;
 use App\Enums\ExpenseType;
 use App\Enums\TripStatus;
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\PricePerLiter;
 use Database\Factories\TripFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -114,7 +115,7 @@ class Trip extends Model
             return 0.0;
         }
 
-        return round((float) $this->fuel->liters * (float) $this->fuel->price_per_liter, 2);
+        return PricePerLiter::fuelCost((float) $this->fuel->liters, (float) $this->fuel->price_per_liter);
     }
 
     public function otherExpensesTotal(): float

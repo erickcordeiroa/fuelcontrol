@@ -156,6 +156,6 @@ class TripLogFormTest extends TestCase
         Livewire::test(TripLogForm::class)
             ->set('gas_station_id', $station->id)
             ->set('gas_station_fuel_offering_id', $offering->id)
-            ->assertSet('price_per_liter', number_format((float) $offering->price_per_liter, 2, ',', '.'));
+            ->assertSet('price_per_liter', number_format((float) $offering->price_per_liter, 4, ',', '.'));
     }
 }

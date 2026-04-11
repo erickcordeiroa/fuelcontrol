@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Casts\MoneyBrlCentsCast;
+use App\Casts\PricePerLiterCast;
 use App\Enums\FuelType;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\FuelFactory;
@@ -55,7 +55,7 @@ class Fuel extends Model
         return [
             'fuel_type' => FuelType::class,
             'liters' => 'decimal:2',
-            'price_per_liter' => MoneyBrlCentsCast::class,
+            'price_per_liter' => PricePerLiterCast::class,
         ];
     }
 

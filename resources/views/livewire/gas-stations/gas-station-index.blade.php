@@ -35,7 +35,7 @@
                         <td class="max-w-xl truncate px-4 py-3 text-fleet-secondary" title="{{ $station->address ?? '' }}">{{ $station->address ?? '—' }}</td>
                         <td class="max-w-md px-4 py-3 text-xs leading-relaxed text-fleet-secondary">
                             @forelse ($station->fuelOfferings as $o)
-                                <span>{{ $o->fuel_type->label() }} R$ {{ number_format((float) $o->price_per_liter, 2, ',', '.') }}@if (! $loop->last)<span class="text-fleet-muted"> · </span>@endif</span>
+                                <span>{{ $o->fuel_type->label() }} R$ {{ number_format((float) $o->price_per_liter, 4, ',', '.') }}@if (! $loop->last)<span class="text-fleet-muted"> · </span>@endif</span>
                             @empty
                                 —
                             @endforelse
@@ -173,12 +173,12 @@
                                                     type="text"
                                                     inputmode="numeric"
                                                     autocomplete="off"
-                                                    x-data="fleetBrlMoneyField('fuel_offerings.{{ $offeringKey }}.price_per_liter', 2)"
+                                                    x-data="fleetBrlMoneyField('fuel_offerings.{{ $offeringKey }}.price_per_liter', 4)"
                                                     x-bind:value="format()"
                                                     x-on:keydown="onKeydown($event)"
                                                     x-on:beforeinput="onBeforeInput($event)"
                                                     x-on:paste="onPaste($event)"
-                                                    placeholder="0,00"
+                                                    placeholder="0,0000"
                                                     class="fleet-field"
                                                 />
                                                 @error('fuel_offerings.'.$offeringKey.'.price_per_liter') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
