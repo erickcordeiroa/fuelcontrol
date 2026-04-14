@@ -37,7 +37,7 @@
 }
 
 .landing-chart-bar {
-    min-height: 6rem;
+    height: 6rem;
     background: linear-gradient(180deg, #edf9f2 0%, #ffffff 100%);
 }
 

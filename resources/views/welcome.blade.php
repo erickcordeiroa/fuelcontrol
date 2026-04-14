@@ -101,7 +101,16 @@
                                         </div>
                                         <div class="landing-chart-bar flex items-end gap-1 rounded-xl p-2">
                                             @foreach ($chartHeights as $height)
-                                                <div class="landing-bar landing-bar-{{ $height }} flex-1"></div>
+                                                <div @class([
+                                                    'landing-bar flex-1',
+                                                    'landing-bar-40' => $height === 40,
+                                                    'landing-bar-45' => $height === 45,
+                                                    'landing-bar-55' => $height === 55,
+                                                    'landing-bar-65' => $height === 65,
+                                                    'landing-bar-70' => $height === 70,
+                                                    'landing-bar-80' => $height === 80,
+                                                    'landing-bar-90' => $height === 90,
+                                                ])></div>
                                             @endforeach
                                         </div>
                                         <div class="flex flex-wrap gap-2">
