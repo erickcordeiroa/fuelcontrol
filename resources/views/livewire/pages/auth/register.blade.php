@@ -104,7 +104,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <a
-                class="order-2 text-center text-sm font-medium text-on-surface-variant underline decoration-outline underline-offset-2 hover:text-on-surface sm:order-1 sm:text-left"
+                class="order-2 text-center text-sm font-medium text-[#2c745f] underline decoration-[#3d9d80]/30 underline-offset-2 hover:text-[#245d4b] sm:order-1 sm:text-left"
                 href="{{ route('login') }}"
                 wire:navigate
             >

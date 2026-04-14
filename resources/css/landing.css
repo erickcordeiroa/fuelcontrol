@@ -1,0 +1,132 @@
+.landing-theme {
+    --fuelly-primary: #3d9d80;
+    --fuelly-secondary: #58c466;
+    --fuelly-primary-dark: #2c745f;
+    --fuelly-primary-darker: #1f5243;
+    --fuelly-secondary-dark: #3f9f4b;
+    --fuelly-soft: #e8f6ef;
+}
+
+.landing-page {
+    font-family: Inter, system-ui, sans-serif;
+    background: linear-gradient(180deg, #ffffff 0%, #f3faf7 45%, #e7f2ec 100%);
+    color: #0f172a;
+}
+
+.landing-grid-bg {
+    background-color: #f8fafc;
+    background-image:
+        linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.landing-card-dark {
+    background: linear-gradient(145deg, var(--fuelly-primary-darker) 0%, var(--fuelly-primary-dark) 55%, #163a30 100%);
+    color: #f8fafc;
+    box-shadow: 0 25px 50px -12px rgba(31, 82, 67, 0.45);
+}
+
+.landing-card-dark p {
+    color: inherit;
+}
+
+.landing-cta-section {
+    background: linear-gradient(135deg, #173d31 0%, #2c745f 55%, #245d4b 100%);
+    color: #ffffff;
+}
+
+.landing-chart-bar {
+    height: 6rem;
+    background: linear-gradient(180deg, #edf9f2 0%, #ffffff 100%);
+}
+
+.landing-bar {
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, var(--fuelly-secondary) 0%, var(--fuelly-primary) 100%);
+}
+
+.landing-kicker {
+    border-color: rgba(61, 157, 128, 0.35);
+    background: var(--fuelly-soft);
+    color: var(--fuelly-primary-dark);
+}
+
+.landing-kicker-dot {
+    background: var(--fuelly-primary);
+}
+
+.landing-highlight-text {
+    color: var(--fuelly-primary);
+}
+
+.landing-btn-primary {
+    background: linear-gradient(135deg, var(--fuelly-primary-dark) 0%, var(--fuelly-primary) 100%);
+    color: #fff;
+}
+
+.landing-btn-primary:hover {
+    background: linear-gradient(135deg, #266652 0%, #368e74 100%);
+}
+
+.landing-icon-primary {
+    background: linear-gradient(135deg, var(--fuelly-primary) 0%, var(--fuelly-primary-dark) 100%);
+}
+
+.landing-icon-secondary {
+    background: linear-gradient(135deg, var(--fuelly-secondary) 0%, var(--fuelly-secondary-dark) 100%);
+}
+
+.landing-icon-neutral {
+    background: linear-gradient(135deg, #3d9d80 0%, #245d4b 100%);
+}
+
+.landing-step-badge {
+    background: #e7f7ea;
+    color: #1f5243;
+    ring-color: rgba(61, 157, 128, 0.25);
+}
+
+.landing-accent-soft {
+    background: rgba(88, 196, 102, 0.18);
+}
+
+.landing-accent-title {
+    color: #b7f5c1;
+}
+
+.landing-link {
+    color: var(--fuelly-primary);
+}
+
+.landing-link:hover {
+    color: var(--fuelly-primary-dark);
+}
+
+.landing-bar-40 {
+    height: 40%;
+}
+
+.landing-bar-45 {
+    height: 45%;
+}
+
+.landing-bar-55 {
+    height: 55%;
+}
+
+.landing-bar-65 {
+    height: 65%;
+}
+
+.landing-bar-70 {
+    height: 70%;
+}
+
+.landing-bar-80 {
+    height: 80%;
+}
+
+.landing-bar-90 {
+    height: 90%;
+}

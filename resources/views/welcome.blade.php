@@ -1,66 +1,31 @@
 @php
-    $brandName = config('app.name') === 'Laravel' ? 'FuelTrack' : config('app.name');
+    $brandName = config('app.name') === 'Laravel' ? 'Fuelly' : config('app.name');
+    $pageTitle = $brandName . ' — ' . __('Gestão de combustível e frota');
+    $pageDescription = __('Fuelly centraliza diário de bordo, abastecimentos, despesas e relatórios da frota em um só sistema para reduzir custos e aumentar o controle operacional.');
+    $pageKeywords = __('fuelly, gestão de frota, controle de combustível, diário de bordo digital, relatório de consumo, custo por km, operação logística');
+    $pageUrl = url()->current();
+    $pageImage = asset('img/logo.png');
+    $chartHeights = [40, 65, 45, 80, 55, 90, 70];
 @endphp
-<!DOCTYPE html>
-<html lang="pt-BR">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="{{ __('Controle de combustível e despesas de frota em um só lugar. Diário de bordo digital, relatórios e cadastros para sua operação.') }}">
+@extends('layouts.landing')
 
-        <title>{{ $brandName }} — {{ __('Gestão de combustível e frota') }}</title>
+@section('meta')
+    @include('partials.landing.head.meta', [
+        'title' => $pageTitle,
+        'description' => $pageDescription,
+        'keywords' => $pageKeywords,
+        'author' => $brandName,
+        'url' => $pageUrl,
+        'image' => $pageImage,
+    ])
+@endsection
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700;800&display=swap" rel="stylesheet" />
-
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        {{-- Garante legibilidade mesmo se o build do Tailwind falhar (evita text-transparent sem gradiente) --}}
-        <style>
-            .landing-page {
-                font-family: Inter, system-ui, sans-serif;
-                background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 45%, #e8edf5 100%);
-                color: #0f172a;
-            }
-            .landing-grid-bg {
-                background-color: #f8fafc;
-                background-image:
-                    linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-                background-size: 40px 40px;
-            }
-            .landing-card-dark {
-                background: linear-gradient(145deg, #0f172a 0%, #1e293b 55%, #0c1222 100%);
-                color: #f8fafc;
-                box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
-            }
-            .landing-card-dark p {
-                color: inherit;
-            }
-            .landing-cta-section {
-                background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #172554 100%);
-                color: #ffffff;
-            }
-            .landing-chart-bar {
-                min-height: 6rem;
-                background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
-            }
-            .landing-bar {
-                border-radius: 4px 4px 0 0;
-                background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-            }
-        </style>
-    </head>
-    <body class="landing-page min-h-screen antialiased">
-        <div class="relative">
+@section('content')
+    <div class="landing-theme relative">
             <header class="relative z-10 border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
-                <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-1 sm:px-6 lg:px-8">
                     <a href="{{ url('/') }}" class="group flex items-center gap-3">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-md ring-1 ring-slate-900/10">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </span>
-                        <span class="text-lg font-extrabold tracking-tight text-slate-900">{{ $brandName }}</span>
+                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-100 max-h-24" />
                     </a>
                     @if (Route::has('login'))
                         @include('partials.landing-nav')
@@ -74,13 +39,13 @@
                     <div class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8 lg:pb-24 lg:pt-20">
                         <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-14">
                             <div class="text-center lg:text-left">
-                                <p class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-blue-800">
-                                    <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+                                <p class="landing-kicker inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wider">
+                                    <span class="landing-kicker-dot h-2 w-2 rounded-full"></span>
                                     {{ __('Operação sob controle') }}
                                 </p>
                                 <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-[2.65rem]">
                                     {{ __('Cada litro e cada quilômetro contados,') }}
-                                    <span class="text-blue-600">{{ __('sem planilhas soltas.') }}</span>
+                                    <span class="landing-highlight-text">{{ __('sem planilhas soltas.') }}</span>
                                 </h1>
                                 <p class="mt-6 max-w-xl text-base leading-relaxed text-slate-600 lg:mx-0">
                                     {{ __('Sua empresa cadastra a frota e a operação: abastecimentos, despesas e rotas no diário de bordo, consumo e custo por km nos relatórios, veículos, motoristas e postos — tudo no mesmo lugar, com visão de gestão.') }}
@@ -89,14 +54,14 @@
                                     @auth
                                         <a
                                             href="{{ route('dashboard') }}"
-                                            class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-7 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800"
+                                            class="landing-btn-primary inline-flex min-h-[44px] items-center justify-center rounded-xl px-7 text-sm font-semibold shadow-md transition"
                                         >
                                             {{ __('Ir para o painel') }}
                                         </a>
                                     @else
                                         <a
                                             href="{{ route('login') }}"
-                                            class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-7 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800"
+                                            class="landing-btn-primary inline-flex min-h-[44px] items-center justify-center rounded-xl px-7 text-sm font-semibold shadow-md transition"
                                         >
                                             {{ __('Entrar na plataforma') }}
                                         </a>
@@ -135,8 +100,17 @@
                                             </div>
                                         </div>
                                         <div class="landing-chart-bar flex items-end gap-1 rounded-xl p-2">
-                                            @foreach ([40, 65, 45, 80, 55, 90, 70] as $h)
-                                                <div class="landing-bar flex-1" style="height: {{ $h }}%"></div>
+                                            @foreach ($chartHeights as $height)
+                                                <div @class([
+                                                    'landing-bar flex-1',
+                                                    'landing-bar-40' => $height === 40,
+                                                    'landing-bar-45' => $height === 45,
+                                                    'landing-bar-55' => $height === 55,
+                                                    'landing-bar-65' => $height === 65,
+                                                    'landing-bar-70' => $height === 70,
+                                                    'landing-bar-80' => $height === 80,
+                                                    'landing-bar-90' => $height === 90,
+                                                ])></div>
                                             @endforeach
                                         </div>
                                         <div class="flex flex-wrap gap-2">
@@ -173,7 +147,7 @@
                         </div>
                         <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-                                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
+                                <div class="landing-icon-primary inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -184,7 +158,7 @@
                                 </p>
                             </article>
                             <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-900/5">
-                                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+                                <div class="landing-icon-secondary inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
@@ -195,7 +169,7 @@
                                 </p>
                             </article>
                             <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-900/5 sm:col-span-2 lg:col-span-1">
-                                <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-white shadow-md">
+                                <div class="landing-icon-neutral inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                     </svg>
@@ -219,23 +193,23 @@
                                 </h2>
                                 <ul class="mt-8 space-y-5">
                                     <li class="flex gap-4">
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">1</span>
+                                        <span class="landing-step-badge flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-1">1</span>
                                         <p class="text-slate-700 leading-relaxed">{{ __('O motorista registra a viagem no diário com valores em reais no padrão brasileiro (vírgula decimal).') }}</p>
                                     </li>
                                     <li class="flex gap-4">
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">2</span>
+                                        <span class="landing-step-badge flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-1">2</span>
                                         <p class="text-slate-700 leading-relaxed">{{ __('Postos cadastrados podem preencher automaticamente o nome e o preço por litro — agilidade com consistência.') }}</p>
                                     </li>
                                     <li class="flex gap-4">
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">3</span>
+                                        <span class="landing-step-badge flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-1">3</span>
                                         <p class="text-slate-700 leading-relaxed">{{ __('O painel e os relatórios consolidam custo de combustível, outras despesas e desempenho por veículo ou período.') }}</p>
                                     </li>
                                 </ul>
                             </div>
                             <div class="landing-card-dark relative overflow-hidden rounded-2xl border border-slate-700/50 p-8 lg:flex lg:flex-col lg:justify-center">
                                 <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"></div>
-                                <div class="pointer-events-none absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-blue-500/20"></div>
-                                <p class="relative text-xs font-bold uppercase tracking-widest text-blue-200">{{ __('Feito para') }}</p>
+                                <div class="landing-accent-soft pointer-events-none absolute -bottom-8 left-8 h-24 w-24 rounded-full"></div>
+                                <p class="landing-accent-title relative text-xs font-bold uppercase tracking-widest">{{ __('Feito para') }}</p>
                                 <p class="relative mt-4 text-lg font-semibold leading-snug text-white">
                                     {{ __('Transportadoras, frotas próprias e operações que precisam de rastreabilidade de combustível sem burocracia extra.') }}
                                 </p>
@@ -285,10 +259,9 @@
                 <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center text-sm text-slate-500 sm:flex-row sm:text-left sm:px-6 lg:px-8">
                     <p>&copy; {{ date('Y') }} {{ $brandName }}. {{ __('Todos os direitos reservados.') }}</p>
                     @if (Route::has('login'))
-                        <a href="{{ route('login') }}" class="font-semibold text-blue-600 hover:text-blue-700">{{ __('Acesso à plataforma') }}</a>
+                        <a href="{{ route('login') }}" class="landing-link font-semibold">{{ __('Acesso à plataforma') }}</a>
                     @endif
                 </div>
             </footer>
-        </div>
-    </body>
-</html>
+    </div>
+@endsection
