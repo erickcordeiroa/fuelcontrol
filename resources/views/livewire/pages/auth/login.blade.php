@@ -74,7 +74,7 @@ new #[Layout('layouts.guest')] class extends Component
                     wire:model="form.remember"
                     id="remember"
                     type="checkbox"
-                    class="rounded border-outline text-primary shadow-sm focus:ring-primary/30"
+                    class="rounded border-outline accent-[#3d9d80] shadow-sm focus:ring-[#3d9d80]/30"
                     name="remember"
                 >
                 <span class="text-sm text-on-surface-variant">{{ __('Lembrar-me') }}</span>
@@ -82,7 +82,7 @@ new #[Layout('layouts.guest')] class extends Component
 
             @if (Route::has('password.request'))
                 <a
-                    class="text-sm font-medium text-primary underline decoration-primary/30 underline-offset-2 hover:opacity-90"
+                    class="text-sm font-medium text-[#2c745f] underline decoration-[#3d9d80]/30 underline-offset-2 hover:text-[#245d4b]"
                     href="{{ route('password.request') }}"
                     wire:navigate
                 >
@@ -100,7 +100,7 @@ new #[Layout('layouts.guest')] class extends Component
         @if (Route::has('register'))
             <p class="text-center text-sm text-on-surface-variant">
                 {{ __('Não tem conta?') }}
-                <a href="{{ route('register') }}" wire:navigate class="font-semibold text-primary hover:opacity-90">{{ __('Cadastrar empresa') }}</a>
+                <a href="{{ route('register') }}" wire:navigate class="font-semibold text-[#2c745f] hover:text-[#245d4b]">{{ __('Cadastrar empresa') }}</a>
             </p>
         @endif
     </form>
