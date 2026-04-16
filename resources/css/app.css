@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --fuelly-primary: #3d9d80;
+    --fuelly-secondary: #58c466;
+    --fuelly-dark: #3f4954;
+}
+
 @layer utilities {
     .material-symbols-outlined {
         font-variation-settings:
@@ -79,8 +85,13 @@
     }
 
     .fleet-btn--primary {
-        @apply fleet-btn border border-transparent bg-fleet-primary text-white hover:opacity-90 active:opacity-100;
+        @apply fleet-btn border border-transparent text-white active:opacity-100;
         @apply focus-visible:ring-fleet-primary/45;
+        background-color: var(--fuelly-primary);
+    }
+
+    .fleet-btn--primary:hover {
+        background-color: var(--fuelly-secondary);
     }
 
     .fleet-btn--secondary {

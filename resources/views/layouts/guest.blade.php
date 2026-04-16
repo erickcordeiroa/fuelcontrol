@@ -27,17 +27,14 @@
                         $brandName = config('app.name') === 'Laravel' ? 'Fuelly' : config('app.name');
                     @endphp
                     <a href="{{ url('/') }}" class="mx-auto inline-flex items-center gap-3">
-                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-100 max-h-24" />
+                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-[200px]" />
                     </a>
                     {{ $slot }}
                 </div>
             </section>
 
-            <section class="relative hidden items-center justify-center overflow-hidden bg-[#eaf5ef] p-12 lg:flex lg:w-1/2">
-                <div class="absolute inset-0 bg-gradient-to-br from-[#dff2e8]/70 via-[#cdebdc]/50 to-[#edf8f1]/80"></div>
-                <div class="absolute right-[-10%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[#3d9d80]/15 blur-[100px]"></div>
-                <div class="absolute bottom-[-10%] left-[-10%] h-[400px] w-[400px] rounded-full bg-[#58c466]/20 blur-[80px]"></div>
-
+            <section class="relative hidden items-center justify-center overflow-hidden bg-[color:var(--fuelly-primary)] p-12 lg:flex lg:w-1/2">
+                
                 <div class="relative z-20 flex w-full max-w-lg flex-col items-center gap-12">
                     <div class="flex w-full flex-col gap-8">
                         <div class="glass-card hover:translate-x-4 space-y-4 self-end translate-x-8 rounded-3xl border border-white/40 p-6 shadow-2xl transition-transform duration-500">
@@ -119,8 +116,8 @@
                     </div>
 
                     <div class="space-y-4 text-center">
-                        <h2 class="font-headline text-2xl font-bold text-on-surface">Gestão em tempo real</h2>
-                        <p class="text-lg font-medium leading-relaxed text-on-surface-variant">
+                        <h2 class="font-headline text-2xl font-bold text-on-surface text-white">Gestão em tempo real</h2>
+                        <p class="text-lg font-medium leading-relaxed text-on-surface-variant text-white">
                             Visualize cada veículo, monitore o consumo de combustível e reduza custos operacionais com inteligência preditiva.
                         </p>
                     </div>

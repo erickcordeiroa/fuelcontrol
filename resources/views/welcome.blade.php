@@ -23,9 +23,9 @@
 @section('content')
     <div class="landing-theme relative">
             <header class="relative z-10 border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
-                <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-1 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
                     <a href="{{ url('/') }}" class="group flex items-center gap-3">
-                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-100 max-h-24" />
+                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-40" />
                     </a>
                     @if (Route::has('login'))
                         @include('partials.landing-nav')
