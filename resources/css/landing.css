@@ -5,6 +5,7 @@
     --fuelly-primary-darker: #1f5243;
     --fuelly-secondary-dark: #3f9f4b;
     --fuelly-soft: #e8f6ef;
+    --fuelly-dark: #3f4954;
 }
 
 .landing-page {
@@ -22,7 +23,7 @@
 }
 
 .landing-card-dark {
-    background: linear-gradient(145deg, var(--fuelly-primary-darker) 0%, var(--fuelly-primary-dark) 55%, #163a30 100%);
+    background-color: var(--fuelly-primary);
     color: #f8fafc;
     box-shadow: 0 25px 50px -12px rgba(31, 82, 67, 0.45);
 }
@@ -32,7 +33,7 @@
 }
 
 .landing-cta-section {
-    background: linear-gradient(135deg, #173d31 0%, #2c745f 55%, #245d4b 100%);
+    background-color: var(--fuelly-dark);
     color: #ffffff;
 }
 
@@ -43,7 +44,7 @@
 
 .landing-bar {
     border-radius: 4px 4px 0 0;
-    background: linear-gradient(180deg, var(--fuelly-secondary) 0%, var(--fuelly-primary) 100%);
+    background-color: var(--fuelly-secondary);
 }
 
 .landing-kicker {
@@ -61,34 +62,34 @@
 }
 
 .landing-btn-primary {
-    background: linear-gradient(135deg, var(--fuelly-primary-dark) 0%, var(--fuelly-primary) 100%);
+    background-color: var(--fuelly-primary);
     color: #fff;
 }
 
 .landing-btn-primary:hover {
-    background: linear-gradient(135deg, #266652 0%, #368e74 100%);
+    background-color: var(--fuelly-secondary);
 }
 
 .landing-icon-primary {
-    background: linear-gradient(135deg, var(--fuelly-primary) 0%, var(--fuelly-primary-dark) 100%);
+    background-color: var(--fuelly-primary);
 }
 
 .landing-icon-secondary {
-    background: linear-gradient(135deg, var(--fuelly-secondary) 0%, var(--fuelly-secondary-dark) 100%);
+    background-color: var(--fuelly-secondary);
 }
 
 .landing-icon-neutral {
-    background: linear-gradient(135deg, #3d9d80 0%, #245d4b 100%);
+    background-color: var(--fuelly-primary);
 }
 
 .landing-step-badge {
     background: #e7f7ea;
     color: #1f5243;
-    ring-color: rgba(61, 157, 128, 0.25);
+    border-color: rgba(61, 157, 128, 0.25);
 }
 
 .landing-accent-soft {
-    background: rgba(88, 196, 102, 0.18);
+    background-color: rgba(88, 196, 102, 0.18);
 }
 
 .landing-accent-title {
