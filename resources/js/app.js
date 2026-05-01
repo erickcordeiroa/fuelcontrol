@@ -140,16 +140,18 @@ window.fleetCharts = {
                 labels,
                 datasets: [
                     {
-                        label: 'Combustível (R$)',
+                        label: 'Combustível acumulado (R$)',
                         data: fuelCost,
+                        yAxisID: 'y',
                         borderColor: '#002B5C',
                         backgroundColor: 'rgba(0, 43, 92, 0.08)',
                         tension: 0.35,
                         fill: true,
                     },
                     {
-                        label: 'Outras despesas (R$)',
+                        label: 'Outras despesas no dia (R$)',
                         data: otherExpenses,
+                        yAxisID: 'y1',
                         borderColor: '#64748B',
                         backgroundColor: 'rgba(100, 116, 139, 0.08)',
                         tension: 0.35,
@@ -160,6 +162,10 @@ window.fleetCharts = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
                 plugins: {
                     legend: {
                         display: true,
@@ -167,8 +173,24 @@ window.fleetCharts = {
                     },
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                        },
+                    },
                     y: {
+                        type: 'linear',
+                        position: 'left',
                         beginAtZero: true,
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                     },
                 },
             },

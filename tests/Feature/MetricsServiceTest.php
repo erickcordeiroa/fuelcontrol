@@ -122,4 +122,57 @@ class MetricsServiceTest extends TestCase
         $this->assertSame(2.86, $agg['efficiency_km_per_liter']);
         $this->assertSame(1.5, $agg['cost_per_km']);
     }
+
+    public function test_daily_series_fuel_cost_is_cumulative_in_period(): void
+    {
+        $owner = User::factory()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $owner->id]);
+        $driver = Driver::factory()->create(['user_id' => $owner->id]);
+
+        $tripJan5 = Trip::query()->create([
+            'date' => '2026-01-05',
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'km_start' => 0,
+            'km_end' => 50,
+            'km_total' => 50,
+            'revenue' => 0,
+            'status' => TripStatus::Completed,
+        ]);
+        Fuel::query()->create([
+            'trip_id' => $tripJan5->id,
+            'fuel_type' => FuelType::GasolinaComum,
+            'liters' => 2,
+            'price_per_liter' => 5,
+            'station' => null,
+        ]);
+
+        $tripJan10 = Trip::query()->create([
+            'date' => '2026-01-10',
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'km_start' => 50,
+            'km_end' => 100,
+            'km_total' => 50,
+            'revenue' => 0,
+            'status' => TripStatus::Completed,
+        ]);
+        Fuel::query()->create([
+            'trip_id' => $tripJan10->id,
+            'fuel_type' => FuelType::GasolinaComum,
+            'liters' => 10,
+            'price_per_liter' => 5,
+            'station' => null,
+        ]);
+
+        $service = app(MetricsService::class);
+        $series = $service->getDailySeries('2026-01-01', '2026-01-12');
+
+        $this->assertCount(12, $series['labels']);
+        $this->assertSame(0.0, $series['fuel_cost'][3]);
+        $this->assertSame(10.0, $series['fuel_cost'][4]);
+        $this->assertSame(10.0, $series['fuel_cost'][8]);
+        $this->assertSame(60.0, $series['fuel_cost'][9]);
+        $this->assertSame(60.0, $series['fuel_cost'][11]);
+    }
 }

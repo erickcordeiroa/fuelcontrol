@@ -126,7 +126,8 @@ class MetricsService
     }
 
     /**
-     * Daily fuel cost and other expenses for charts.
+     * Daily series for charts: fuel cost is a running total (cumulative) over the period;
+     * other expenses remain per-day amounts.
      *
      * @return array{labels: list<string>, fuel_cost: list<float>, other_expenses: list<float>}
      */
@@ -141,8 +142,9 @@ class MetricsService
             ->get();
 
         $labels = [];
-        $fuelCost = [];
+        $fuelCumulative = [];
         $otherExpenses = [];
+        $runningFuel = 0.0;
 
         for ($day = $start; $day->lte($end); $day = $day->addDay()) {
             $key = $day->format('Y-m-d');
@@ -150,7 +152,7 @@ class MetricsService
 
             $dayTrips = $trips->filter(fn (Trip $t) => $t->date->format('Y-m-d') === $key);
 
-            $fuelCost[] = round((float) $dayTrips->sum(function (Trip $trip) {
+            $dailyFuel = round((float) $dayTrips->sum(function (Trip $trip) {
                 if ($trip->fuel === null) {
                     return 0;
                 }
@@ -158,12 +160,15 @@ class MetricsService
                 return (float) $trip->fuel->liters * (float) $trip->fuel->price_per_liter;
             }), 2);
 
+            $runningFuel += $dailyFuel;
+            $fuelCumulative[] = round($runningFuel, 2);
+
             $otherExpenses[] = round((float) $dayTrips->sum(fn (Trip $trip) => (float) $trip->expenses->sum('amount')), 2);
         }
 
         return [
             'labels' => $labels,
-            'fuel_cost' => $fuelCost,
+            'fuel_cost' => $fuelCumulative,
             'other_expenses' => $otherExpenses,
         ];
     }

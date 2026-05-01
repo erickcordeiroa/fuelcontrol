@@ -124,7 +124,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
-            <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Custos diários (combustível vs. outras despesas)') }}</h3>
+            <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Consumo Mensal (Valor)') }}</h3>
             <div class="mt-4 h-64" wire:ignore>
                 <canvas id="reportLine"></canvas>
             </div>
