@@ -71,7 +71,7 @@ class MetricsServiceTest extends TestCase
         $this->assertSame(1.02, $agg['cost_per_km']);
     }
 
-    public function test_efficiency_and_cost_per_km_are_averaged_per_logbook_entry(): void
+    public function test_efficiency_and_cost_per_km_use_period_totals(): void
     {
         $owner = User::factory()->create();
         $vehicle = Vehicle::factory()->create(['user_id' => $owner->id]);
@@ -119,7 +119,7 @@ class MetricsServiceTest extends TestCase
 
         $agg = $service->getAggregates($start, $end);
 
-        $this->assertSame(3.5, $agg['efficiency_km_per_liter']);
+        $this->assertSame(2.86, $agg['efficiency_km_per_liter']);
         $this->assertSame(1.5, $agg['cost_per_km']);
     }
 }

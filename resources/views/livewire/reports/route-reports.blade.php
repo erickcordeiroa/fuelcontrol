@@ -95,7 +95,7 @@
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Consumo médio (por diário)') }}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Consumo médio') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">
                 @if ($metrics['efficiency_km_per_liter'] !== null)
                     {{ $metrics['efficiency_km_per_liter'] }} km/L
@@ -103,10 +103,10 @@
                     —
                 @endif
             </p>
-            <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do km/L de cada registro do diário de bordo no período') }}</p>
+            <p class="mt-1 text-xs text-fleet-muted">{{ __('Total de km ÷ total de litros no período') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Preço médio por KM (por diário)') }}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Preço médio por KM') }}</p>
             <p class="mt-2 text-2xl font-bold text-fleet-ink">
                 @if ($metrics['cost_per_km'] !== null)
                     R$ {{ number_format($metrics['cost_per_km'], 2, ',', '.') }}
@@ -114,7 +114,7 @@
                     —
                 @endif
             </p>
-            <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do R$/km (só combustível) de cada registro do diário') }}</p>
+            <p class="mt-1 text-xs text-fleet-muted">{{ __('Custo total de combustível ÷ km rodados no período') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('KM rodados (período)') }}</p>

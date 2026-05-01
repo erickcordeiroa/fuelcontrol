@@ -43,8 +43,8 @@ class MetricsService
      *   cost_per_km: float|null
      * }
      *
-     * efficiency_km_per_liter and cost_per_km are arithmetic means across each logbook entry (trip)
-     * that has valid fuel data, not fleet-wide totals blended into one ratio.
+     * efficiency_km_per_liter is total km divided by total liters (period aggregate).
+     * cost_per_km is total fuel cost divided by total km (R$/km de combustível).
      */
     public function getAggregates(string $startDate, string $endDate, ?int $vehicleId = null, ?int $driverId = null): array
     {
@@ -95,30 +95,12 @@ class MetricsService
 
             $totalOperational = $totalFuelCost + $totalOtherExpenses;
 
-            $trips = Trip::query()
-                ->whereIn('id', $tripIds)
-                ->with(['fuel'])
-                ->get();
-
-            $kmPerLiterPerLogbook = [];
-            $costPerKmPerLogbook = [];
-            foreach ($trips as $trip) {
-                $kmL = $trip->fuelEfficiencyKmPerLiter();
-                if ($kmL !== null) {
-                    $kmPerLiterPerLogbook[] = $kmL;
-                }
-                $cpk = $trip->fuelCostPerKm();
-                if ($cpk !== null) {
-                    $costPerKmPerLogbook[] = $cpk;
-                }
-            }
-
-            $efficiency = count($kmPerLiterPerLogbook) > 0
-                ? round(array_sum($kmPerLiterPerLogbook) / count($kmPerLiterPerLogbook), 2)
+            $efficiency = $totalLiters > 0
+                ? round($totalKm / $totalLiters, 2)
                 : null;
 
-            $costPerKm = count($costPerKmPerLogbook) > 0
-                ? round(array_sum($costPerKmPerLogbook) / count($costPerKmPerLogbook), 2)
+            $costPerKm = $totalKm > 0
+                ? round($totalFuelCost / $totalKm, 2)
                 : null;
 
             return [

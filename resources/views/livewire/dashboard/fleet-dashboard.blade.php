@@ -26,7 +26,7 @@
 
     <div class="grid gap-4 lg:grid-cols-3">
         <div class="fleet-panel lg:col-span-1">
-            <p class="fleet-section-title">{{ __('Consumo médio (por diário)') }}</p>
+            <p class="fleet-section-title">{{ __('Consumo médio') }}</p>
             <p class="mt-2 text-xl font-semibold text-fleet-ink">
                 @if ($metrics['efficiency_km_per_liter'] !== null)
                     {{ $metrics['efficiency_km_per_liter'] }} km/L
@@ -34,10 +34,10 @@
                     —
                 @endif
             </p>
-            <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do km/L por registro no diário') }}</p>
+            <p class="mt-1 text-xs text-fleet-muted">{{ __('Total de km ÷ total de litros no período') }}</p>
         </div>
         <div class="fleet-panel lg:col-span-1">
-            <p class="fleet-section-title">{{ __('Preço médio por KM (por diário)') }}</p>
+            <p class="fleet-section-title">{{ __('Preço médio por KM') }}</p>
             <p class="mt-2 text-xl font-semibold text-fleet-ink">
                 @if ($metrics['cost_per_km'] !== null)
                     R$ {{ number_format($metrics['cost_per_km'], 2, ',', '.') }}
@@ -45,7 +45,7 @@
                     —
                 @endif
             </p>
-            <p class="mt-1 text-xs text-fleet-muted">{{ __('Média do R$/km de combustível por registro') }}</p>
+            <p class="mt-1 text-xs text-fleet-muted">{{ __('Custo total de combustível ÷ km rodados no período') }}</p>
         </div>
         <div class="fleet-panel lg:col-span-1">
             <p class="fleet-section-title">{{ __('KM totais') }}</p>
