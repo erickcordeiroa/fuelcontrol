@@ -168,11 +168,12 @@ class MetricsServiceTest extends TestCase
         $service = app(MetricsService::class);
         $series = $service->getDailySeries('2026-01-01', '2026-01-12');
 
-        $this->assertCount(12, $series['labels']);
-        $this->assertSame(0.0, $series['fuel_cost'][3]);
-        $this->assertSame(10.0, $series['fuel_cost'][4]);
-        $this->assertSame(10.0, $series['fuel_cost'][8]);
-        $this->assertSame(60.0, $series['fuel_cost'][9]);
-        $this->assertSame(60.0, $series['fuel_cost'][11]);
+        $this->assertCount(2, $series['labels']);
+        $this->assertSame('05/01/2026', $series['labels'][0]);
+        $this->assertSame('10/01/2026', $series['labels'][1]);
+        $this->assertSame(10.0, $series['fuel_cost'][0]);
+        $this->assertSame(60.0, $series['fuel_cost'][1]);
+        $this->assertSame(0.0, $series['other_expenses'][0]);
+        $this->assertSame(0.0, $series['other_expenses'][1]);
     }
 }

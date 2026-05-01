@@ -134,6 +134,10 @@ window.fleetCharts = {
 
         this.destroy(id);
 
+        if (!labels || labels.length === 0) {
+            return;
+        }
+
         this.instances[id] = new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: {
