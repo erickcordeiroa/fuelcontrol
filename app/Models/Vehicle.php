@@ -22,6 +22,7 @@ class Vehicle extends Model
         'model',
         'capacity',
         'fuel_type',
+        'ideal_consumption',
     ];
 
     /**
@@ -31,6 +32,7 @@ class Vehicle extends Model
     {
         return [
             'capacity' => 'integer',
+            'ideal_consumption' => 'decimal:2',
         ];
     }
 

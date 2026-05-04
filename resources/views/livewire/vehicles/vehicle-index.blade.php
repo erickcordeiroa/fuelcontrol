@@ -24,6 +24,7 @@
                     <th class="px-4 py-3">{{ __('Modelo') }}</th>
                     <th class="px-4 py-3">{{ __('Capacidade') }}</th>
                     <th class="px-4 py-3">{{ __('Combustível') }}</th>
+                    <th class="px-4 py-3">{{ __('Média ideal') }}</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
@@ -34,6 +35,13 @@
                         <td class="max-w-xl truncate px-4 py-3 text-fleet-secondary" title="{{ $vehicle->model }}">{{ $vehicle->model }}</td>
                         <td class="px-4 py-3 text-fleet-secondary">{{ number_format($vehicle->capacity, 0, ',', '.') }} kg</td>
                         <td class="px-4 py-3 text-fleet-secondary">{{ $vehicle->fuel_type }}</td>
+                        <td class="px-4 py-3 text-fleet-secondary">
+                            @if ($vehicle->ideal_consumption !== null)
+                                {{ number_format((float) $vehicle->ideal_consumption, 2, ',', '.') }} km/L
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-right">
                             <div class="inline-flex items-center justify-end gap-1">
                                 <button
@@ -59,7 +67,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhum veículo cadastrado.') }}</td>
+                        <td colspan="6" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhum veículo cadastrado.') }}</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -142,6 +150,19 @@
                                 <label class="fleet-label" for="vehicle-fuel">{{ __('Combustível') }}</label>
                                 <input id="vehicle-fuel" type="text" wire:model="fuel_type" class="fleet-field" />
                                 @error('fuel_type') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="fleet-label" for="vehicle-ideal-consumption">{{ __('Média ideal (km/L)') }}</label>
+                                <input
+                                    id="vehicle-ideal-consumption"
+                                    type="text"
+                                    inputmode="decimal"
+                                    wire:model="ideal_consumption"
+                                    placeholder="{{ __('Ex.: 8,50') }}"
+                                    class="fleet-field"
+                                />
+                                <p class="mt-1 text-xs text-fleet-muted">{{ __('Consumo ideal esperado deste veículo, usado para comparar com o consumo real nos relatórios.') }}</p>
+                                @error('ideal_consumption') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                             </div>
                             <div class="flex flex-wrap gap-2 sm:col-span-2">
                                 <button type="submit" class="fleet-btn--primary fleet-btn--lg">{{ __('Salvar') }}</button>

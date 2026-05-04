@@ -30,6 +30,8 @@ class VehicleIndex extends Component
 
     public string $fuel_type = '';
 
+    public string $ideal_consumption = '';
+
     public function openCreateModal(): void
     {
         Gate::authorize('create', Vehicle::class);
@@ -50,6 +52,9 @@ class VehicleIndex extends Component
         $this->model = $vehicle->model;
         $this->capacity = (string) $vehicle->capacity;
         $this->fuel_type = $vehicle->fuel_type;
+        $this->ideal_consumption = $vehicle->ideal_consumption !== null
+            ? number_format((float) $vehicle->ideal_consumption, 2, ',', '')
+            : '';
         $this->resetValidation();
         $this->showModal = true;
     }
@@ -68,6 +73,20 @@ class VehicleIndex extends Component
         $this->model = '';
         $this->capacity = '';
         $this->fuel_type = '';
+        $this->ideal_consumption = '';
+    }
+
+    private function parseIdealConsumption(): ?float
+    {
+        $raw = trim($this->ideal_consumption);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', $raw);
+
+        return is_numeric($normalized) ? (float) $normalized : null;
     }
 
     public function save(): void
@@ -96,11 +115,14 @@ class VehicleIndex extends Component
                     ->ignore($vehicle->id),
             ];
 
+            $this->ideal_consumption = str_replace(',', '.', trim($this->ideal_consumption));
+
             $validated = $this->validate([
                 'plate' => $plateRules,
                 'model' => ['required', 'string', 'max:255'],
                 'capacity' => ['required', 'integer', 'min:1'],
                 'fuel_type' => ['required', 'string', 'max:64'],
+                'ideal_consumption' => ['nullable', 'numeric', 'min:0.01', 'max:9999.99'],
             ]);
 
             $vehicle->update([
@@ -108,17 +130,21 @@ class VehicleIndex extends Component
                 'model' => $validated['model'],
                 'capacity' => (int) $validated['capacity'],
                 'fuel_type' => $validated['fuel_type'],
+                'ideal_consumption' => $this->parseIdealConsumption(),
             ]);
 
             session()->flash('status', __('Veículo atualizado.'));
         } else {
             Gate::authorize('create', Vehicle::class);
 
+            $this->ideal_consumption = str_replace(',', '.', trim($this->ideal_consumption));
+
             $validated = $this->validate([
                 'plate' => $plateRules,
                 'model' => ['required', 'string', 'max:255'],
                 'capacity' => ['required', 'integer', 'min:1'],
                 'fuel_type' => ['required', 'string', 'max:64'],
+                'ideal_consumption' => ['nullable', 'numeric', 'min:0.01', 'max:9999.99'],
             ]);
 
             Vehicle::query()->create([
@@ -126,6 +152,7 @@ class VehicleIndex extends Component
                 'model' => $validated['model'],
                 'capacity' => (int) $validated['capacity'],
                 'fuel_type' => $validated['fuel_type'],
+                'ideal_consumption' => $this->parseIdealConsumption(),
             ]);
 
             session()->flash('status', __('Veículo criado.'));

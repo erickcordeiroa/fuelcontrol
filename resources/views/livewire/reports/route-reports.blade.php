@@ -23,28 +23,26 @@
     <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
         <div class="grid gap-4 lg:grid-cols-5">
             <div>
-                <label class="fleet-label">{{ __('De') }}</label>
+                <label class="fleet-label" for="report-start-date">{{ __('De') }}</label>
                 <input
-                    type="text"
-                    wire:model.live="startDateBr"
-                    placeholder="dd/mm/aaaa"
-                    maxlength="10"
-                    autocomplete="off"
+                    id="report-start-date"
+                    type="date"
+                    wire:model.live="startDate"
+                    lang="pt-BR"
                     class="fleet-field"
                 />
-                @error('startDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                @error('startDate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="fleet-label">{{ __('Até') }}</label>
+                <label class="fleet-label" for="report-end-date">{{ __('Até') }}</label>
                 <input
-                    type="text"
-                    wire:model.live="endDateBr"
-                    placeholder="dd/mm/aaaa"
-                    maxlength="10"
-                    autocomplete="off"
+                    id="report-end-date"
+                    type="date"
+                    wire:model.live="endDate"
+                    lang="pt-BR"
                     class="fleet-field"
                 />
-                @error('endDateBr') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                @error('endDate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             @if (auth()->user()->isAdmin())
                 <div>
@@ -94,16 +92,46 @@
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Consumo médio') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">
-                @if ($metrics['efficiency_km_per_liter'] !== null)
-                    {{ $metrics['efficiency_km_per_liter'] }} km/L
+        @php
+            $efficiency = $metrics['efficiency_km_per_liter'];
+            $hasIdealComparison = $idealConsumption !== null && $efficiency !== null;
+            $isAboveIdeal = $hasIdealComparison && $efficiency >= $idealConsumption;
+            $isBelowIdeal = $hasIdealComparison && $efficiency < $idealConsumption;
+
+            $consumoCardClass = match (true) {
+                $isAboveIdeal => 'rounded-2xl border border-fleet-success/40 bg-fleet-success/10 p-5 shadow-fleet',
+                $isBelowIdeal => 'rounded-2xl border border-fleet-danger/40 bg-fleet-danger/10 p-5 shadow-fleet',
+                default => 'rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet',
+            };
+
+            $consumoLabelClass = match (true) {
+                $isAboveIdeal => 'text-xs font-semibold uppercase tracking-wide text-fleet-profit',
+                $isBelowIdeal => 'text-xs font-semibold uppercase tracking-wide text-fleet-danger',
+                default => 'text-xs font-semibold uppercase tracking-wide text-fleet-muted',
+            };
+
+            $consumoValueClass = match (true) {
+                $isAboveIdeal => 'mt-2 text-2xl font-bold text-fleet-profit',
+                $isBelowIdeal => 'mt-2 text-2xl font-bold text-fleet-danger',
+                default => 'mt-2 text-2xl font-bold text-fleet-ink',
+            };
+        @endphp
+        <div class="{{ $consumoCardClass }}">
+            <p class="{{ $consumoLabelClass }}">{{ __('Consumo médio') }}</p>
+            <p class="{{ $consumoValueClass }}">
+                @if ($efficiency !== null)
+                    {{ $efficiency }} km/L
                 @else
                     —
                 @endif
             </p>
-            <p class="mt-1 text-xs text-fleet-muted">{{ __('Total de km ÷ total de litros no período') }}</p>
+            @if ($idealConsumption !== null)
+                <p class="mt-1 text-xs {{ $isAboveIdeal ? 'text-fleet-profit' : ($isBelowIdeal ? 'text-fleet-danger' : 'text-fleet-muted') }}">
+                    {{ __('Ideal: :ideal km/L', ['ideal' => number_format($idealConsumption, 2, ',', '.')]) }}
+                </p>
+            @else
+                <p class="mt-1 text-xs text-fleet-muted">{{ __('Total de km ÷ total de litros no período') }}</p>
+            @endif
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
             <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Preço médio por KM') }}</p>
