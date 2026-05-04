@@ -30,6 +30,11 @@
                 @endisset
 
                 <main class="flex-1 px-4 py-6 lg:px-8">
+                    @if ($oilChangeAlerts->isNotEmpty())
+                        <div class="mb-6">
+                            <x-fleet.oil-change-alert :alerts="$oilChangeAlerts" />
+                        </div>
+                    @endif
                     {{ $slot }}
                 </main>
             </div>

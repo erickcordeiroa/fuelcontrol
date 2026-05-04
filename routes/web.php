@@ -4,6 +4,7 @@ use App\Livewire\Dashboard\FleetDashboard;
 use App\Livewire\Drivers\DriverIndex;
 use App\Livewire\GasStations\GasStationIndex;
 use App\Livewire\Logbook\TripLogForm;
+use App\Livewire\OilChanges\OilChangeIndex;
 use App\Livewire\Reports\RouteReports;
 use App\Livewire\Vehicles\VehicleIndex;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/motoristas', DriverIndex::class)->name('drivers.index');
 
         Route::get('/postos', GasStationIndex::class)->name('gas-stations.index');
+
+        Route::get('/trocas-oleo', OilChangeIndex::class)->name('oil-changes.index');
     });
 
     Route::redirect('/ativos/veiculos', '/veiculos')->name('assets.vehicles');

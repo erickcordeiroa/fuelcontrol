@@ -37,7 +37,7 @@
                     <div class="grid gap-4 sm:grid-cols-3">
                         <div class="min-w-0">
                             <label class="fleet-label">{{ __('Data') }}</label>
-                            <input type="date" wire:model.live="date" class="fleet-field w-full min-w-0" />
+                            <x-fleet.br-date-input for="date" :live="true" class="fleet-field w-full min-w-0" />
                             @error('date') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
                         <div>

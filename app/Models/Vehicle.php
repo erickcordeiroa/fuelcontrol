@@ -43,4 +43,12 @@ class Vehicle extends Model
     {
         return $this->hasMany(Trip::class);
     }
+
+    /**
+     * @return HasMany<OilChange, $this>
+     */
+    public function oilChanges(): HasMany
+    {
+        return $this->hasMany(OilChange::class);
+    }
 }

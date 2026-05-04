@@ -24,24 +24,12 @@
         <div class="grid gap-4 lg:grid-cols-5">
             <div>
                 <label class="fleet-label" for="report-start-date">{{ __('De') }}</label>
-                <input
-                    id="report-start-date"
-                    type="date"
-                    wire:model.live="startDate"
-                    lang="pt-BR"
-                    class="fleet-field"
-                />
+                <x-fleet.br-date-input id="report-start-date" for="startDate" :live="true" />
                 @error('startDate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="fleet-label" for="report-end-date">{{ __('Até') }}</label>
-                <input
-                    id="report-end-date"
-                    type="date"
-                    wire:model.live="endDate"
-                    lang="pt-BR"
-                    class="fleet-field"
-                />
+                <x-fleet.br-date-input id="report-end-date" for="endDate" :live="true" />
                 @error('endDate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             @if (auth()->user()->isAdmin())

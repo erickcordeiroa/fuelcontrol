@@ -4,6 +4,7 @@ import { allowDigitsOnlyKeydown, fleetBrlMoneyField, formatBrlFromDigits } from 
 import { fleetBrPhoneField, formatBrPhoneFromDigits } from './br-phone-mask';
 import { fleetBrPlateField, formatBrPlateFromChars } from './br-plate-mask';
 import { fleetKmField, formatKmFromDigits } from './br-km-mask';
+import { fleetBrDateField } from './br-date-mask';
 
 window.fleetFormatBrlDigits = formatBrlFromDigits;
 window.fleetAllowDigitsOnlyKeydown = allowDigitsOnlyKeydown;
@@ -14,6 +15,7 @@ window.fleetBrPlateField = fleetBrPlateField;
 window.fleetFormatBrPlateFromChars = formatBrPlateFromChars;
 window.fleetKmField = fleetKmField;
 window.fleetFormatKmFromDigits = formatKmFromDigits;
+window.fleetBrDateField = fleetBrDateField;
 
 const normalizeFleetSearchText = (value = '') =>
     value

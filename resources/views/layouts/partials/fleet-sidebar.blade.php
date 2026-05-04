@@ -66,6 +66,17 @@
                 </span>
                 {{ __('Postos') }}
             </a>
+            <a
+                href="{{ route('oil-changes.index') }}"
+                wire:navigate
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
+                    {{ request()->routeIs('oil-changes.*') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
+            >
+                <span class="{{ $navIcon(request()->routeIs('oil-changes.*')) }}" aria-hidden="true">
+                    <x-icons.wrench class="h-4 w-4" />
+                </span>
+                {{ __('Trocas de óleo') }}
+            </a>
         @endif
 
         <a
