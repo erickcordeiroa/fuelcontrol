@@ -1,5 +1,67 @@
 import './bootstrap';
 import Chart from 'chart.js/auto';
+
+document.addEventListener('alpine:init', () => {
+    window.Alpine.data('tripRowActionsDropdown', () => ({
+        open: false,
+        top: 0,
+        left: 0,
+        panelWidth: 192,
+
+        init() {
+            this._reposition = () => {
+                if (this.open) {
+                    this.placePanel();
+                }
+            };
+
+            this.$watch('open', (value) => {
+                if (value) {
+                    window.addEventListener('scroll', this._reposition, true);
+                    window.addEventListener('resize', this._reposition);
+                    this.$nextTick(() => this.placePanel());
+                } else {
+                    window.removeEventListener('scroll', this._reposition, true);
+                    window.removeEventListener('resize', this._reposition);
+                }
+            });
+        },
+
+        destroy() {
+            if (typeof this._reposition === 'function') {
+                window.removeEventListener('scroll', this._reposition, true);
+                window.removeEventListener('resize', this._reposition);
+            }
+        },
+
+        placePanel() {
+            const el = this.$refs.trigger;
+            if (!el) {
+                return;
+            }
+
+            const r = el.getBoundingClientRect();
+            const margin = 8;
+            this.top = r.bottom + 4;
+            this.left = Math.min(
+                Math.max(margin, r.right - this.panelWidth),
+                window.innerWidth - this.panelWidth - margin,
+            );
+        },
+
+        toggle() {
+            this.open = !this.open;
+        },
+
+        closeIfOutside(e) {
+            if (this.$refs.trigger.contains(e.target)) {
+                return;
+            }
+
+            this.open = false;
+        },
+    }));
+});
 import { allowDigitsOnlyKeydown, fleetBrlMoneyField, formatBrlFromDigits } from './brl-money-mask';
 import { fleetBrPhoneField, formatBrPhoneFromDigits } from './br-phone-mask';
 import { fleetBrPlateField, formatBrPlateFromChars } from './br-plate-mask';
