@@ -24,6 +24,7 @@ class OilChange extends Model
         'vehicle_id',
         'date',
         'occurred_at',
+        'km_at_change',
         'oil_brand',
         'interval_km',
         'notes',
@@ -60,6 +61,7 @@ class OilChange extends Model
         return [
             'date' => 'date',
             'occurred_at' => 'datetime',
+            'km_at_change' => 'integer',
             'interval_km' => 'integer',
         ];
     }

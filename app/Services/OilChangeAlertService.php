@@ -25,6 +25,7 @@ class OilChangeAlertService
      *     model: string,
      *     oil_change_id: int,
      *     oil_change_date: string,
+     *     km_at_change: int|null,
      *     km_driven: int,
      *     km_remaining: int,
      *     days_remaining: int,
@@ -67,6 +68,7 @@ class OilChangeAlertService
      *     model: string,
      *     oil_change_id: int,
      *     oil_change_date: string,
+     *     km_at_change: int|null,
      *     km_driven: int,
      *     km_remaining: int,
      *     days_remaining: int,
@@ -77,17 +79,9 @@ class OilChangeAlertService
     {
         $oilChange->loadMissing('vehicle');
 
-        $startInclusive = $this->oilChangeOccurredAt($oilChange);
         $next = $this->nextOilChange($oilChange);
-        $endExclusive = $next !== null ? $this->oilChangeOccurredAt($next) : null;
 
-        $kmDriven = $this->sumTripKmInWindow(
-            (int) $oilChange->vehicle_id,
-            $startInclusive,
-            $endExclusive,
-            $oilChange->date->toDateString(),
-            $next?->date->toDateString(),
-        );
+        $kmDriven = $this->computeKmDriven($oilChange, $next);
 
         $kmRemaining = (int) $oilChange->interval_km - $kmDriven;
 
@@ -109,6 +103,7 @@ class OilChangeAlertService
             'model' => (string) ($oilChange->vehicle?->model ?? ''),
             'oil_change_id' => (int) $oilChange->id,
             'oil_change_date' => $oilChange->date->toDateString(),
+            'km_at_change' => $oilChange->km_at_change !== null ? (int) $oilChange->km_at_change : null,
             'km_driven' => $kmDriven,
             'km_remaining' => $kmRemaining,
             'days_remaining' => $daysRemaining,
@@ -177,6 +172,38 @@ class OilChangeAlertService
             ->first();
     }
 
+    private function computeKmDriven(OilChange $oilChange, ?OilChange $next): int
+    {
+        if ($oilChange->km_at_change !== null) {
+            if ($next !== null && $next->km_at_change !== null) {
+                return max(0, (int) $next->km_at_change - (int) $oilChange->km_at_change);
+            }
+
+            $maxKmEnd = $this->maxTripKmEndInWindow(
+                (int) $oilChange->vehicle_id,
+                $oilChange->date->toDateString(),
+                $next?->date->toDateString(),
+            );
+
+            if ($maxKmEnd === null) {
+                return 0;
+            }
+
+            return max(0, $maxKmEnd - (int) $oilChange->km_at_change);
+        }
+
+        $startInclusive = $this->oilChangeOccurredAt($oilChange);
+        $endExclusive = $next !== null ? $this->oilChangeOccurredAt($next) : null;
+
+        return $this->sumTripKmInWindow(
+            (int) $oilChange->vehicle_id,
+            $startInclusive,
+            $endExclusive,
+            $oilChange->date->toDateString(),
+            $next?->date->toDateString(),
+        );
+    }
+
     private function oilChangeOccurredAt(OilChange $oilChange): CarbonImmutable
     {
         $calendar = $oilChange->date->format('Y-m-d');
@@ -203,6 +230,21 @@ class OilChangeAlertService
         }
 
         return CarbonImmutable::createFromFormat('Y-m-d', $calendar, $timezone)->startOfDay();
+    }
+
+    private function maxTripKmEndInWindow(int $vehicleId, string $fromDate, ?string $throughDate): ?int
+    {
+        $query = Trip::query()
+            ->where('vehicle_id', $vehicleId)
+            ->whereDate('date', '>=', $fromDate);
+
+        if ($throughDate !== null) {
+            $query->whereDate('date', '<=', $throughDate);
+        }
+
+        $max = $query->max('km_end');
+
+        return $max !== null ? (int) $max : null;
     }
 
     /**

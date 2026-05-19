@@ -25,6 +25,7 @@ class OilChangeIndexTest extends TestCase
             ->call('openCreateModal')
             ->set('vehicleId', $vehicle->id)
             ->set('date', '2026-04-01')
+            ->set('km_at_change', '53216')
             ->set('oil_brand', 'Mobil')
             ->set('interval_km', '10000')
             ->set('notes', 'Trocou também o filtro')
@@ -35,6 +36,7 @@ class OilChangeIndexTest extends TestCase
         $this->assertDatabaseHas('oil_changes', [
             'user_id' => $admin->id,
             'vehicle_id' => $vehicle->id,
+            'km_at_change' => 53216,
             'oil_brand' => 'Mobil',
             'interval_km' => 10000,
             'notes' => 'Trocou também o filtro',
@@ -93,10 +95,28 @@ class OilChangeIndexTest extends TestCase
             ->call('openCreateModal')
             ->set('vehicleId', $vehicle->id)
             ->set('date', '2026-04-01')
+            ->set('km_at_change', '53216')
             ->set('oil_brand', 'Shell')
             ->set('interval_km', '7500')
             ->call('save')
             ->assertHasErrors(['interval_km']);
+    }
+
+    public function test_save_requires_km_at_change(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id]);
+        $this->actingAs($admin);
+
+        Livewire::test(OilChangeIndex::class)
+            ->call('openCreateModal')
+            ->set('vehicleId', $vehicle->id)
+            ->set('date', '2026-04-01')
+            ->set('km_at_change', '')
+            ->set('oil_brand', 'Shell')
+            ->set('interval_km', '10000')
+            ->call('save')
+            ->assertHasErrors(['km_at_change']);
     }
 
     public function test_driver_cannot_access_index_route(): void

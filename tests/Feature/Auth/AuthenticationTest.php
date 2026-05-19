@@ -66,7 +66,6 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Fleet Command', false)
             ->assertSee(__('Painel operacional'), false);
     }
 

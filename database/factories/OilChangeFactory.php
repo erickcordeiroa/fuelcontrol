@@ -23,6 +23,7 @@ class OilChangeFactory extends Factory
             'date' => fake()->dateTimeBetween('-5 months', 'now')->format('Y-m-d'),
             'oil_brand' => fake()->randomElement(['Mobil', 'Shell', 'Castrol', 'Petrobras', 'Ipiranga']),
             'interval_km' => fake()->randomElement([5000, 10000]),
+            'km_at_change' => 100_000,
             'notes' => null,
         ];
     }

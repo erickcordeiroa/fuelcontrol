@@ -25,6 +25,7 @@
                         <th class="px-4 py-3">{{ __('Veículo') }}</th>
                         <th class="px-4 py-3">{{ __('Marca') }}</th>
                         <th class="px-4 py-3">{{ __('Intervalo') }}</th>
+                        <th class="px-4 py-3">{{ __('Km da troca') }}</th>
                         <th class="px-4 py-3">{{ __('Km percorridos') }}</th>
                         <th class="px-4 py-3">{{ __('Km restantes') }}</th>
                         <th class="px-4 py-3">{{ __('Status') }}</th>
@@ -49,6 +50,13 @@
                             </td>
                             <td class="px-4 py-3 text-fleet-secondary">{{ $oilChange->oil_brand }}</td>
                             <td class="px-4 py-3 text-fleet-secondary">{{ number_format($oilChange->interval_km, 0, ',', '.') }} km</td>
+                            <td class="px-4 py-3 text-fleet-secondary">
+                                @if ($computed['km_at_change'] !== null)
+                                    {{ number_format($computed['km_at_change'], 0, ',', '.') }} km
+                                @else
+                                    <span class="text-fleet-muted">—</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-fleet-secondary">{{ number_format($computed['km_driven'], 0, ',', '.') }} km</td>
                             <td class="px-4 py-3 {{ $kmRemaining <= 1000 ? 'font-semibold text-fleet-danger' : 'text-fleet-secondary' }}">
                                 @if ($kmRemaining <= 0)
@@ -104,7 +112,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhuma troca de óleo registrada.') }}</td>
+                            <td colspan="9" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhuma troca de óleo registrada.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -167,6 +175,20 @@
                                 <label class="fleet-label" for="oil-date">{{ __('Data da troca') }}</label>
                                 <x-fleet.br-date-input id="oil-date" for="date" :live="false" />
                                 @error('date') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="fleet-label" for="oil-km">{{ __('KM do veículo na troca') }}</label>
+                                <input
+                                    id="oil-km"
+                                    type="number"
+                                    inputmode="numeric"
+                                    min="0"
+                                    step="1"
+                                    wire:model="km_at_change"
+                                    class="fleet-field"
+                                    placeholder="{{ __('Ex.: 53216') }}"
+                                />
+                                @error('km_at_change') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="fleet-label" for="oil-brand">{{ __('Marca do óleo') }}</label>

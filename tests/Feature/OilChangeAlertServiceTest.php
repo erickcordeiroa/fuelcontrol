@@ -35,6 +35,7 @@ class OilChangeAlertServiceTest extends TestCase
                 'vehicle_id' => $vehicle->id,
                 'date' => $oilDate,
                 'interval_km' => $kmInterval,
+                'km_at_change' => 100_000,
             ]);
         }
 
@@ -134,6 +135,7 @@ class OilChangeAlertServiceTest extends TestCase
             'date' => $day,
             'interval_km' => 5000,
             'occurred_at' => $base->setTime(9, 0, 0),
+            'km_at_change' => 100_000,
         ]);
 
         OilChange::factory()->create([
@@ -142,6 +144,7 @@ class OilChangeAlertServiceTest extends TestCase
             'date' => $day,
             'interval_km' => 5000,
             'occurred_at' => $base->setTime(18, 0, 0),
+            'km_at_change' => 104_200,
         ]);
 
         Trip::factory()->create([
@@ -179,6 +182,84 @@ class OilChangeAlertServiceTest extends TestCase
 
         $alerts = $service->getAlerts();
         $this->assertTrue($alerts->isEmpty());
+    }
+
+    public function test_retroactive_oil_change_uses_km_at_change_baseline(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id, 'plate' => 'RETRO-1']);
+        $driver = Driver::factory()->create(['user_id' => $admin->id]);
+
+        $oilDate = CarbonImmutable::now()->subDays(30)->toDateString();
+
+        $oilChange = OilChange::factory()->create([
+            'user_id' => $admin->id,
+            'vehicle_id' => $vehicle->id,
+            'date' => $oilDate,
+            'interval_km' => 10_000,
+            'km_at_change' => 53_216,
+        ]);
+
+        Trip::factory()->create([
+            'user_id' => $admin->id,
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'date' => CarbonImmutable::now()->subDays(20)->toDateString(),
+            'km_start' => 53_500,
+            'km_end' => 58_000,
+            'km_total' => 4_500,
+            'status' => TripStatus::Completed,
+        ]);
+
+        Trip::factory()->create([
+            'user_id' => $admin->id,
+            'vehicle_id' => $vehicle->id,
+            'driver_id' => $driver->id,
+            'date' => CarbonImmutable::now()->subDays(5)->toDateString(),
+            'km_start' => 58_000,
+            'km_end' => 62_035,
+            'km_total' => 4_035,
+            'status' => TripStatus::Completed,
+        ]);
+
+        Cache::flush();
+
+        $row = app(OilChangeAlertService::class)->computeForRecord($oilChange->refresh());
+
+        $this->assertSame(53_216, $row['km_at_change']);
+        $this->assertSame(62_035 - 53_216, $row['km_driven']);
+        $this->assertSame(10_000 - (62_035 - 53_216), $row['km_remaining']);
+    }
+
+    public function test_km_driven_uses_next_oil_change_km_when_present(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        $vehicle = Vehicle::factory()->create(['user_id' => $admin->id, 'plate' => 'NEXT-1']);
+
+        $first = OilChange::factory()->create([
+            'user_id' => $admin->id,
+            'vehicle_id' => $vehicle->id,
+            'date' => CarbonImmutable::now()->subDays(60)->toDateString(),
+            'interval_km' => 10_000,
+            'km_at_change' => 40_000,
+        ]);
+
+        OilChange::factory()->create([
+            'user_id' => $admin->id,
+            'vehicle_id' => $vehicle->id,
+            'date' => CarbonImmutable::now()->subDays(10)->toDateString(),
+            'interval_km' => 10_000,
+            'km_at_change' => 49_500,
+        ]);
+
+        Cache::flush();
+
+        $row = app(OilChangeAlertService::class)->computeForRecord($first->refresh());
+
+        $this->assertSame(9_500, $row['km_driven']);
+        $this->assertSame(500, $row['km_remaining']);
     }
 
     public function test_uses_only_latest_oil_change_per_vehicle(): void

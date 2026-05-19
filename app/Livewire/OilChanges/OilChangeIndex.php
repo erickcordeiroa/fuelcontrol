@@ -29,6 +29,8 @@ class OilChangeIndex extends Component
 
     public string $date = '';
 
+    public string $km_at_change = '';
+
     public string $oil_brand = '';
 
     public string $interval_km = '5000';
@@ -53,6 +55,7 @@ class OilChangeIndex extends Component
         $this->editingId = $oilChange->id;
         $this->vehicleId = (int) $oilChange->vehicle_id;
         $this->date = $oilChange->date->toDateString();
+        $this->km_at_change = $oilChange->km_at_change !== null ? (string) $oilChange->km_at_change : '';
         $this->oil_brand = $oilChange->oil_brand;
         $this->interval_km = (string) $oilChange->interval_km;
         $this->notes = (string) ($oilChange->notes ?? '');
@@ -72,6 +75,7 @@ class OilChangeIndex extends Component
     {
         $this->vehicleId = null;
         $this->date = '';
+        $this->km_at_change = '';
         $this->oil_brand = '';
         $this->interval_km = '5000';
         $this->notes = '';
@@ -84,6 +88,7 @@ class OilChangeIndex extends Component
         $rules = [
             'vehicleId' => ['required', 'integer', Rule::exists('vehicles', 'id')->where(fn ($q) => $q->where('user_id', $tenantId))],
             'date' => ['required', 'date_format:Y-m-d'],
+            'km_at_change' => ['required', 'integer', 'min:0', 'max:9999999'],
             'oil_brand' => ['required', 'string', 'max:120'],
             'interval_km' => ['required', 'in:5000,10000'],
             'notes' => ['nullable', 'string', 'max:500'],
@@ -101,6 +106,7 @@ class OilChangeIndex extends Component
                 'occurred_at' => Carbon::parse($validated['date'])->setTimeFrom(
                     Carbon::parse($oilChange->occurred_at ?? $oilChange->created_at ?? now()),
                 ),
+                'km_at_change' => (int) $validated['km_at_change'],
                 'oil_brand' => $validated['oil_brand'],
                 'interval_km' => (int) $validated['interval_km'],
                 'notes' => $validated['notes'] !== '' ? $validated['notes'] : null,
@@ -116,6 +122,7 @@ class OilChangeIndex extends Component
                 'vehicle_id' => (int) $validated['vehicleId'],
                 'date' => $validated['date'],
                 'occurred_at' => Carbon::parse($validated['date'])->setTimeFrom(now()),
+                'km_at_change' => (int) $validated['km_at_change'],
                 'oil_brand' => $validated['oil_brand'],
                 'interval_km' => (int) $validated['interval_km'],
                 'notes' => $validated['notes'] !== '' ? $validated['notes'] : null,
