@@ -34,6 +34,32 @@
             <section class="fleet-panel">
                 <h2 class="fleet-section-title">{{ __('Informações de rota') }}</h2>
                 <div class="mt-4 space-y-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div @class(['sm:col-span-2' => ! auth()->user()->isAdmin()])>
+                            <label class="fleet-label">{{ __('Placa do veículo') }}</label>
+                            <select wire:model.live="vehicle_id" class="fleet-field">
+                                <option value="">{{ __('Selecione') }}</option>
+                                @foreach ($vehicles as $vehicle)
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
+                                @endforeach
+                            </select>
+                            @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                        </div>
+                        @if (auth()->user()->isAdmin())
+                            <div>
+                                <label class="fleet-label">{{ __('Motorista') }}</label>
+                                <select wire:model.live="driver_id" class="fleet-field">
+                                    <option value="">{{ __('Selecione') }}</option>
+                                    @foreach ($drivers as $driver)
+                                        <option value="{{ $driver->id }}">{{ $driver->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('driver_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                        @else
+                            <input type="hidden" wire:model="driver_id" />
+                        @endif
+                    </div>
                     <div class="grid gap-4 sm:grid-cols-3">
                         <div class="min-w-0">
                             <label class="fleet-label">{{ __('Data') }}</label>
@@ -73,32 +99,7 @@
                             @error('km_end') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div @class(['sm:col-span-2' => ! auth()->user()->isAdmin()])>
-                            <label class="fleet-label">{{ __('Placa do veículo') }}</label>
-                            <select wire:model.live="vehicle_id" class="fleet-field">
-                                <option value="">{{ __('Selecione') }}</option>
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->plate }} — {{ $vehicle->model }}</option>
-                                @endforeach
-                            </select>
-                            @error('vehicle_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                        </div>
-                    @if (auth()->user()->isAdmin())
-                        <div>
-                            <label class="fleet-label">{{ __('Motorista') }}</label>
-                            <select wire:model.live="driver_id" class="fleet-field">
-                                <option value="">{{ __('Selecione') }}</option>
-                                @foreach ($drivers as $driver)
-                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('driver_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                        </div>
-                    @else
-                        <input type="hidden" wire:model="driver_id" />
-                    @endif
-                    <div class="sm:col-span-2">
+                    <div>
                         <label class="fleet-label">{{ __('Observações') }}</label>
                         <textarea
                             wire:model.live="notes"
@@ -108,7 +109,6 @@
                         ></textarea>
                         <p class="mt-1 text-xs text-fleet-muted">{{ __('Use para nomes de ajudantes e rota ou destino da viagem.') }}</p>
                         @error('notes') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
-                    </div>
                     </div>
                 </div>
             </section>
