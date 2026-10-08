@@ -13,16 +13,19 @@ use Illuminate\Support\Facades\DB;
 class MetricsService
 {
     /**
+     * @param  int|list<int>|null  $vehicleId  Um veículo, uma lista de veículos ou null/lista vazia para todos.
      * @return Builder<Trip>
      */
-    public function tripsQuery(string $startDate, string $endDate, ?int $vehicleId = null, ?int $driverId = null): Builder
+    public function tripsQuery(string $startDate, string $endDate, int|array|null $vehicleId = null, ?int $driverId = null): Builder
     {
         $query = Trip::query()
             ->whereDate('date', '>=', $startDate)
             ->whereDate('date', '<=', $endDate);
 
-        if ($vehicleId !== null) {
-            $query->where('vehicle_id', $vehicleId);
+        $vehicleIds = $this->normalizeVehicleIds($vehicleId);
+
+        if ($vehicleIds !== []) {
+            $query->whereIn('vehicle_id', $vehicleIds);
         }
 
         if ($driverId !== null) {
@@ -46,24 +49,26 @@ class MetricsService
      * efficiency_km_per_liter is total km divided by total liters (period aggregate).
      * cost_per_km is total fuel cost divided by total km (R$/km de combustível).
      */
-    public function getAggregates(string $startDate, string $endDate, ?int $vehicleId = null, ?int $driverId = null): array
+    public function getAggregates(string $startDate, string $endDate, int|array|null $vehicleId = null, ?int $driverId = null): array
     {
         $tenantSegment = Auth::check()
             ? (string) Auth::user()->tenantOwnerId()
             : '0';
+
+        $vehicleIds = $this->normalizeVehicleIds($vehicleId);
 
         $cacheKey = implode(':', [
             'fleet_metrics',
             $tenantSegment,
             $startDate,
             $endDate,
-            (string) ($vehicleId ?? 'all'),
+            $vehicleIds === [] ? 'all' : implode(',', $vehicleIds),
             (string) ($driverId ?? 'all'),
         ]);
 
         /** @var array<string, float|int|null> $data */
-        $data = Cache::remember($cacheKey, 60, function () use ($startDate, $endDate, $vehicleId, $driverId) {
-            $tripIds = $this->tripsQuery($startDate, $endDate, $vehicleId, $driverId)->pluck('id');
+        $data = Cache::remember($cacheKey, 60, function () use ($startDate, $endDate, $vehicleIds, $driverId) {
+            $tripIds = $this->tripsQuery($startDate, $endDate, $vehicleIds, $driverId)->pluck('id');
 
             if ($tripIds->isEmpty()) {
                 return [
@@ -131,7 +136,7 @@ class MetricsService
      *
      * @return array{labels: list<string>, fuel_cost: list<float>, other_expenses: list<float>}
      */
-    public function getDailySeries(string $startDate, string $endDate, ?int $vehicleId = null, ?int $driverId = null): array
+    public function getDailySeries(string $startDate, string $endDate, int|array|null $vehicleId = null, ?int $driverId = null): array
     {
         $start = CarbonImmutable::parse($startDate)->startOfDay();
         $end = CarbonImmutable::parse($endDate)->startOfDay();
@@ -225,5 +230,87 @@ class MetricsService
         usort($result, fn (array $a, array $b) => $b['km_per_liter'] <=> $a['km_per_liter']);
 
         return $result;
+    }
+
+    /**
+     * Fuel report with one row per vehicle (custo, litros, km/L, R$/km e km rodado no período).
+     * Selected vehicles without trips in the period are still listed with zeroed values.
+     *
+     * @param  list<int>  $vehicleIds  Lista vazia = todos os veículos com viagens no período.
+     * @return list<array{
+     *   vehicle_id: int,
+     *   plate: string,
+     *   model: string|null,
+     *   drivers: list<string>,
+     *   fuel_cost: float,
+     *   liters: float,
+     *   km: int,
+     *   km_per_liter: float|null,
+     *   cost_per_km: float|null
+     * }>
+     */
+    public function getVehicleFuelReportRows(string $startDate, string $endDate, array $vehicleIds = [], ?int $driverId = null): array
+    {
+        $vehicleIds = $this->normalizeVehicleIds($vehicleIds);
+
+        $tripsByVehicle = $this->tripsQuery($startDate, $endDate, $vehicleIds, $driverId)
+            ->with(['fuel', 'driver'])
+            ->orderBy('date')
+            ->get()
+            ->groupBy('vehicle_id');
+
+        $reportVehicleIds = $vehicleIds !== []
+            ? $vehicleIds
+            : $tripsByVehicle->keys()->map(fn ($id) => (int) $id)->all();
+
+        if ($reportVehicleIds === []) {
+            return [];
+        }
+
+        $vehicles = Vehicle::query()
+            ->whereIn('id', $reportVehicleIds)
+            ->orderBy('plate')
+            ->get();
+
+        $rows = [];
+
+        foreach ($vehicles as $vehicle) {
+            $trips = $tripsByVehicle->get($vehicle->id, collect());
+
+            $km = (int) $trips->sum('km_total');
+            $liters = round((float) $trips->sum(fn (Trip $trip) => (float) ($trip->fuel?->liters ?? 0)), 2);
+            $fuelCost = round((float) $trips->sum(fn (Trip $trip) => $trip->fuelCost()), 2);
+
+            $rows[] = [
+                'vehicle_id' => $vehicle->id,
+                'plate' => $vehicle->plate,
+                'model' => $vehicle->model,
+                'drivers' => $trips->pluck('driver.name')->filter()->unique()->sort()->values()->all(),
+                'fuel_cost' => $fuelCost,
+                'liters' => $liters,
+                'km' => $km,
+                'km_per_liter' => $liters > 0 ? round($km / $liters, 2) : null,
+                'cost_per_km' => $km > 0 ? round($fuelCost / $km, 2) : null,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  int|array<int|string, int|string>|null  $vehicleId
+     * @return list<int>
+     */
+    private function normalizeVehicleIds(int|array|null $vehicleId): array
+    {
+        if ($vehicleId === null) {
+            return [];
+        }
+
+        $ids = array_map('intval', is_array($vehicleId) ? $vehicleId : [$vehicleId]);
+        $ids = array_values(array_unique(array_filter($ids, fn (int $id) => $id > 0)));
+        sort($ids);
+
+        return $ids;
     }
 }

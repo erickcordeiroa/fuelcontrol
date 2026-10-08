@@ -8,6 +8,10 @@
     --fuelly-dark: #3f4954;
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 @layer utilities {
     .material-symbols-outlined {
         font-variation-settings:

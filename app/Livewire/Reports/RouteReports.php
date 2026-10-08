@@ -27,7 +27,10 @@ class RouteReports extends Component
 
     public string $endDate = '';
 
-    public ?int $filterVehicleId = null;
+    /**
+     * @var list<int|string>
+     */
+    public array $filterVehicleIds = [];
 
     public ?int $filterDriverId = null;
 
@@ -74,6 +77,26 @@ class RouteReports extends Component
         if (str_starts_with((string) $name, 'filter') || $name === 'startDate' || $name === 'endDate') {
             $this->resetPage();
         }
+    }
+
+    public function clearVehicleFilter(): void
+    {
+        $this->filterVehicleIds = [];
+        $this->resetPage();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function selectedVehicleIds(): array
+    {
+        return collect($this->filterVehicleIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     public function openTripHistory(int $tripId): void
@@ -157,10 +180,11 @@ class RouteReports extends Component
         $user = auth()->user();
         $driverScopeId = $user->isAdmin() ? null : $user->driver?->id;
 
-        $vehicleId = $this->filterVehicleId;
+        $vehicleIds = $user->isAdmin() ? $this->selectedVehicleIds() : [];
         $driverId = $user->isAdmin() ? $this->filterDriverId : $driverScopeId;
+        $hasNoDriverScope = $driverScopeId === null && ! $user->isAdmin();
 
-        $metrics = $driverScopeId === null && ! $user->isAdmin()
+        $metrics = $hasNoDriverScope
             ? [
                 'total_fuel_cost' => 0.0,
                 'total_other_expenses' => 0.0,
@@ -173,16 +197,32 @@ class RouteReports extends Component
             : app(MetricsService::class)->getAggregates(
                 $this->startDate,
                 $this->endDate,
-                $vehicleId,
+                $vehicleIds,
                 $driverId,
             );
 
         $series = app(MetricsService::class)->getDailySeries(
             $this->startDate,
             $this->endDate,
-            $vehicleId,
+            $vehicleIds,
             $driverId,
         );
+
+        $vehicleReportRows = $hasNoDriverScope
+            ? []
+            : app(MetricsService::class)->getVehicleFuelReportRows(
+                $this->startDate,
+                $this->endDate,
+                $vehicleIds,
+                $driverId,
+            );
+
+        $exportQuery = array_filter([
+            'start_date' => $this->startDate,
+            'end_date' => $this->endDate,
+            'vehicle_ids' => $vehicleIds,
+            'driver_id' => $user->isAdmin() ? $this->filterDriverId : null,
+        ], fn ($value) => $value !== null && $value !== '' && $value !== []);
 
         $vehicleRows = app(MetricsService::class)->getVehicleEfficiencyRows(
             $this->startDate,
@@ -202,7 +242,7 @@ class RouteReports extends Component
             ->with(['vehicle', 'driver', 'fuel', 'expenses'])
             ->whereDate('date', '>=', $this->startDate)
             ->whereDate('date', '<=', $this->endDate)
-            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($vehicleIds !== [], fn ($q) => $q->whereIn('vehicle_id', $vehicleIds))
             ->when($user->isAdmin() && $this->filterDriverId, fn ($q) => $q->where('driver_id', $this->filterDriverId))
             ->when(! $user->isAdmin(), function ($q) use ($driverScopeId) {
                 if ($driverScopeId === null) {
@@ -235,8 +275,8 @@ class RouteReports extends Component
 
         $idealConsumption = null;
 
-        if ($vehicleId !== null) {
-            $idealRaw = Vehicle::query()->whereKey($vehicleId)->value('ideal_consumption');
+        if (count($vehicleIds) === 1) {
+            $idealRaw = Vehicle::query()->whereKey($vehicleIds[0])->value('ideal_consumption');
             $idealConsumption = $idealRaw !== null ? (float) $idealRaw : null;
         }
 
@@ -249,6 +289,10 @@ class RouteReports extends Component
             'vehiclePlates' => $vehiclePlates,
             'driverNames' => $driverNames,
             'idealConsumption' => $idealConsumption,
+            'vehicleReportRows' => $vehicleReportRows,
+            'selectedVehicleIds' => $vehicleIds,
+            'exportPdfUrl' => route('reports.export', [...$exportQuery, 'format' => 'pdf']),
+            'exportCsvUrl' => route('reports.export', [...$exportQuery, 'format' => 'csv']),
         ]);
     }
 }

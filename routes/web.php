@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Reports\RouteReportExportController;
 use App\Livewire\Dashboard\FleetDashboard;
 use App\Livewire\Drivers\DriverIndex;
 use App\Livewire\GasStations\GasStationIndex;
@@ -15,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', FleetDashboard::class)->name('dashboard');
     Route::get('/diario/{trip?}', TripLogForm::class)->name('logbook');
     Route::get('/relatorios', RouteReports::class)->name('reports');
+    Route::get('/relatorios/exportar', RouteReportExportController::class)->name('reports.export');
 
     Route::middleware('admin')->group(function () {
         Route::get('/veiculos', VehicleIndex::class)->name('vehicles.index');

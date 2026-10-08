@@ -11,12 +11,12 @@
             <p class="fleet-page-lead">{{ __('Combustível, despesas e desempenho por viagem e veículo.') }}</p>
         </div>
         <div class="flex gap-2">
-            <button type="button" disabled class="fleet-btn--outline fleet-btn--sm cursor-not-allowed opacity-50">
+            <a href="{{ $exportPdfUrl }}" target="_blank" rel="noopener" class="fleet-btn--outline fleet-btn--sm">
                 {{ __('Export PDF') }}
-            </button>
-            <button type="button" disabled class="fleet-btn--outline fleet-btn--sm cursor-not-allowed opacity-50">
+            </a>
+            <a href="{{ $exportCsvUrl }}" class="fleet-btn--outline fleet-btn--sm">
                 {{ __('Export Excel') }}
-            </button>
+            </a>
         </div>
     </div>
 
@@ -33,14 +33,32 @@
                 @error('endDate') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
             </div>
             @if (auth()->user()->isAdmin())
-                <div>
-                    <label class="fleet-label">{{ __('Veículo') }}</label>
-                    <select wire:model.live="filterVehicleId" class="fleet-field">
-                        <option value="">{{ __('Todos') }}</option>
+                <div class="relative" x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape="open = false">
+                    <label class="fleet-label">{{ __('Veículos') }}</label>
+                    <button type="button" x-on:click="open = ! open" class="fleet-field flex items-center justify-between text-left" aria-haspopup="listbox" x-bind:aria-expanded="open">
+                        <span class="truncate">
+                            @if ($selectedVehicleIds === [])
+                                {{ __('Todos') }}
+                            @else
+                                {{ $vehicles->whereIn('id', $selectedVehicleIds)->pluck('plate')->join(', ') }}
+                            @endif
+                        </span>
+                        <svg class="ml-2 h-4 w-4 shrink-0 text-fleet-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-fleet-border bg-fleet-card p-2 shadow-fleet" role="listbox" aria-multiselectable="true">
+                        <button type="button" wire:click="clearVehicleFilter" class="mb-1 w-full rounded-lg px-2 py-1.5 text-left text-sm text-fleet-secondary hover:bg-fleet-page">
+                            {{ __('Todos') }}
+                        </button>
                         @foreach ($vehicles as $vehicle)
-                            <option value="{{ $vehicle->id }}">{{ $vehicle->plate }}</option>
+                            <label wire:key="vehicle-filter-{{ $vehicle->id }}" class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-fleet-ink hover:bg-fleet-page">
+                                <input type="checkbox" value="{{ $vehicle->id }}" wire:model.live="filterVehicleIds" class="rounded border-fleet-border">
+                                <span>{{ $vehicle->plate }}</span>
+                                @if ($vehicle->model)
+                                    <span class="truncate text-xs text-fleet-muted">{{ $vehicle->model }}</span>
+                                @endif
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
                 <div>
                     <label class="fleet-label">{{ __('Motorista') }}</label>
@@ -150,6 +168,44 @@
             <div class="mt-4 h-64" wire:ignore>
                 <canvas id="reportBars"></canvas>
             </div>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
+        <div class="rounded-t-2xl border-b border-fleet-border px-4 py-3">
+            <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Comparativo por veículo') }}</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-fleet-border text-fleet-body">
+                <thead class="fleet-table-head">
+                    <tr>
+                        <th class="px-4 py-3">{{ __('Vendedor') }}</th>
+                        <th class="px-4 py-3">{{ __('Veículo') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('Custo combustível') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('Litros') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('Consumo médio') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('Preço médio') }}</th>
+                        <th class="px-4 py-3 text-right">{{ __('KM rodado') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-fleet-border">
+                    @forelse ($vehicleReportRows as $row)
+                        <tr wire:key="vehicle-report-{{ $row['vehicle_id'] }}">
+                            <td class="px-4 py-3 text-fleet-secondary">{{ $row['drivers'] !== [] ? implode(', ', $row['drivers']) : '—' }}</td>
+                            <td class="px-4 py-3 font-medium text-fleet-ink">{{ $row['plate'] }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-sm">{{ format_money_brl($row['fuel_cost']) }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-sm">{{ number_format($row['liters'], 2, ',', '.') }} L</td>
+                            <td class="px-4 py-3 text-right font-mono text-sm">{{ $row['km_per_liter'] !== null ? number_format($row['km_per_liter'], 2, ',', '.').' km/L' : '—' }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-sm">{{ $row['cost_per_km'] !== null ? format_money_brl($row['cost_per_km']).'/km' : '—' }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-sm">{{ number_format($row['km'], 0, ',', '.') }} km</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhum lançamento no período.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
