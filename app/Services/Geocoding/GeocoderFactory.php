@@ -7,7 +7,8 @@ use App\Services\Billing\PlanLimits;
 use Illuminate\Support\Carbon;
 
 /**
- * Monta o geocoder da plataforma (conta única, spec 005) e controla a cota mensal de cada empresa.
+ * Monta o geocoder da plataforma (conta única, spec 005) e controla a cota mensal de cada empresa
+ * e o teto diário da conta da plataforma.
  */
 class GeocoderFactory
 {
@@ -58,5 +59,29 @@ class GeocoderFactory
     public function hasQuotaFor(?int $tenantId): bool
     {
         return $this->usedThisMonth($tenantId) < $this->monthlyQuota($tenantId);
+    }
+
+    /**
+     * Teto diário da conta da plataforma, somando todas as empresas; 0 desliga o teto.
+     */
+    public function dailyLimit(): int
+    {
+        return (int) config('services.geocoding.daily_limit');
+    }
+
+    public function usedToday(?Carbon $now = null): int
+    {
+        $now ??= now();
+
+        return GeocodingRequest::query()
+            ->withoutGlobalScopes()
+            ->where('billable', true)
+            ->whereBetween('created_at', [$now->copy()->startOfDay(), $now->copy()->endOfDay()])
+            ->count();
+    }
+
+    public function hasDailyCapacity(): bool
+    {
+        return $this->dailyLimit() <= 0 || $this->usedToday() < $this->dailyLimit();
     }
 }

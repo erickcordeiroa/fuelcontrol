@@ -64,6 +64,7 @@ comando de uso.
 - **FR-007**: Resultados fora da cidade e UF informadas MUST ser descartados.
 - **FR-008**: A tela de Integrações MUST mostrar o uso e a cota da empresa, sem campo de chave.
 - **FR-009**: Deve ser possível trocar de provedor alterando a configuração, sem mudar telas.
+- **FR-010**: A conta da plataforma MUST ter um teto diário de buscas somando todas as empresas (padrão 3.000, o plano gratuito do Geoapify). Ao atingir, o cliente fica "Pendente" com o aviso e a busca volta para a fila sozinha no dia seguinte (00:10); o mesmo reenfileiramento vale para quem ficou sem cota mensal.
 
 ### Key Entities
 

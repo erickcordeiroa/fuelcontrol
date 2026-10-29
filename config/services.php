@@ -42,6 +42,9 @@ return [
         /** Limite do plano gratuito do Geoapify: 5 consultas por segundo para toda a plataforma. */
         'per_minute' => (int) env('GEOCODING_PER_MINUTE', 280),
         'per_minute_per_tenant' => (int) env('GEOCODING_PER_MINUTE_PER_TENANT', 120),
+
+        /** Teto diário da plataforma (plano gratuito do Geoapify: 3.000 por dia). 0 desliga o teto. */
+        'daily_limit' => (int) env('GEOCODING_DAILY_LIMIT', 3000),
     ],
 
     'google_maps' => [

@@ -293,6 +293,7 @@ class GeocodeCustomerJobTest extends TestCase
             $mock->allows('forTenant')->andReturn($geocoder);
             $mock->allows('provider')->andReturn($provider);
             $mock->allows('hasQuotaFor')->andReturn(true);
+            $mock->allows('hasDailyCapacity')->andReturn(true);
         });
     }
 }

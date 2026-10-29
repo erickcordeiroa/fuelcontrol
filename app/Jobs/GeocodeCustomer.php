@@ -18,7 +18,7 @@ use Throwable;
 
 /**
  * Localiza o cliente (spec 005/006), nesta ordem: coordenada própria → base de endereços já localizados
- * → provedor da plataforma, só se houver cota no mês. Todo resultado do provedor entra na base.
+ * → provedor da plataforma, só se houver cota no mês e no teto diário da plataforma. Todo resultado do provedor entra na base.
  */
 class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
 {
@@ -69,6 +69,15 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
 
         if ($known?->isKnownNotFound()) {
             $this->markFailed($customer, __('Endereço não encontrado. Arraste o pino até o local ou informe latitude e longitude na planilha.'));
+
+            return;
+        }
+
+        if (! $geocoders->hasDailyCapacity()) {
+            $customer->forceFill([
+                'geocode_status' => GeocodeStatus::Pending,
+                'geocode_error' => __('Limite diário de busca de endereços atingido. A busca continua automaticamente amanhã.'),
+            ])->save();
 
             return;
         }
