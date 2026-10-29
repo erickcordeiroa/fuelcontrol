@@ -10,7 +10,8 @@
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^3.6.4",
-        "livewire/volt": "^1.7.0"
+        "livewire/volt": "^1.7.0",
+        "openspout/openspout": "^5.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

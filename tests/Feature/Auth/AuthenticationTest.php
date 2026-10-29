@@ -34,7 +34,7 @@ class AuthenticationTest extends TestCase
 
         $component
             ->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('reports', absolute: false));
 
         $this->assertAuthenticated();
     }
@@ -56,17 +56,13 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_dashboard_can_be_rendered_for_authenticated_users(): void
+    public function test_old_dashboard_url_redirects_to_reports(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user);
 
-        $response = $this->get('/dashboard');
-
-        $response
-            ->assertOk()
-            ->assertSee(__('Painel operacional'), false);
+        $this->get('/dashboard')->assertRedirect('/relatorios');
     }
 
     public function test_users_can_logout(): void

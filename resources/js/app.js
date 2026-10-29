@@ -67,6 +67,7 @@ import { fleetBrPhoneField, formatBrPhoneFromDigits } from './br-phone-mask';
 import { fleetBrPlateField, formatBrPlateFromChars } from './br-plate-mask';
 import { fleetKmField, formatKmFromDigits } from './br-km-mask';
 import { fleetBrDateField } from './br-date-mask';
+import { fleetRouteMap } from './route-map';
 
 window.fleetFormatBrlDigits = formatBrlFromDigits;
 window.fleetAllowDigitsOnlyKeydown = allowDigitsOnlyKeydown;
@@ -78,6 +79,7 @@ window.fleetFormatBrPlateFromChars = formatBrPlateFromChars;
 window.fleetKmField = fleetKmField;
 window.fleetFormatKmFromDigits = formatKmFromDigits;
 window.fleetBrDateField = fleetBrDateField;
+window.fleetRouteMap = fleetRouteMap;
 
 const normalizeFleetSearchText = (value = '') =>
     value
@@ -98,12 +100,13 @@ window.fleetPageSearch = (pages = []) => ({
     },
 
     get filteredPages() {
+        // Sem texto, o campo funciona como menu: lista todas as páginas por categoria.
         if (this.normalizedQuery === '') {
-            return [];
+            return this.pages;
         }
 
         return this.pages.filter((page) => {
-            const haystack = normalizeFleetSearchText([page.label, page.description ?? ''].join(' '));
+            const haystack = normalizeFleetSearchText([page.label, page.description ?? '', page.category ?? '', page.keywords ?? ''].join(' '));
 
             return haystack.includes(this.normalizedQuery);
         });
@@ -138,6 +141,12 @@ window.fleetPageSearch = (pages = []) => ({
 
         this.open = true;
         this.activeIndex = (this.activeIndex - 1 + this.filteredPages.length) % this.filteredPages.length;
+    },
+
+    startsCategory(index) {
+        const pages = this.filteredPages;
+
+        return index === 0 || pages[index].category !== pages[index - 1].category;
     },
 
     selectIndex(index) {

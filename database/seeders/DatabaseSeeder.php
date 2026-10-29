@@ -167,6 +167,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $this->call(RouteManagementSeeder::class);
+
         $this->command->info('Admin: '.$admin->email.' / password');
         $this->command->info('Motorista: '.$driverUser->email.' / password');
     }
