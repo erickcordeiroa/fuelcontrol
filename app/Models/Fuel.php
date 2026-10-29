@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\PricePerLiterCast;
 use App\Enums\FuelType;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\FuelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Fuel extends Model
 {
     /** @use HasFactory<FuelFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>

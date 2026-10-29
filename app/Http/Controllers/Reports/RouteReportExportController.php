@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reports\RouteReportExportRequest;
+use App\Services\Billing\PlanLimits;
 use App\Services\MetricsService;
 use App\Support\BrazilianNumber;
 use Carbon\Carbon;
@@ -17,6 +18,12 @@ class RouteReportExportController extends Controller
      */
     public function __invoke(RouteReportExportRequest $request, MetricsService $metrics): View|StreamedResponse
     {
+        abort_unless(
+            $request->hasNoDriverScope() || app(PlanLimits::class)->allows($request->user()->tenantOwnerId(), 'report_export'),
+            403,
+            __('Exportar relatórios não faz parte do seu plano. Mude de plano em Assinatura.'),
+        );
+
         $startDate = $request->validated('start_date');
         $endDate = $request->validated('end_date');
 

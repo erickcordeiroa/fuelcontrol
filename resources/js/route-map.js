@@ -23,8 +23,8 @@ function pinIcon(color, label, square = false) {
         background: color,
         color: '#fff',
         border: '2px solid #fff',
-        boxShadow: '0 1px 4px rgb(0 0 0 / 0.35)',
-        font: '600 11px/20px Inter, system-ui, sans-serif',
+        boxShadow: '0 1px 3px rgb(30 25 25 / 0.35)',
+        font: '600 11px/20px "Inter Variable", system-ui, sans-serif',
         textAlign: 'center',
         boxSizing: 'border-box',
         transform: 'translate(-50%, -50%)',
@@ -40,9 +40,9 @@ function driverIcon() {
         width: '18px',
         height: '18px',
         borderRadius: '999px',
-        background: '#F97316',
-        border: '3px solid #fff',
-        boxShadow: '0 0 0 6px rgb(249 115 22 / 0.25), 0 1px 4px rgb(0 0 0 / 0.35)',
+        background: '#EECC5D',
+        border: '3px solid #1E1919',
+        boxShadow: '0 0 0 5px rgb(238 204 93 / 0.35), 0 1px 3px rgb(30 25 25 / 0.35)',
         boxSizing: 'border-box',
         transform: 'translate(-50%, -50%)',
     });
@@ -88,9 +88,9 @@ function requireModifierForWheelZoom(map, container) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgb(15 23 42 / 0.45)',
+        background: 'rgb(30 25 25 / 0.6)',
         color: '#fff',
-        font: '600 15px/1.4 Inter, system-ui, sans-serif',
+        font: '500 15px/1.4 "Inter Variable", system-ui, sans-serif',
         textAlign: 'center',
         padding: '16px',
         pointerEvents: 'none',
@@ -167,11 +167,11 @@ export function fleetRouteMap(initialPayload, tiles) {
             layers.clearLayers();
 
             if (payload.path.length > 1) {
-                L.polyline(payload.path, { color: '#002B5C', opacity: 0.75, weight: 3 }).addTo(layers);
+                L.polyline(payload.path, { color: '#1E1919', opacity: 0.8, weight: 2.5 }).addTo(layers);
             }
 
             if (payload.origin) {
-                L.marker(payload.origin, { icon: pinIcon('#1E293B', 'CD', true), title: 'Centro de distribuição' })
+                L.marker(payload.origin, { icon: pinIcon('#1E1919', 'CD', true), title: 'Centro de distribuição' })
                     .bindPopup(popupContent('Centro de distribuição', ''))
                     .addTo(layers);
             }

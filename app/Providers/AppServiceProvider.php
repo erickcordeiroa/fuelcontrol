@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Jobs\GeocodeCustomer;
 use App\View\Composers\OilChangeAlertComposer;
+use App\View\Composers\PlanUsageComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
@@ -25,9 +26,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('layouts.app', OilChangeAlertComposer::class);
+        View::composer('layouts.app', PlanUsageComposer::class);
 
-        /** Cada empresa usa a própria chave do Google, então o limite é por empresa. */
-        RateLimiter::for('google-geocoding', fn (GeocodeCustomer $job): Limit => Limit::perMinute(config('services.google_maps.geocoding_per_minute'))
-            ->by('tenant:'.($job->customer->user_id ?? 'none')));
+        /** Conta única da plataforma: um limite geral (o do provedor) e um por empresa, para uma não travar as outras. */
+        RateLimiter::for('geocoding', fn (GeocodeCustomer $job): array => [
+            Limit::perMinute(config('services.geocoding.per_minute'))->by('platform'),
+            Limit::perMinute(config('services.geocoding.per_minute_per_tenant'))->by('tenant:'.($job->customer->user_id ?? 'none')),
+        ]);
     }
 }

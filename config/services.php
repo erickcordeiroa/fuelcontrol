@@ -28,6 +28,22 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /**
+     * Busca de endereços (spec 005): conta única da plataforma, custo incluído no plano.
+     * O provedor precisa permitir guardar o resultado e exibi-lo no mapa OpenStreetMap.
+     */
+    'geocoding' => [
+        'provider' => env('GEOCODING_PROVIDER', 'geoapify'),
+        'geoapify_key' => env('GEOAPIFY_API_KEY'),
+
+        /** Cota mensal de consultas por empresa até os planos (spec 007) definirem a sua. */
+        'monthly_quota_per_tenant' => (int) env('GEOCODING_MONTHLY_QUOTA_PER_TENANT', 1000),
+
+        /** Limite do plano gratuito do Geoapify: 5 consultas por segundo para toda a plataforma. */
+        'per_minute' => (int) env('GEOCODING_PER_MINUTE', 280),
+        'per_minute_per_tenant' => (int) env('GEOCODING_PER_MINUTE_PER_TENANT', 120),
+    ],
+
     'google_maps' => [
         /**
          * Cada empresa cadastra a própria chave em Integrações. Esta só é usada fora de produção,
@@ -57,7 +73,8 @@ return [
     'map_tiles' => [
         /** Imagens do mapa (Leaflet). O servidor público do OpenStreetMap não é para alto volume: troque por um provedor em produção. */
         'url' => env('MAP_TILES_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-        'attribution' => env('MAP_TILES_ATTRIBUTION', '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'),
+        /** O plano gratuito do Geoapify exige o crédito "Powered by Geoapify" onde os resultados aparecem. */
+        'attribution' => env('MAP_TILES_ATTRIBUTION', '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://www.geoapify.com/">Powered by Geoapify</a>'),
         'max_zoom' => (int) env('MAP_TILES_MAX_ZOOM', 19),
     ],
 

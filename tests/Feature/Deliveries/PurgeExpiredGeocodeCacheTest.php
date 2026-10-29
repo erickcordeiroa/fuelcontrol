@@ -4,6 +4,7 @@ namespace Tests\Feature\Deliveries;
 
 use App\Enums\GeocodeStatus;
 use App\Models\Customer;
+use App\Models\GeocodedAddress;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -59,5 +60,32 @@ class PurgeExpiredGeocodeCacheTest extends TestCase
         $this->assertNull($customer->latitude);
         $this->assertSame(['lat' => -16.7, 'lng' => -49.2], $customer->coordinates());
         $this->assertSame(GeocodeStatus::Confirmed, $customer->geocode_status);
+    }
+
+    public function test_keeps_coordinates_from_providers_that_allow_storage(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->located()->create([
+            'user_id' => $admin->id,
+            'geocode_provider' => 'geoapify',
+            'geocoded_at' => now()->subDays(90),
+        ]);
+
+        $this->artisan('geocoding:purge-expired')->assertSuccessful();
+
+        $this->assertNotNull($customer->refresh()->latitude);
+    }
+
+    public function test_backfill_loads_confirmed_and_storable_coordinates_but_not_google(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Customer::factory()->confirmed(-24.49, -47.84)->create(['user_id' => $admin->id, 'number' => '10']);
+        Customer::factory()->located(-24.50, -47.85)->create(['user_id' => $admin->id, 'number' => '20', 'geocode_provider' => 'geoapify']);
+        Customer::factory()->located(-24.51, -47.86)->create(['user_id' => $admin->id, 'number' => '30']);
+
+        $this->artisan('geocoding:backfill-address-book')->assertSuccessful();
+
+        $this->assertSame(2, GeocodedAddress::query()->count());
+        $this->assertSame(1, GeocodedAddress::query()->where('source', GeocodedAddress::SOURCE_GPS)->count());
     }
 }

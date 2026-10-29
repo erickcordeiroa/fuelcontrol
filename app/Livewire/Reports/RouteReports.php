@@ -282,6 +282,8 @@ class RouteReports extends Component
 
         return view('livewire.reports.route-reports', [
             'metrics' => $metrics,
+            'hasLineChartData' => $series['labels'] !== [],
+            'hasBarChartData' => $vehicleRows !== [],
             'trips' => $trips,
             'vehicles' => $vehicles,
             'drivers' => $drivers,

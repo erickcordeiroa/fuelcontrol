@@ -2,37 +2,61 @@
 
 namespace App\Services\Geocoding;
 
-use App\Models\GoogleMapsCredential;
+use App\Models\GeocodingRequest;
+use App\Services\Billing\PlanLimits;
+use Illuminate\Support\Carbon;
 
 /**
- * Monta o geocoder com a chave da empresa. Fora de produção, sem chave cadastrada,
- * usa GOOGLE_MAPS_SERVER_KEY do .env para facilitar o desenvolvimento.
+ * Monta o geocoder da plataforma (conta única, spec 005) e controla a cota mensal de cada empresa.
  */
 class GeocoderFactory
 {
     public function forTenant(?int $tenantId): Geocoder
     {
-        return new GoogleGeocoder($this->apiKeyFor($tenantId), $tenantId);
+        return match ($this->provider()) {
+            'google' => new GoogleGeocoder(config('services.google_maps.server_key'), $tenantId),
+            default => new GeoapifyGeocoder(config('services.geocoding.geoapify_key'), $tenantId),
+        };
     }
 
-    public function withKey(string $apiKey, ?int $tenantId): Geocoder
+    public function provider(): string
     {
-        return new GoogleGeocoder($apiKey, $tenantId);
+        return (string) config('services.geocoding.provider', GeoapifyGeocoder::PROVIDER);
     }
 
-    public function isConfiguredFor(?int $tenantId): bool
+    public function isConfigured(): bool
     {
-        return filled($this->apiKeyFor($tenantId));
+        return filled($this->provider() === 'google'
+            ? config('services.google_maps.server_key')
+            : config('services.geocoding.geoapify_key'));
     }
 
-    private function apiKeyFor(?int $tenantId): ?string
+    /**
+     * Cota do plano da empresa (spec 007); sem empresa, ou com plano sem cota, vale a configuração.
+     */
+    public function monthlyQuota(?int $tenantId = null): int
     {
-        $tenantKey = GoogleMapsCredential::forTenant($tenantId)?->api_key;
+        $planQuota = $tenantId === null ? null : app(PlanLimits::class)->limit($tenantId, 'geocoding_per_month');
 
-        if (filled($tenantKey)) {
-            return $tenantKey;
+        return $planQuota ?? (int) config('services.geocoding.monthly_quota_per_tenant');
+    }
+
+    public function usedThisMonth(?int $tenantId, ?Carbon $now = null): int
+    {
+        if ($tenantId === null) {
+            return 0;
         }
 
-        return app()->isProduction() ? null : config('services.google_maps.server_key');
+        return GeocodingRequest::query()
+            ->withoutGlobalScopes()
+            ->where('user_id', $tenantId)
+            ->where('billable', true)
+            ->inMonth($now ?? now())
+            ->count();
+    }
+
+    public function hasQuotaFor(?int $tenantId): bool
+    {
+        return $this->usedThisMonth($tenantId) < $this->monthlyQuota($tenantId);
     }
 }

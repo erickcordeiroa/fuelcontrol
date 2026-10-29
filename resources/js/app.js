@@ -1,6 +1,16 @@
 import './bootstrap';
 import Chart from 'chart.js/auto';
 
+/** Gráficos no sistema Fuelly (DESIGN.md): Inter, tinta quente e grade fina. */
+Chart.defaults.font.family = '"Inter Variable", system-ui, sans-serif';
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#524A3E';
+Chart.defaults.borderColor = '#E6E1DA';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.boxHeight = 2;
+Chart.defaults.plugins.tooltip.backgroundColor = '#1E1919';
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('tripRowActionsDropdown', () => ({
         open: false,
@@ -220,18 +230,23 @@ window.fleetCharts = {
                         label: 'Combustível acumulado (R$)',
                         data: fuelCost,
                         yAxisID: 'y',
-                        borderColor: '#002B5C',
-                        backgroundColor: 'rgba(0, 43, 92, 0.08)',
-                        tension: 0.35,
+                        borderColor: '#0061FE',
+                        backgroundColor: 'rgba(0, 97, 254, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0,
                         fill: true,
                     },
                     {
                         label: 'Outras despesas no dia (R$)',
                         data: otherExpenses,
                         yAxisID: 'y1',
-                        borderColor: '#64748B',
-                        backgroundColor: 'rgba(100, 116, 139, 0.08)',
-                        tension: 0.35,
+                        borderColor: '#1E1919',
+                        backgroundColor: 'rgba(30, 25, 25, 0.04)',
+                        borderWidth: 1.5,
+                        borderDash: [4, 3],
+                        pointRadius: 0,
+                        tension: 0,
                         fill: true,
                     },
                 ],
@@ -290,13 +305,13 @@ window.fleetCharts = {
         const data = rows.map((r) => r.km_per_liter);
         const colors = data.map((v) => {
             if (v >= 3) {
-                return '#10b981';
+                return '#175641';
             }
             if (v >= 2) {
-                return '#002B5C';
+                return '#0061FE';
             }
 
-            return '#F97316';
+            return '#7A5A00';
         });
 
         this.instances[id] = new Chart(canvas.getContext('2d'), {

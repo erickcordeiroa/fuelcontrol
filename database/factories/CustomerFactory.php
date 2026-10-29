@@ -47,6 +47,7 @@ class CustomerFactory extends Factory
             'latitude' => $latitude ?? fake()->latitude(-24.53, -24.48),
             'longitude' => $longitude ?? fake()->longitude(-47.88, -47.81),
             'location_type' => 'ROOFTOP',
+            'geocode_provider' => 'google',
             'geocoded_at' => now(),
         ]);
     }

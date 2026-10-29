@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DeliveryRouteStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\DeliveryRouteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class DeliveryRoute extends Model
 {
     /** @use HasFactory<DeliveryRouteFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>

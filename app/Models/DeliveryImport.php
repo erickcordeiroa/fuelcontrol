@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DeliveryImportStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\DeliveryImportFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DeliveryImport extends Model
 {
     /** @use HasFactory<DeliveryImportFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>

@@ -17,9 +17,9 @@ use Illuminate\Support\Collection;
  */
 class RouteMapPresenter
 {
-    private const REVIEW_COLOR = '#F97316';
+    private const REVIEW_COLOR = '#7A5A00';
 
-    private const FAILED_COLOR = '#dc2626';
+    private const FAILED_COLOR = '#B42318';
 
     /**
      * Mapa de revisão: um pino por cliente do dia, arrastável para corrigir a posição.

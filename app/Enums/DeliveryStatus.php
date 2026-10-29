@@ -31,11 +31,11 @@ enum DeliveryStatus: string
     public function color(): string
     {
         return match ($this) {
-            self::Pending => '#94a3b8',
-            self::Routed => '#002B5C',
-            self::InTransit => '#F97316',
-            self::Delivered => '#10b981',
-            self::Failed => '#dc2626',
+            self::Pending => '#6B6560',
+            self::Routed => '#0061FE',
+            self::InTransit => '#7A5A00',
+            self::Delivered => '#175641',
+            self::Failed => '#B42318',
         };
     }
 

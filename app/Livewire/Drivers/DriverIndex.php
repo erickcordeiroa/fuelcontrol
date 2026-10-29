@@ -3,6 +3,7 @@
 namespace App\Livewire\Drivers;
 
 use App\Enums\UserRole;
+use App\Livewire\Concerns\ChecksPlanLimits;
 use App\Livewire\Concerns\ConfirmsDeletes;
 use App\Models\Driver;
 use App\Models\User;
@@ -18,7 +19,7 @@ use Livewire\WithPagination;
 #[Title('Motoristas')]
 class DriverIndex extends Component
 {
-    use ConfirmsDeletes;
+    use ChecksPlanLimits, ConfirmsDeletes;
     use WithPagination;
 
     public bool $showModal = false;
@@ -36,6 +37,10 @@ class DriverIndex extends Component
     public function openCreateModal(): void
     {
         Gate::authorize('create', Driver::class);
+
+        if (! $this->planAllowsAdding('drivers')) {
+            return;
+        }
 
         $this->editingId = null;
         $this->resetForm();
@@ -81,6 +86,10 @@ class DriverIndex extends Component
 
         if ($this->editingId === null) {
             Gate::authorize('create', Driver::class);
+
+            if (! $this->planAllowsAdding('drivers')) {
+                return;
+            }
 
             $validated = $this->validate([
                 'name' => ['required', 'string', 'max:255'],

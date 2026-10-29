@@ -37,12 +37,12 @@ enum GeocodeStatus: string
     public function color(): string
     {
         return match ($this) {
-            self::Pending => '#94a3b8',
-            self::Resolved => '#10b981',
-            self::Approximate => '#F97316',
-            self::Failed => '#dc2626',
-            self::Manual => '#002B5C',
-            self::Confirmed => '#166534',
+            self::Pending => '#6B6560',
+            self::Resolved => '#0061FE',
+            self::Approximate => '#7A5A00',
+            self::Failed => '#B42318',
+            self::Manual => '#1E1919',
+            self::Confirmed => '#175641',
         };
     }
 

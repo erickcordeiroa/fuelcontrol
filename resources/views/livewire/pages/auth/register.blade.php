@@ -46,7 +46,7 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <div class="mb-8 text-center lg:text-left">
-        <h1 class="font-headline text-2xl font-bold text-on-surface">{{ __('Cadastrar empresa') }}</h1>
+        <h1 class="fleet-page-title">{{ __('Cadastrar empresa') }}</h1>
         <p class="mt-2 text-sm font-medium text-on-surface-variant">
             {{ __('Crie a conta da sua empresa para gerenciar frota, diário de bordo e relatórios.') }}
         </p>
@@ -104,7 +104,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <a
-                class="order-2 text-center text-sm font-medium text-[#2c745f] underline decoration-[#3d9d80]/30 underline-offset-2 hover:text-[#245d4b] sm:order-1 sm:text-left"
+                class="order-2 text-center text-sm font-medium text-fleet-primary underline decoration-fleet-primary/40 underline-offset-4 hover:decoration-fleet-primary sm:order-1 sm:text-left"
                 href="{{ route('login') }}"
                 wire:navigate
             >

@@ -10,6 +10,7 @@ use App\Livewire\Integrations\IntegrationSettings;
 use App\Livewire\Logbook\TripLogForm;
 use App\Livewire\OilChanges\OilChangeIndex;
 use App\Livewire\Reports\RouteReports;
+use App\Livewire\Subscription\SubscriptionSettings;
 use App\Livewire\Vehicles\VehicleIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rotas', RouteMonitor::class)->name('deliveries.monitor');
 
         Route::get('/integracoes', IntegrationSettings::class)->name('integrations.index');
+
+        Route::get('/assinatura', SubscriptionSettings::class)->name('subscription.index');
     });
 
     Route::redirect('/ativos/veiculos', '/veiculos')->name('assets.vehicles');

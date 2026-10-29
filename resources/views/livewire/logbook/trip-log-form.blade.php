@@ -291,7 +291,7 @@
 
         <div class="space-y-6">
             <div class="fleet-panel--inverted shadow-fleet-card">
-                <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Resumo da viagem') }}</p>
+                <p class="text-sm font-medium text-fleet-navy/80">{{ __('Resumo da viagem') }}</p>
                 <p class="mt-4 text-3xl font-bold">
                     @if ($this->preview['km_total'] !== null)
                         {{ number_format($this->preview['km_total'], 0, ',', '.') }} km
@@ -299,14 +299,14 @@
                         —
                     @endif
                 </p>
-                <p class="mt-2 text-sm text-white/80">{{ __('Consumo médio') }}:
+                <p class="mt-2 text-sm text-fleet-navy">{{ __('Consumo médio') }}:
                     @if ($this->preview['efficiency_km_per_liter'] !== null)
                         {{ $this->preview['efficiency_km_per_liter'] }} km/L
                     @else
                         —
                     @endif
                 </p>
-                <p class="text-sm text-white/80">{{ __('Custo por KM') }}:
+                <p class="text-sm text-fleet-navy">{{ __('Custo por KM') }}:
                     @if ($this->preview['cost_per_km'] !== null)
                         R$ {{ number_format($this->preview['cost_per_km'], 2, ',', '.') }}
                     @else
@@ -314,9 +314,9 @@
                     @endif
                 </p>
                 @if ($this->preview['km_total'] !== null)
-                    <p class="mt-3 border-t border-white/10 pt-3 text-sm text-white/85">{{ __('Custo combustível') }}: R$ {{ number_format($this->preview['fuel_cost'], 2, ',', '.') }}</p>
-                    <p class="text-sm text-white/85">{{ __('Outras despesas') }}: R$ {{ number_format($this->preview['total_expenses'], 2, ',', '.') }}</p>
-                    <p class="text-sm font-semibold text-white">{{ __('Total operacional') }}: R$ {{ number_format($this->preview['fuel_cost'] + $this->preview['total_expenses'], 2, ',', '.') }}</p>
+                    <p class="mt-3 border-t border-fleet-navy/15 pt-3 text-sm text-fleet-navy">{{ __('Custo combustível') }}: R$ {{ number_format($this->preview['fuel_cost'], 2, ',', '.') }}</p>
+                    <p class="text-sm text-fleet-navy">{{ __('Outras despesas') }}: R$ {{ number_format($this->preview['total_expenses'], 2, ',', '.') }}</p>
+                    <p class="text-sm font-bold text-fleet-navy">{{ __('Total operacional') }}: R$ {{ number_format($this->preview['fuel_cost'] + $this->preview['total_expenses'], 2, ',', '.') }}</p>
                 @endif
             </div>
 

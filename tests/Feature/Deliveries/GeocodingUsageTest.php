@@ -27,11 +27,9 @@ class GeocodingUsageTest extends TestCase
         Livewire::actingAs($admin)
             ->test(IntegrationSettings::class)
             ->assertViewHas('currentMonth', fn (array $usage): bool => $usage['billable'] === 3
-                && $usage['notBilled'] === 1
-                && $usage['cost'] === 0.0
-                && $usage['projected'] === 7)
+                && $usage['notBilled'] === 1)
             ->assertViewHas('history', fn ($history): bool => $history->first()['billable'] === 1)
-            ->assertSee('Consumo do Google');
+            ->assertSee('Uso em');
     }
 
     public function test_command_reports_all_tenants_and_estimated_cost(): void

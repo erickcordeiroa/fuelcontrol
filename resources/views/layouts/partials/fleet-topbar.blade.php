@@ -4,8 +4,8 @@
     $mobileMenu = \App\Support\FleetMenu::for($user);
 @endphp
 
-<div class="sticky top-0 z-10 border-b border-fleet-border bg-fleet-card/90 backdrop-blur">
-    <div class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+<div class="sticky top-0 z-40 border-b border-fleet-border bg-fleet-page">
+    <div class="flex min-h-[60px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-10">
         <div
             class="relative max-w-xl flex-1"
             x-data="fleetPageSearch(@js($quickSearchPages))"
@@ -37,7 +37,7 @@
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 translate-y-1"
-                class="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-fleet-border bg-white shadow-fleet"
+                class="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-fleet-border bg-white shadow-fleet-card"
                 style="display: none;"
             >
                 <div class="max-h-[70vh] overflow-y-auto">
@@ -45,7 +45,7 @@
                         <div>
                             <p
                                 x-show="startsCategory(index)"
-                                class="border-b border-fleet-border/70 bg-fleet-page px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-fleet-muted"
+                                class="border-b border-fleet-border bg-fleet-page px-4 py-1.5 text-xs font-medium text-fleet-secondary"
                                 x-text="page.category"
                             ></p>
                             <a
@@ -53,8 +53,8 @@
                                 wire:navigate
                                 @mouseenter="selectIndex(index)"
                                 @click.prevent="goToPage(page)"
-                                class="block border-b border-fleet-border/70 px-4 py-3"
-                                :class="index === activeIndex ? 'bg-fleet-primary/10 text-fleet-ink' : 'text-fleet-secondary hover:bg-fleet-page'"
+                                class="block border-b border-fleet-border px-4 py-3"
+                                :class="index === activeIndex ? 'bg-fleet-surface text-fleet-ink' : 'text-fleet-secondary hover:bg-fleet-page'"
                             >
                                 <span class="block text-sm font-semibold" x-text="page.label"></span>
                                 <span class="mt-0.5 block text-xs text-fleet-muted" x-text="page.description"></span>
@@ -80,7 +80,7 @@
                     href="{{ route($item['route']) }}"
                     wire:navigate
                     @if ($isActive) aria-current="page" @endif
-                    class="whitespace-nowrap rounded-lg px-3 py-1.5 font-medium {{ $isActive ? 'bg-fleet-primary text-white' : 'bg-fleet-primary/10 text-fleet-primary' }}"
+                    class="whitespace-nowrap rounded-pill px-3.5 py-1.5 font-medium {{ $isActive ? 'bg-fleet-ink text-fleet-on-dark' : 'bg-fleet-surface text-fleet-ink' }}"
                 >{{ $item['label'] }}</a>
             @endforeach
         @endforeach

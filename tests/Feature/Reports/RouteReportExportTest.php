@@ -7,6 +7,7 @@ use App\Enums\TripStatus;
 use App\Livewire\Reports\RouteReports;
 use App\Models\Driver;
 use App\Models\Fuel;
+use App\Models\Subscription;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -38,6 +39,8 @@ class RouteReportExportTest extends TestCase
         Cache::flush();
 
         $this->admin = User::factory()->admin()->create();
+        /** Exportar faz parte do plano de até 10 veículos (spec 007). */
+        Subscription::factory()->forTenant($this->admin->id)->plan('profissional')->create();
         $this->vehicleA = Vehicle::factory()->create(['user_id' => $this->admin->id, 'plate' => 'TJF3B40']);
         $this->vehicleB = Vehicle::factory()->create(['user_id' => $this->admin->id, 'plate' => 'TJQ9E29']);
         $this->vehicleC = Vehicle::factory()->create(['user_id' => $this->admin->id, 'plate' => 'TMH9H98']);

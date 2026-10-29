@@ -19,7 +19,7 @@ class FleetMenuTest extends TestCase
             'Acompanhamento' => ['Relatórios', 'Rotas'],
             'Lançamentos' => ['Diário de Bordo', 'Entregas', 'Trocas de óleo'],
             'Cadastros' => ['Veículos', 'Motoristas', 'Postos'],
-            'Configurações' => ['Integrações', 'Perfil'],
+            'Configurações' => ['Assinatura', 'Integrações', 'Perfil'],
         ], $menu);
     }
 

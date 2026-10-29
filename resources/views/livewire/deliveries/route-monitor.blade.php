@@ -41,15 +41,15 @@
             {{-- Indicadores da rota selecionada --}}
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div class="fleet-panel--inverted">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Entregas concluídas') }}</p>
-                    <p class="mt-3 text-3xl font-bold tabular-nums">{{ $summary['delivered'] }} <span class="text-lg font-semibold text-white/70">{{ __('de :total', ['total' => $summary['total']]) }}</span></p>
+                    <p class="text-sm font-medium text-fleet-navy/80">{{ __('Entregas concluídas') }}</p>
+                    <p class="mt-3 font-display text-3xl font-medium tabular-nums">{{ $summary['delivered'] }} <span class="text-lg font-semibold text-fleet-navy/80">{{ __('de :total', ['total' => $summary['total']]) }}</span></p>
                     @if ($summary['failed'] > 0)
-                        <p class="mt-1 text-xs text-white/80">{{ trans_choice(':count não entregue|:count não entregues', $summary['failed']) }}</p>
+                        <p class="mt-1 text-xs text-fleet-navy">{{ trans_choice(':count não entregue|:count não entregues', $summary['failed']) }}</p>
                     @endif
                 </div>
                 <div class="fleet-panel">
                     <p class="fleet-section-title">{{ __('Valor entregue') }}</p>
-                    <p class="mt-3 text-2xl font-bold tabular-nums text-fleet-ink">{{ format_money_brl($summary['amountDelivered']) }}</p>
+                    <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ format_money_brl($summary['amountDelivered']) }}</p>
                     <p class="mt-2 text-xs text-fleet-muted">{{ __('de :total na rota', ['total' => format_money_brl($summary['amountTotal'])]) }}</p>
                 </div>
                 <div class="fleet-panel">
@@ -69,7 +69,7 @@
                 </div>
                 <div class="fleet-panel">
                     <p class="fleet-section-title">{{ __('Km restantes') }}</p>
-                    <p class="mt-3 text-2xl font-bold tabular-nums text-fleet-ink">{{ number_format($summary['kmRemaining'], 1, ',', '.') }} km</p>
+                    <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ number_format($summary['kmRemaining'], 1, ',', '.') }} km</p>
                     <p class="mt-2 text-xs {{ $summary['isIdle'] ? 'font-semibold text-fleet-tertiary' : 'text-fleet-muted' }}">
                         @if ($summary['lastPingMinutes'] === null)
                             {{ __('Motorista ainda não enviou posição') }}
@@ -88,7 +88,7 @@
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-tertiary"></span>{{ __('Em rota') }}</span>
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-primary"></span>{{ __('Roteirizada') }}</span>
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-danger"></span>{{ __('Não entregue') }}</span>
-                    <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-full border-2 border-white bg-fleet-tertiary shadow"></span>{{ __('Motorista') }}</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-full border-2 border-fleet-ink bg-fleet-warning"></span>{{ __('Motorista') }}</span>
                 </div>
             </div>
         @endif

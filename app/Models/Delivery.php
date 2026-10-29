@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyBrlCentsCast;
 use App\Enums\DeliveryStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\DeliveryFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Delivery extends Model
 {
     /** @use HasFactory<DeliveryFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>

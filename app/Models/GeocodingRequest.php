@@ -28,6 +28,7 @@ class GeocodingRequest extends Model
     protected $fillable = [
         'user_id',
         'customer_id',
+        'provider',
         'lookup',
         'provider_status',
         'billable',

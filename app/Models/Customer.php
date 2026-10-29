@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\GeocodeStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
+use App\Services\Geocoding\AddressBook;
 use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +21,7 @@ use Illuminate\Support\Str;
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * Dias que o cache de lat/lng do Google pode ser mantido (Google Maps Platform Terms).
@@ -155,6 +157,13 @@ class Customer extends Model
             'geocode_status' => $status,
             'geocode_error' => null,
         ])->save();
+
+        app(AddressBook::class)->rememberConfirmed(
+            $this,
+            $latitude,
+            $longitude,
+            $status === GeocodeStatus::Confirmed ? GeocodedAddress::SOURCE_GPS : GeocodedAddress::SOURCE_MANUAL,
+        );
     }
 
     /**

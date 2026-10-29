@@ -68,13 +68,13 @@
                             <td class="px-4 py-3">
                                 @if (! $isLatestOilChange)
                                     <span
-                                        class="rounded-full border border-fleet-border bg-fleet-page px-2 py-1 text-xs font-semibold uppercase text-fleet-secondary"
+                                        class="rounded-full border border-fleet-border bg-fleet-page px-2 py-1 text-xs font-semibold text-fleet-secondary"
                                         title="{{ __('Ciclo encerrado por uma troca mais recente neste veículo.') }}"
                                     >
                                         {{ __('Finalizado') }}
                                     </span>
                                 @elseif ($needsAttention)
-                                    <span class="rounded-full bg-fleet-danger/15 px-2 py-1 text-xs font-semibold uppercase text-fleet-danger">
+                                    <span class="rounded-full bg-fleet-danger/15 px-2 py-1 text-xs font-semibold text-fleet-danger">
                                         @if (in_array('km', $reasons, true) && in_array('time', $reasons, true))
                                             {{ __('Trocar (km + tempo)') }}
                                         @elseif (in_array('km', $reasons, true))
@@ -84,7 +84,7 @@
                                         @endif
                                     </span>
                                 @else
-                                    <span class="rounded-full bg-fleet-success/15 px-2 py-1 text-xs font-semibold uppercase text-fleet-profit">{{ __('Em dia') }}</span>
+                                    <span class="rounded-full bg-fleet-success/15 px-2 py-1 text-xs font-semibold text-fleet-profit">{{ __('Em dia') }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">

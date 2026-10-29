@@ -7,9 +7,6 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
-
         @include('partials.head.tracking')
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
@@ -29,7 +26,16 @@
                     </header>
                 @endisset
 
-                <main class="flex-1 px-4 py-6 lg:px-8">
+                <main class="flex-1 px-4 py-8 lg:px-10 lg:py-10">
+                    @if ($planWarnings !== [])
+                        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fleet-warning bg-fleet-warning/20 px-4 py-3 text-sm text-fleet-ink" role="status">
+                            <p>
+                                {{ __('Seu plano está perto do limite:') }}
+                                {{ collect($planWarnings)->map(fn ($row) => $row['label'].' ('.$row['used'].' de '.$row['max'].')')->implode(', ') }}.
+                            </p>
+                            <a href="{{ route('subscription.index') }}" wire:navigate class="fleet-btn--outline fleet-btn--sm">{{ __('Ver assinatura') }}</a>
+                        </div>
+                    @endif
                     @if ($oilChangeAlerts->isNotEmpty())
                         <div class="mb-6">
                             <x-fleet.oil-change-alert :alerts="$oilChangeAlerts" />
@@ -37,6 +43,18 @@
                     @endif
                     {{ $slot }}
                 </main>
+            </div>
+        </div>
+
+        <div
+            x-data="{ message: null, timer: null }"
+            x-on:plan-limit-reached.window="message = $event.detail.message; clearTimeout(timer); timer = setTimeout(() => message = null, 8000)"
+            class="pointer-events-none fixed inset-x-0 bottom-6 z-[80] flex justify-center px-4"
+            aria-live="assertive"
+        >
+            <div x-show="message" x-cloak x-transition class="pointer-events-auto flex max-w-xl items-start gap-4 rounded-2xl bg-fleet-ink px-5 py-4 text-sm text-fleet-on-dark shadow-fleet-card">
+                <p x-text="message"></p>
+                <a href="{{ route('subscription.index') }}" wire:navigate class="shrink-0 font-medium text-white underline underline-offset-4">{{ __('Ver planos') }}</a>
             </div>
         </div>
 

@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('geocoding:purge-expired')]
-#[Description('Apaga lat/lng do Google com mais de 30 dias (termos do Google Maps Platform). Mantém place_id e coordenadas próprias.')]
+#[Description('Apaga lat/lng vindas do Google com mais de 30 dias (termos do Google Maps Platform). Outros provedores, place_id e coordenadas próprias ficam.')]
 class PurgeExpiredGeocodeCache extends Command
 {
     public function handle(): int
@@ -19,6 +19,7 @@ class PurgeExpiredGeocodeCache extends Command
 
         Customer::query()
             ->withoutGlobalScopes()
+            ->where('geocode_provider', 'google')
             ->whereNotNull('geocoded_at')
             ->where('geocoded_at', '<', $expiredBefore)
             ->chunkById(500, function ($customers) use (&$purged): void {

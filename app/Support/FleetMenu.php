@@ -46,7 +46,8 @@ class FleetMenu
             [
                 'label' => __('Configurações'),
                 'items' => [
-                    $isAdmin ? self::item(__('Integrações'), __('Chave do Google e consumo'), 'integrations.index', 'integrations.*', 'key', 'google api chave custo') : null,
+                    $isAdmin ? self::item(__('Assinatura'), __('Plano, uso e troca de plano'), 'subscription.index', 'subscription.*', 'credit-card', 'plano limite pagamento mensalidade') : null,
+                    $isAdmin ? self::item(__('Integrações'), __('Busca de endereços e consumo'), 'integrations.index', 'integrations.*', 'key', 'endereços geolocalização cota consumo') : null,
                     self::item(__('Perfil'), __('Dados da conta e senha'), 'profile', 'profile', 'user-circle', 'senha conta usuario'),
                 ],
             ],

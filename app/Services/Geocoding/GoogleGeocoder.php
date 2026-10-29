@@ -86,6 +86,7 @@ class GoogleGeocoder implements Geocoder
         GeocodingRequest::query()->withoutGlobalScopes()->create([
             'user_id' => $this->tenantId ?? $customer?->user_id,
             'customer_id' => $customer?->id,
+            'provider' => 'google',
             'lookup' => $lookup,
             'provider_status' => mb_substr($status, 0, 32),
             'billable' => in_array($status, self::BILLABLE_STATUSES, true),

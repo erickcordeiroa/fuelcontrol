@@ -5,8 +5,13 @@
 
 <div class="w-full space-y-8">
     @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit">
+        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit" role="status">
             {{ session('status') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="rounded-xl border border-fleet-danger/30 bg-fleet-danger/10 px-4 py-3 text-sm text-fleet-danger" role="alert">
+            {{ session('error') }}
         </div>
     @endif
 
@@ -27,11 +32,10 @@
         </div>
     </div>
 
-    @unless ($googleKeyConfigured)
+    @unless ($geocodingAvailable)
         <div class="rounded-xl border border-fleet-tertiary/30 bg-fleet-tertiary/10 px-4 py-3 text-sm text-fleet-ink">
-            <span class="font-semibold">{{ __('Busca automática de endereços desligada.') }}</span>
-            {{ __('Cadastre a chave do Google para localizar clientes novos. Clientes já localizados continuam funcionando.') }}
-            <a href="{{ route('integrations.index') }}" wire:navigate class="font-semibold text-fleet-primary underline-offset-2 hover:underline">{{ __('Ir para Integrações') }}</a>
+            <span class="font-semibold">{{ __('Busca automática de endereços indisponível no momento.') }}</span>
+            {{ __('Clientes já localizados continuam funcionando; para os novos, arraste o pino no mapa ou informe latitude e longitude na planilha.') }}
         </div>
     @endunless
 
@@ -86,21 +90,21 @@
     {{-- Indicadores --}}
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="fleet-panel--inverted">
-            <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Pedidos do dia') }}</p>
-            <p class="mt-3 text-3xl font-bold">{{ $stats['total'] }}</p>
+            <p class="text-sm font-medium text-fleet-navy/80">{{ __('Pedidos do dia') }}</p>
+            <p class="mt-3 font-display text-3xl font-medium tabular-nums">{{ $stats['total'] }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Sem rota') }}</p>
-            <p class="mt-3 text-2xl font-bold text-fleet-ink">{{ $stats['unrouted'] }}</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ $stats['unrouted'] }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Revisar endereço') }}</p>
-            <p class="mt-3 text-2xl font-bold {{ $stats['needsReview'] > 0 ? 'text-fleet-tertiary' : 'text-fleet-ink' }}">{{ $stats['needsReview'] }}</p>
-            <p class="mt-2 text-xs text-fleet-muted">{{ __('Arraste o pino laranja até a porta do cliente') }}</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums {{ $stats['needsReview'] > 0 ? 'text-fleet-tertiary' : 'text-fleet-ink' }}">{{ $stats['needsReview'] }}</p>
+            <p class="mt-2 text-xs text-fleet-muted">{{ __('Arraste o pino até a porta do cliente') }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Aguardando localização') }}</p>
-            <p class="mt-3 text-2xl font-bold text-fleet-ink">{{ $stats['waitingGeocode'] }}</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ $stats['waitingGeocode'] }}</p>
             <p class="mt-2 text-xs text-fleet-muted">{{ __('Processado pela fila (queue:work)') }}</p>
         </div>
     </div>
@@ -199,6 +203,12 @@
                         </div>
                         <div class="flex shrink-0 gap-2">
                             <button type="button" wire:click="reoptimize({{ $route->id }})" class="fleet-btn--muted fleet-btn--sm">{{ __('Reotimizar') }}</button>
+                            <button
+                                type="button"
+                                wire:click="deleteRoute({{ $route->id }})"
+                                wire:confirm="{{ __('Excluir a rota “:name”? Os pedidos dela voltam para Pendente.', ['name' => $route->name]) }}"
+                                class="fleet-btn--muted fleet-btn--sm text-fleet-danger"
+                            >{{ __('Excluir') }}</button>
                             <a href="{{ route('deliveries.monitor', ['data' => $date, 'rota' => $route->id]) }}" wire:navigate class="fleet-btn--outline fleet-btn--sm">{{ __('Acompanhar') }}</a>
                         </div>
                     </li>
@@ -270,7 +280,7 @@
                         </th>
                         @foreach ($sortableHeaders as $field => $label)
                             <th class="px-4 py-3" aria-sort="{{ $sortField === $field ? ($sortDirection === 'asc' ? 'ascending' : 'descending') : 'none' }}">
-                                <button type="button" wire:click="sortBy('{{ $field }}')" class="inline-flex items-center gap-1 uppercase hover:text-fleet-ink">
+                                <button type="button" wire:click="sortBy('{{ $field }}')" class="inline-flex items-center gap-1 hover:text-fleet-primary">
                                     {{ $label }}
                                     <span class="text-[10px]">{{ $sortField === $field ? ($sortDirection === 'asc' ? '▲' : '▼') : '↕' }}</span>
                                 </button>
@@ -278,13 +288,13 @@
                         @endforeach
                         <th class="px-4 py-3">{{ __('Localização') }}</th>
                         <th class="px-4 py-3" aria-sort="{{ $sortField === 'status' ? ($sortDirection === 'asc' ? 'ascending' : 'descending') : 'none' }}">
-                            <button type="button" wire:click="sortBy('status')" class="inline-flex items-center gap-1 uppercase hover:text-fleet-ink">
+                            <button type="button" wire:click="sortBy('status')" class="inline-flex items-center gap-1 hover:text-fleet-primary">
                                 {{ __('Situação') }}
                                 <span class="text-[10px]">{{ $sortField === 'status' ? ($sortDirection === 'asc' ? '▲' : '▼') : '↕' }}</span>
                             </button>
                         </th>
                         <th class="px-4 py-3 text-right" aria-sort="{{ $sortField === 'amount' ? ($sortDirection === 'asc' ? 'ascending' : 'descending') : 'none' }}">
-                            <button type="button" wire:click="sortBy('amount')" class="inline-flex items-center gap-1 uppercase hover:text-fleet-ink">
+                            <button type="button" wire:click="sortBy('amount')" class="inline-flex items-center gap-1 hover:text-fleet-primary">
                                 {{ __('Valor') }}
                                 <span class="text-[10px]">{{ $sortField === 'amount' ? ($sortDirection === 'asc' ? '▲' : '▼') : '↕' }}</span>
                             </button>
@@ -307,6 +317,7 @@
                             <td class="max-w-xs px-4 py-3">
                                 <p class="truncate font-medium text-fleet-ink" title="{{ $customer->name }}">{{ $customer->name }}</p>
                                 <p class="truncate text-xs text-fleet-secondary" title="{{ $customer->fullAddress() }}">{{ $customer->external_code }} · {{ $customer->fullAddress() }}</p>
+                                <button type="button" wire:click="openAddressEditor({{ $customer->id }})" class="fleet-btn-text mt-1">{{ __('Editar endereço') }}</button>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-fleet-secondary">{{ $delivery->sector ?? '—' }}</td>
                             <td class="px-4 py-3">
@@ -314,7 +325,7 @@
                                 @if ($customer->geocode_error)
                                     <p class="mt-1 max-w-[16rem] text-xs text-fleet-danger">{{ $customer->geocode_error }}</p>
                                 @endif
-                                @if (in_array($customer->geocode_status, [GeocodeStatus::Failed, GeocodeStatus::Pending], true) && $googleKeyConfigured)
+                                @if (in_array($customer->geocode_status, [GeocodeStatus::Failed, GeocodeStatus::Pending], true) && $geocodingAvailable)
                                     <button type="button" wire:click="retryGeocoding({{ $customer->id }})" class="mt-1 text-xs font-semibold text-fleet-primary hover:underline">{{ __('Tentar de novo') }}</button>
                                 @endif
                             </td>
@@ -347,4 +358,66 @@
             </div>
         @endif
     </div>
+
+    @if ($editingCustomerId)
+        @teleport('body')
+            <div class="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="address-editor-title" x-data x-on:keydown.escape.window="$wire.closeAddressEditor()">
+                <div class="absolute inset-0 bg-fleet-ink/50" wire:click="closeAddressEditor"></div>
+                <div class="relative z-10 flex min-h-full items-start justify-center overflow-y-auto px-4 pb-10 pt-24 sm:pt-32">
+                    <form wire:submit="saveAddress" class="w-full max-w-2xl rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet-card" onclick="event.stopPropagation()">
+                        <div class="mb-1 flex items-start justify-between gap-4">
+                            <h2 id="address-editor-title" class="fleet-modal-title">{{ __('Editar endereço') }}</h2>
+                            <button type="button" wire:click="closeAddressEditor" class="fleet-icon-btn fleet-icon-btn--ghost" aria-label="{{ __('Fechar') }}">
+                                <x-icons.x-mark class="h-5 w-5" />
+                            </button>
+                        </div>
+                        <p class="mb-5 text-sm text-fleet-secondary">{{ __('Se o endereço mudar, a localização antiga é descartada e a busca é feita de novo.') }}</p>
+
+                        <div class="grid gap-4 sm:grid-cols-6">
+                            <div class="sm:col-span-4">
+                                <label class="fleet-label" for="address-street">{{ __('Rua') }}</label>
+                                <input id="address-street" type="text" wire:model="addressForm.street" class="fleet-field" @error('addressForm.street') aria-invalid="true" @enderror />
+                                @error('addressForm.street') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="fleet-label" for="address-number">{{ __('Número') }}</label>
+                                <input id="address-number" type="text" wire:model="addressForm.number" class="fleet-field" />
+                                @error('addressForm.number') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="fleet-label" for="address-district">{{ __('Bairro') }}</label>
+                                <input id="address-district" type="text" wire:model="addressForm.district" class="fleet-field" />
+                                @error('addressForm.district') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="fleet-label" for="address-zip">{{ __('CEP') }}</label>
+                                <input id="address-zip" type="text" inputmode="numeric" wire:model="addressForm.zip_code" class="fleet-field" placeholder="00000-000" @error('addressForm.zip_code') aria-invalid="true" @enderror />
+                                @error('addressForm.zip_code') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-4">
+                                <label class="fleet-label" for="address-city">{{ __('Cidade') }}</label>
+                                <input id="address-city" type="text" wire:model="addressForm.city" class="fleet-field" @error('addressForm.city') aria-invalid="true" @enderror />
+                                @error('addressForm.city') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="fleet-label" for="address-state">{{ __('UF') }}</label>
+                                <input id="address-state" type="text" maxlength="2" wire:model="addressForm.state" class="fleet-field uppercase" @error('addressForm.state') aria-invalid="true" @enderror />
+                                @error('addressForm.state') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-6">
+                                <label class="fleet-label" for="address-reference">{{ __('Ponto de referência') }}</label>
+                                <input id="address-reference" type="text" wire:model="addressForm.reference" class="fleet-field" />
+                                @error('addressForm.reference') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex flex-wrap justify-end gap-3">
+                            <button type="button" wire:click="closeAddressEditor" class="fleet-btn--outline">{{ __('Cancelar') }}</button>
+                            <button type="submit" class="fleet-btn--primary" wire:loading.attr="disabled" wire:target="saveAddress">{{ __('Salvar endereço') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endteleport
+    @endif
 </div>

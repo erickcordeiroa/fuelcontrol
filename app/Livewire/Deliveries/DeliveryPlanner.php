@@ -5,6 +5,7 @@ namespace App\Livewire\Deliveries;
 use App\Enums\DeliveryStatus;
 use App\Enums\GeocodeStatus;
 use App\Jobs\GeocodeCustomer;
+use App\Livewire\Concerns\ChecksPlanLimits;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryImport;
@@ -20,6 +21,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
@@ -35,7 +37,7 @@ use Livewire\WithPagination;
 #[Title('Entregas')]
 class DeliveryPlanner extends Component
 {
-    use WithFileUploads;
+    use ChecksPlanLimits, WithFileUploads;
     use WithPagination;
 
     /** Valor do filtro de setor que representa pedidos sem setor. */
@@ -63,6 +65,20 @@ class DeliveryPlanner extends Component
     public ?int $driverId = null;
 
     public ?int $vehicleId = null;
+
+    /** Cliente com o endereço aberto para edição. */
+    public ?int $editingCustomerId = null;
+
+    /** @var array{street: string, number: string, district: string, city: string, state: string, zip_code: string, reference: string} */
+    public array $addressForm = [
+        'street' => '',
+        'number' => '',
+        'district' => '',
+        'city' => '',
+        'state' => '',
+        'zip_code' => '',
+        'reference' => '',
+    ];
 
     #[Url(as: 'busca', except: '')]
     public string $search = '';
@@ -208,6 +224,10 @@ class DeliveryPlanner extends Component
     {
         Gate::authorize('create', DeliveryRoute::class);
 
+        if (! $this->planAllowsAdding('routes_per_month')) {
+            return;
+        }
+
         $validated = $this->validate([
             'routeName' => ['required', 'string', 'max:120'],
             'driverId' => ['nullable', 'integer', Rule::exists('drivers', 'id')->where('user_id', auth()->user()->tenantOwnerId())],
@@ -271,6 +291,125 @@ class DeliveryPlanner extends Component
         $customer->confirmLocation($latitude, $longitude, GeocodeStatus::Manual);
     }
 
+    /**
+     * Exclui uma rota criada por engano. Pedidos voltam para "Pendente"; rota com baixas fica, para não perder o histórico.
+     */
+    public function deleteRoute(int $routeId): void
+    {
+        $route = DeliveryRoute::query()->with('stops.delivery')->findOrFail($routeId);
+        Gate::authorize('delete', $route);
+
+        if ($route->stops->contains(fn ($stop): bool => $stop->delivery->status->isFinished())) {
+            session()->flash('error', __('A rota ":name" tem entregas baixadas e não pode ser excluída.', ['name' => $route->name]));
+
+            return;
+        }
+
+        DB::transaction(function () use ($route): void {
+            foreach ($route->stops as $stop) {
+                $stop->delivery->update(['status' => DeliveryStatus::Pending]);
+            }
+
+            $route->delete();
+        });
+
+        $this->selected = [];
+        session()->flash('status', __('Rota ":name" excluída. Os pedidos voltaram para "Pendente".', ['name' => $route->name]));
+    }
+
+    public function openAddressEditor(int $customerId): void
+    {
+        Gate::authorize('create', DeliveryRoute::class);
+
+        $customer = Customer::query()->findOrFail($customerId);
+
+        $this->editingCustomerId = $customer->id;
+        $this->addressForm = [
+            'street' => (string) $customer->street,
+            'number' => (string) $customer->number,
+            'district' => (string) $customer->district,
+            'city' => (string) $customer->city,
+            'state' => (string) $customer->state,
+            'zip_code' => (string) $customer->zip_code,
+            'reference' => (string) $customer->reference,
+        ];
+        $this->resetValidation();
+    }
+
+    public function closeAddressEditor(): void
+    {
+        $this->editingCustomerId = null;
+        $this->resetValidation();
+    }
+
+    /**
+     * Salva o endereço; se mudou, descarta a localização antiga e refaz a busca (base de endereços primeiro).
+     */
+    public function saveAddress(): void
+    {
+        Gate::authorize('create', DeliveryRoute::class);
+
+        $this->addressForm['zip_code'] = preg_replace('/\D+/', '', $this->addressForm['zip_code']) ?? '';
+        $this->addressForm['state'] = mb_strtoupper(trim($this->addressForm['state']));
+
+        $validated = $this->validate([
+            'addressForm.street' => ['required', 'string', 'max:255'],
+            'addressForm.number' => ['nullable', 'string', 'max:20'],
+            'addressForm.district' => ['nullable', 'string', 'max:120'],
+            'addressForm.city' => ['required', 'string', 'max:120'],
+            'addressForm.state' => ['required', 'string', 'size:2', 'alpha'],
+            'addressForm.zip_code' => ['required', 'digits:8'],
+            'addressForm.reference' => ['nullable', 'string', 'max:500'],
+        ], attributes: [
+            'addressForm.street' => __('rua'),
+            'addressForm.number' => __('número'),
+            'addressForm.district' => __('bairro'),
+            'addressForm.city' => __('cidade'),
+            'addressForm.state' => __('UF'),
+            'addressForm.zip_code' => __('CEP'),
+            'addressForm.reference' => __('referência'),
+        ])['addressForm'];
+
+        $customer = Customer::query()->findOrFail($this->editingCustomerId);
+
+        $address = [
+            'street' => trim($validated['street']),
+            'number' => filled($validated['number']) ? trim($validated['number']) : null,
+            'district' => filled($validated['district']) ? trim($validated['district']) : null,
+            'city' => trim($validated['city']),
+            'state' => $validated['state'],
+            'zip_code' => $validated['zip_code'],
+        ];
+        $addressHash = Customer::hashAddress($address);
+        $addressChanged = $addressHash !== $customer->address_hash;
+
+        if ($addressChanged) {
+            $customer->resetLocation();
+        }
+
+        $customer->fill([
+            ...$address,
+            'reference' => filled($validated['reference']) ? trim($validated['reference']) : null,
+            'address_hash' => $addressHash,
+        ])->save();
+
+        $this->editingCustomerId = null;
+
+        if (! $addressChanged) {
+            session()->flash('status', __('Dados do cliente atualizados.'));
+
+            return;
+        }
+
+        GeocodeCustomer::dispatch($customer);
+
+        $isInRoute = Delivery::query()->where('customer_id', $customer->id)->whereHas('routeStop')->whereIn('status', [DeliveryStatus::Routed, DeliveryStatus::InTransit])->exists();
+
+        session()->flash('status', $isInRoute
+            ? __('Endereço atualizado e localização sendo buscada de novo. O cliente está numa rota: reotimize a rota depois que ele for localizado.')
+            : __('Endereço atualizado. A localização está sendo buscada de novo.'));
+    }
+
     public function retryGeocoding(int $customerId): void
     {
         Gate::authorize('create', DeliveryRoute::class);
@@ -316,7 +455,7 @@ class DeliveryPlanner extends Component
             'vehicles' => Vehicle::query()->orderBy('plate')->get(['id', 'plate', 'model']),
             'lastImport' => $this->lastImportId ? DeliveryImport::query()->find($this->lastImportId) : null,
             'mapPayload' => $mapPayload,
-            'googleKeyConfigured' => app(GeocoderFactory::class)->isConfiguredFor(auth()->user()->tenantOwnerId()),
+            'geocodingAvailable' => app(GeocoderFactory::class)->isConfigured(),
         ]);
     }
 

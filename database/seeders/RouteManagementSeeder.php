@@ -361,7 +361,7 @@ class RouteManagementSeeder extends Seeder
         if ($index % 10 < 3) {
             return [
                 'geocode_status' => GeocodeStatus::Resolved,
-                'google_place_id' => 'ChIJdemo'.$sector.$index,
+                'geocode_provider' => 'geoapify',
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'location_type' => 'ROOFTOP',

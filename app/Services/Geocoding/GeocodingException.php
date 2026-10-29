@@ -13,6 +13,6 @@ class GeocodingException extends RuntimeException
 
     public static function notConfigured(): self
     {
-        return new self(__('Chave do Google não cadastrada. Cadastre em Integrações.'));
+        return new self(__('Busca de endereços indisponível: a chave do serviço não está configurada na plataforma.'));
     }
 }
