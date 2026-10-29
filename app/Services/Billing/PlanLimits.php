@@ -31,6 +31,16 @@ class PlanLimits
     }
 
     /**
+     * Planos oferecidos ao público (home e troca pela tela de Assinatura).
+     *
+     * @return Collection<string, Plan>
+     */
+    public function publicPlans(): Collection
+    {
+        return $this->plans()->filter(fn (array $plan): bool => (bool) ($plan['public'] ?? true));
+    }
+
+    /**
      * @return Plan
      */
     public function planFor(int $tenantId): array

@@ -26,7 +26,7 @@ class SubscriptionSettings extends Component
 
         $plan = $planLimits->plans()->get($planKey);
 
-        if ($plan === null || $plan['price_cents'] === null) {
+        if ($plan === null || $plan['price_cents'] === null || ! ($plan['public'] ?? true)) {
             session()->flash('error', __('Este plano é contratado com a nossa equipe.'));
 
             return;
@@ -46,11 +46,13 @@ class SubscriptionSettings extends Component
             'current' => $current,
             'subscription' => $planLimits->subscriptionFor($tenantId),
             'usage' => $planLimits->usageSummary($tenantId),
-            'plans' => $planLimits->plans()->map(fn (array $plan): array => [
-                ...$plan,
-                'isCurrent' => $plan['key'] === $current['key'],
-                'overLimits' => $this->overLimits($planLimits, $tenantId, $plan),
-            ]),
+            'plans' => $planLimits->plans()
+                ->filter(fn (array $plan): bool => ($plan['public'] ?? true) || $plan['key'] === $current['key'])
+                ->map(fn (array $plan): array => [
+                    ...$plan,
+                    'isCurrent' => $plan['key'] === $current['key'],
+                    'overLimits' => $this->overLimits($planLimits, $tenantId, $plan),
+                ]),
         ]);
     }
 

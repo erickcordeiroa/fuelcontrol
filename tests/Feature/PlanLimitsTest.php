@@ -151,4 +151,55 @@ class PlanLimitsTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('subscription.index'))->assertOk()->assertSee('Uso do plano');
     }
+
+    public function test_partner_plan_limits(): void
+    {
+        Subscription::factory()->forTenant($this->admin->id)->plan('parceiros')->create();
+        $planLimits = app(PlanLimits::class);
+
+        $this->assertSame(20, $planLimits->limit($this->admin->id, 'drivers'));
+        $this->assertSame(5000, $planLimits->limit($this->admin->id, 'geocoding_per_month'));
+        $this->assertNull($planLimits->limit($this->admin->id, 'routes_per_month'));
+        $this->assertTrue($planLimits->allows($this->admin->id, 'report_export'));
+    }
+
+    public function test_partner_plan_is_hidden_from_home_and_self_service(): void
+    {
+        $this->get('/')->assertOk()->assertDontSee('Parceiros');
+
+        Livewire::actingAs($this->admin)
+            ->test(SubscriptionSettings::class)
+            ->assertDontSee('Parceiros')
+            ->call('changePlan', 'parceiros')
+            ->assertSee('Este plano é contratado com a nossa equipe.');
+
+        $this->assertNull(Subscription::query()->withoutGlobalScopes()->first());
+    }
+
+    public function test_partner_company_sees_its_plan_in_subscription(): void
+    {
+        Subscription::factory()->forTenant($this->admin->id)->plan('parceiros')->create();
+
+        Livewire::actingAs($this->admin)
+            ->test(SubscriptionSettings::class)
+            ->assertSee('Parceiros')
+            ->assertSee('R$ 0,00');
+    }
+
+    public function test_assign_command_puts_a_company_on_a_plan(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'parceiro@exemplo.com', 'company_name' => 'Tomb Raider']);
+
+        $this->artisan('subscription:assign', ['email' => 'parceiro@exemplo.com', 'plan' => 'parceiros'])
+            ->expectsOutputToContain('Tomb Raider')
+            ->assertSuccessful();
+
+        $this->assertSame('parceiros', app(PlanLimits::class)->planFor($admin->id)['key']);
+    }
+
+    public function test_assign_command_rejects_unknown_plan_or_user(): void
+    {
+        $this->artisan('subscription:assign', ['email' => $this->admin->email, 'plan' => 'ouro'])->assertFailed();
+        $this->artisan('subscription:assign', ['email' => 'ninguem@exemplo.com', 'plan' => 'parceiros'])->assertFailed();
+    }
 }

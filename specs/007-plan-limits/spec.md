@@ -54,6 +54,7 @@ veículos" tem limites definidos caso a caso.
 
 - **FR-001**: Cada empresa MUST estar vinculada a um plano com limites de veículos, motoristas com acesso, rotas por mês, endereços por mês e recursos habilitados.
 - **FR-002**: Planos iniciais: "Até 2 veículos", "Até 10 veículos" e "Mais de 10 veículos" (sob consulta, limites por empresa).
+- **FR-002a**: Plano "Parceiros" (não público, R$ 0): 20 veículos, 20 motoristas, rotas sem limite, 5.000 buscas de endereço por mês e exportação. Não aparece na home nem pode ser escolhido pela tela; é atribuído pelo dono da plataforma com `php artisan subscription:assign {email} parceiros`.
 - **FR-003**: O sistema MUST bloquear ações que ultrapassem limites, com mensagem clara e caminho para mudar de plano.
 - **FR-004**: A tela "Plano e uso" MUST mostrar plano, preço e uso de cada limite.
 - **FR-005**: O sistema MUST avisar a partir de 80% de qualquer limite.

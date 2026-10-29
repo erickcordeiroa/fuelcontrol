@@ -18,7 +18,7 @@
     ];
 
     /** Planos vêm da mesma configuração usada no sistema (config/plans.php). */
-    $plans = app(PlanLimits::class)->plans();
+    $plans = app(PlanLimits::class)->publicPlans();
     $limitText = fn (?int $value, string $unlimited, string $limited): string => $value === null ? $unlimited : str_replace(':n', number_format($value, 0, ',', '.'), $limited);
     $comparison = [
         __('Veículos') => fn ($plan) => $limitText($plan['limits']['vehicles'], __('Sob consulta'), ':n'),
