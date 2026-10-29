@@ -1,10 +1,10 @@
 @php
     use App\Services\Billing\PlanLimits;
 
-    $brandName = config('app.name') === 'Laravel' ? 'Fuelly' : config('app.name');
+    $brandName = config('app.name') === 'Laravel' ? 'Kilomo' : config('app.name');
     $pageTitle = $brandName . ' — ' . __('Gestão de frota, combustível e rotas de entrega');
-    $pageDescription = __('Fuelly reúne diário de bordo, abastecimentos, trocas de óleo, relatórios de custo e a roteirização de entregas — da importação dos pedidos ao acompanhamento das rotas no mapa — em um só sistema.');
-    $pageKeywords = __('fuelly, gestão de frota, controle de combustível, roteirização de entregas, otimização de rotas, acompanhamento de entregas, diário de bordo digital, troca de óleo, custo por km');
+    $pageDescription = __('Kilomo reúne diário de bordo, abastecimentos, trocas de óleo, relatórios de custo e a roteirização de entregas — da importação dos pedidos ao acompanhamento das rotas no mapa — em um só sistema.');
+    $pageKeywords = __('kilomo, gestão de frota, controle de combustível, roteirização de entregas, otimização de rotas, acompanhamento de entregas, diário de bordo digital, troca de óleo, custo por km');
     $pageUrl = url()->current();
     $pageImage = asset('img/logo.png');
 

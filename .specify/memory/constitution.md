@@ -10,7 +10,7 @@ Sync Impact Report
 - Deferred TODOs: none
 -->
 
-# Fuelly Constitution
+# Kilomo Constitution
 
 ## Core Principles
 

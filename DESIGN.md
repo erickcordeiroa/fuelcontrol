@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Fuelly
+name: Kilomo
 description: Gestão de frota, combustível e rotas de entrega — tela creme quente, tinta quase preta e um único azul elétrico para a ação principal.
 colors:
   primary: "#0061FE"
@@ -176,9 +176,9 @@ components:
     padding: "48px 24px"
 ---
 
-# Design System: Fuelly
+# Design System: Kilomo
 
-Sistema adotado em 29/10/2026 a partir de uma referência visual enviada pelo usuário (o DESIGN.md de uma empresa de armazenamento em nuvem). Ficaram as decisões de cor, raio, escala e ritmo; ficaram de fora o nome, os textos e as fontes proprietárias da marca de origem. A marca continua sendo **Fuelly**.
+Sistema adotado em 29/10/2026 a partir de uma referência visual enviada pelo usuário (o DESIGN.md de uma empresa de armazenamento em nuvem). Ficaram as decisões de cor, raio, escala e ritmo; ficaram de fora o nome, os textos e as fontes proprietárias da marca de origem. A marca continua sendo **Kilomo**.
 
 ## Overview
 
@@ -228,7 +228,7 @@ O azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão pr
 
 **The Cream Canvas Rule.** A página é creme. Branco puro só dentro do produto (painéis, tabelas, campos, cartão de rota).
 
-**The Logo Exception.** O verde do logo Fuelly vive só no logo.
+**The Logo Exception.** O verde do logo Kilomo vive só no logo.
 
 ## Typography
 

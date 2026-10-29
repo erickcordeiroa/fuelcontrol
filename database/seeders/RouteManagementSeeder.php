@@ -68,7 +68,7 @@ class RouteManagementSeeder extends Seeder
 
     public function run(): void
     {
-        $admin = User::query()->where('email', 'admin@fueltrack.test')->first()
+        $admin = User::query()->where('email', 'admin@kilomo.test')->first()
             ?? User::query()->where('role', UserRole::Admin)->first();
 
         if ($admin === null) {

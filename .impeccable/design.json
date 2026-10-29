@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-29T16:49:59.038402+00:00",
-  "title": "Design System: Fuelly",
+  "title": "Design System: Kilomo",
   "extensions": {
     "colorMeta": {
       "primary": {
@@ -453,7 +453,7 @@
       },
       {
         "name": "The Logo Exception",
-        "body": "O verde do logo Fuelly vive só no logo.",
+        "body": "O verde do logo Kilomo vive só no logo.",
         "section": "colors"
       },
       {

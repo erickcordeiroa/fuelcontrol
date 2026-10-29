@@ -15,7 +15,7 @@ Two audiences weigh the same:
 
 ## Product Purpose
 
-Fuelly puts the cost of running a fleet and the work of delivering in one system: fuel, expenses, oil changes, and cost per km on one side; order import, geocoding, route optimization, and route follow-up on the other. Success is the administrator trusting the numbers (what was launched in the Diário matches the reports) and planning a day of deliveries in minutes instead of a spreadsheet afternoon.
+Kilomo puts the cost of running a fleet and the work of delivering in one system: fuel, expenses, oil changes, and cost per km on one side; order import, geocoding, route optimization, and route follow-up on the other. Success is the administrator trusting the numbers (what was launched in the Diário matches the reports) and planning a day of deliveries in minutes instead of a spreadsheet afternoon.
 
 ## Positioning
 
@@ -39,8 +39,8 @@ Fleet cost control and delivery routing live in the same product and the same da
 
 ## Brand Commitments
 
-- Name: **Fuelly**. The current logo (`public/img/logo.png`, green) stays as is; it is the only place its green is required.
-- Visual direction pinned by the user (2026-10-29, replacing earlier attempts): warm cream canvas, near-black ink, one electric blue filled pill per area, Space Grotesk headlines and Inter body — see DESIGN.md. Derived from another company's reference DESIGN.md; Fuelly must never use that company's name, copy, customer logos, or proprietary fonts.
+- Name: **Kilomo**. The current logo (`public/img/logo.png`, green) stays as is; it is the only place its green is required.
+- Visual direction pinned by the user (2026-10-29, replacing earlier attempts): warm cream canvas, near-black ink, one electric blue filled pill per area, Space Grotesk headlines and Inter body — see DESIGN.md. Derived from another company's reference DESIGN.md; Kilomo must never use that company's name, copy, customer logos, or proprietary fonts.
 - Voice: plain, factual Portuguese. No hype words or AI marketing clichés.
 
 ## Evidence on Hand

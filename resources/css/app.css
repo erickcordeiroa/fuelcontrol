@@ -10,18 +10,18 @@
  * aqui ficam as que CSS puro e JS precisam.
  */
 :root {
-    --fuelly-canvas: #f7f5f2;
-    --fuelly-ink: #1e1919;
-    --fuelly-blue: #0061fe;
-    --fuelly-blue-press: #0044af;
-    --fuelly-success: #175641;
-    --fuelly-error: #b42318;
-    --fuelly-warning: #eecc5d;
+    --kilomo-canvas: #f7f5f2;
+    --kilomo-ink: #1e1919;
+    --kilomo-blue: #0061fe;
+    --kilomo-blue-press: #0044af;
+    --kilomo-success: #175641;
+    --kilomo-error: #b42318;
+    --kilomo-warning: #eecc5d;
 
     /* Nomes antigos, mantidos para telas que ainda os referenciam. */
-    --fuelly-primary: var(--fuelly-blue);
-    --fuelly-secondary: var(--fuelly-blue-press);
-    --fuelly-dark: var(--fuelly-ink);
+    --kilomo-primary: var(--kilomo-blue);
+    --kilomo-secondary: var(--kilomo-blue-press);
+    --kilomo-dark: var(--kilomo-ink);
 }
 
 [x-cloak] {

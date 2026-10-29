@@ -25,9 +25,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $admin = User::query()->create([
-            'company_name' => 'FuelTrack Demo',
+            'company_name' => 'Kilomo Demo',
             'name' => 'Administrador',
-            'email' => 'admin@fueltrack.test',
+            'email' => 'admin@kilomo.test',
             'password' => Hash::make('password'),
             'role' => UserRole::Admin,
             'email_verified_at' => now(),
@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
 
         $driverUser = User::query()->create([
             'name' => 'Ricardo Oliveira',
-            'email' => 'motorista@fueltrack.test',
+            'email' => 'motorista@kilomo.test',
             'password' => Hash::make('password'),
             'role' => UserRole::Driver,
             'email_verified_at' => now(),

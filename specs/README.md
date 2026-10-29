@@ -1,4 +1,4 @@
-# Specs do Fuelly
+# Specs do Kilomo
 
 Visão geral do sistema por funcionalidade (spec-kit). Princípios do projeto em
 [`.specify/memory/constitution.md`](../.specify/memory/constitution.md); contexto de produto em

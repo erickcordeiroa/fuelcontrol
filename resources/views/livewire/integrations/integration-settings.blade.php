@@ -6,7 +6,7 @@
 <div class="w-full space-y-8">
     <div>
         <h1 class="fleet-page-title">{{ __('Integrações') }}</h1>
-        <p class="fleet-page-lead">{{ __('Serviços usados pelo Fuelly em nome da sua empresa. Já estão incluídos no seu plano: não é preciso criar conta nem cadastrar chave.') }}</p>
+        <p class="fleet-page-lead">{{ __('Serviços usados pelo Kilomo em nome da sua empresa. Já estão incluídos no seu plano: não é preciso criar conta nem cadastrar chave.') }}</p>
     </div>
 
     <div class="grid gap-4 xl:grid-cols-3">

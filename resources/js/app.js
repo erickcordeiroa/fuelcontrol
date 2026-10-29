@@ -1,7 +1,7 @@
 import './bootstrap';
 import Chart from 'chart.js/auto';
 
-/** Gráficos no sistema Fuelly (DESIGN.md): Inter, tinta quente e grade fina. */
+/** Gráficos no sistema Kilomo (DESIGN.md): Inter, tinta quente e grade fina. */
 Chart.defaults.font.family = '"Inter Variable", system-ui, sans-serif';
 Chart.defaults.font.size = 12;
 Chart.defaults.color = '#524A3E';

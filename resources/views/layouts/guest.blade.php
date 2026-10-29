@@ -21,7 +21,7 @@
             ])>
                 <div class="flex w-full max-w-md flex-col gap-8">
                     @php
-                        $brandName = config('app.name') === 'Laravel' ? 'Fuelly' : config('app.name');
+                        $brandName = config('app.name') === 'Laravel' ? 'Kilomo' : config('app.name');
                     @endphp
                     <a href="{{ url('/') }}" class="mx-auto inline-flex items-center gap-3 lg:mx-0">
                         <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-[200px]" />
@@ -30,7 +30,7 @@
                 </div>
             </section>
 
-            <section class="relative hidden flex-col justify-between bg-fleet-dark px-14 py-14 text-fleet-on-dark lg:flex lg:w-1/2" aria-label="{{ __('O que o Fuelly faz') }}">
+            <section class="relative hidden flex-col justify-between bg-fleet-dark px-14 py-14 text-fleet-on-dark lg:flex lg:w-1/2" aria-label="{{ __('O que o Kilomo faz') }}">
                 <div>
                                         <p class="max-w-[14ch] font-display text-[clamp(2.25rem,3.6vw,3.25rem)] font-medium leading-[1.12] tracking-[-0.015em]">
                         {{ __('Frota e entregas no mesmo registro.') }}

@@ -10,7 +10,7 @@ related_targets: []
 Scope: public landing at `/` (resources/views/welcome.blade.php). Mode: Persuade.
 Audience: owners/managers of small and mid-sized distributors, carriers and own fleets (first client: Registro-SP). Action: log in or register the company.
 Proof: the real feature set only (PRODUCT.md). Demonstration data is synthetic and labeled. Driver app is "Em breve".
-Constraints: user-pinned DESIGN.md (warm cream canvas, one electric-blue filled pill per band; replaced earlier attempts on 2026-10-29); Fuelly name and green logo kept; Portuguese; no invented customers, logos, numbers or prices; no reference-brand names, copy or fonts; no eyebrows (craft-floor ban overrides the reference).
+Constraints: user-pinned DESIGN.md (warm cream canvas, one electric-blue filled pill per band; replaced earlier attempts on 2026-10-29); Kilomo name and green logo kept; Portuguese; no invented customers, logos, numbers or prices; no reference-brand names, copy or fonts; no eyebrows (craft-floor ban overrides the reference).
 
 ## Direction contract
 
