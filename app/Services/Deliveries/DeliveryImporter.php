@@ -50,6 +50,7 @@ class DeliveryImporter
         'janela_fim' => false,
         'latitude' => false,
         'longitude' => false,
+        'telefone' => false,
     ];
 
     private const MAX_STORED_ERRORS = 200;
@@ -200,6 +201,7 @@ class DeliveryImporter
         $data['janela_fim'] = $this->asTime($data['janela_fim']);
         $data['latitude'] = $this->asCoordinate($data['latitude']);
         $data['longitude'] = $this->asCoordinate($data['longitude']);
+        $data['telefone'] = $this->asText($data['telefone']);
 
         return $data;
     }
@@ -236,6 +238,7 @@ class DeliveryImporter
             'janela_fim' => ['nullable', 'date_format:H:i'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            'telefone' => ['nullable', 'string', 'max:20'],
         ], attributes: [
             'codigo_cliente' => 'código do cliente',
             'numero_pedido' => 'número do pedido',
@@ -282,6 +285,7 @@ class DeliveryImporter
             ...$address,
             'name' => $data['nome'],
             'reference' => $data['ponto_referencia'] ?: $customer->reference,
+            'phone' => $data['telefone'] ?: $customer->phone,
             'address_hash' => $addressHash,
             'geocode_status' => $customer->geocode_status ?? GeocodeStatus::Pending,
         ])->save();

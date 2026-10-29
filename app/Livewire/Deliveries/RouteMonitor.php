@@ -4,6 +4,7 @@ namespace App\Livewire\Deliveries;
 
 use App\Enums\DeliveryRouteStatus;
 use App\Enums\DeliveryStatus;
+use App\Livewire\Concerns\KeepsMessages;
 use App\Models\DeliveryRoute;
 use App\Models\RouteStop;
 use App\Services\Routing\RouteMapPresenter;
@@ -22,10 +23,17 @@ use Livewire\Component;
 #[Title('Acompanhamento de rotas')]
 class RouteMonitor extends Component
 {
+    use KeepsMessages;
+
     /**
      * Sem posição nova há mais que isso, com a rota em andamento, o motorista aparece como parado.
      */
     public const IDLE_AFTER_MINUTES = 10;
+
+    /**
+     * Intervalo da atualização automática da tela (o botão "Atualizar agora" busca na hora).
+     */
+    public const REFRESH_MINUTES = 10;
 
     /**
      * Velocidade média urbana usada no ETA quando não há velocidade recente do GPS.
@@ -61,25 +69,41 @@ class RouteMonitor extends Component
         $this->routeId = $routeId;
     }
 
-    public function render(): View
+    /**
+     * Volta para o mapa com todos os motoristas do dia.
+     */
+    public function showAll(): void
+    {
+        $this->routeId = null;
+    }
+
+    public function render(RouteMapPresenter $presenter): View
     {
         $routes = $this->routesOfDay();
-        $route = $routes->firstWhere('id', $this->routeId)
-            ?? $routes->firstWhere('status', DeliveryRouteStatus::InProgress)
-            ?? $routes->first();
+        $colorIndex = $routes->pluck('id')->flip();
+
+        /** Com uma rota só no dia, ela já é a visão geral. */
+        $route = $this->routeId !== null ? $routes->firstWhere('id', $this->routeId) : ($routes->count() === 1 ? $routes->first() : null);
 
         if ($route !== null) {
             Gate::authorize('view', $route);
-            $route->load(['stops.delivery.customer']);
-            $mapPayload = app(RouteMapPresenter::class)->forRoute($route);
+            $mapPayload = $presenter->forRoute($route, $colorIndex[$route->id]);
+        } elseif ($routes->isNotEmpty()) {
+            $mapPayload = $presenter->forOverview($routes, 'overview-'.$this->date.'-'.$routes->count());
+        }
+
+        if (isset($mapPayload)) {
             $this->dispatch('route-map-update', payload: $mapPayload);
         }
 
         return view('livewire.deliveries.route-monitor', [
             'routes' => $routes,
+            'routeColors' => $routes->mapWithKeys(fn (DeliveryRoute $item): array => [$item->id => RouteMapPresenter::routeColor($colorIndex[$item->id])])->all(),
+            'nextStops' => $routes->mapWithKeys(fn (DeliveryRoute $item): array => [$item->id => $this->nextStop($item)])->all(),
             'idleRouteIds' => $routes->filter(fn (DeliveryRoute $r): bool => $this->isIdle($r))->modelKeys(),
             'route' => $route,
             'summary' => $route !== null ? $this->summarize($route) : null,
+            'overview' => $route === null && $routes->isNotEmpty() ? $this->overview($routes) : null,
             'mapPayload' => $mapPayload ?? null,
         ]);
     }
@@ -96,7 +120,7 @@ class RouteMonitor extends Component
 
         return DeliveryRoute::query()
             ->whereDate('scheduled_for', $this->date)
-            ->with(['driver', 'vehicle', 'latestLocation'])
+            ->with(['driver', 'vehicle', 'latestLocation', 'stops.delivery.customer'])
             ->withCount([
                 'stops',
                 'stops as delivered_count' => $countByStatus(DeliveryStatus::Delivered),
@@ -115,7 +139,7 @@ class RouteMonitor extends Component
         $open = $stops->reject(fn (RouteStop $stop): bool => $stop->delivery->status->isFinished());
         $delivered = $stops->filter(fn (RouteStop $stop): bool => $stop->delivery->status === DeliveryStatus::Delivered);
 
-        $nextStop = $open->first(fn (RouteStop $stop): bool => $stop->delivery->status === DeliveryStatus::InTransit) ?? $open->first();
+        $nextStop = $this->nextStop($route);
         $location = $route->latestLocation;
         $lastPingMinutes = $location?->recorded_at?->diffInMinutes(now());
 
@@ -141,6 +165,34 @@ class RouteMonitor extends Component
             'lastPingMinutes' => $lastPingMinutes === null ? null : (int) $lastPingMinutes,
             'isIdle' => $this->isIdle($route),
         ];
+    }
+
+    /**
+     * Números da operação do dia inteiro, para a tela com todos os motoristas.
+     *
+     * @param  Collection<int, DeliveryRoute>  $routes
+     * @return array{inProgress: int, routes: int, finished: int, stops: int, failed: int, idle: int, withoutSignal: int}
+     */
+    private function overview(Collection $routes): array
+    {
+        $inProgress = $routes->filter(fn (DeliveryRoute $route): bool => $route->status === DeliveryRouteStatus::InProgress);
+
+        return [
+            'inProgress' => $inProgress->count(),
+            'routes' => $routes->count(),
+            'finished' => (int) $routes->sum(fn (DeliveryRoute $route): int => $route->delivered_count + $route->failed_count),
+            'stops' => (int) $routes->sum('stops_count'),
+            'failed' => (int) $routes->sum('failed_count'),
+            'idle' => $routes->filter(fn (DeliveryRoute $route): bool => $this->isIdle($route))->count(),
+            'withoutSignal' => $inProgress->filter(fn (DeliveryRoute $route): bool => $route->latestLocation === null)->count(),
+        ];
+    }
+
+    private function nextStop(DeliveryRoute $route): ?RouteStop
+    {
+        $open = $route->stops->reject(fn (RouteStop $stop): bool => $stop->delivery->status->isFinished());
+
+        return $open->first(fn (RouteStop $stop): bool => $stop->delivery->status === DeliveryStatus::InTransit) ?? $open->first();
     }
 
     private function isIdle(DeliveryRoute $route): bool

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyBrlCentsCast;
+use App\Enums\DeliveryFailureReason;
 use App\Enums\DeliveryStatus;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
@@ -34,6 +35,13 @@ class Delivery extends Model
         'status',
         'delivered_at',
         'failure_reason',
+        'failure_reason_code',
+        'failure_note',
+        'completed_by_driver_id',
+        'completed_latitude',
+        'completed_longitude',
+        'completed_accuracy_m',
+        'client_uuid',
     ];
 
     /**
@@ -46,6 +54,10 @@ class Delivery extends Model
             'amount' => MoneyBrlCentsCast::class,
             'status' => DeliveryStatus::class,
             'delivered_at' => 'datetime',
+            'failure_reason_code' => DeliveryFailureReason::class,
+            'completed_latitude' => 'float',
+            'completed_longitude' => 'float',
+            'completed_accuracy_m' => 'integer',
         ];
     }
 

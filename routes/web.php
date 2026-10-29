@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Deliveries\DeliveryImportTemplateController;
+use App\Http\Controllers\Reports\DeliveryReportExportController;
 use App\Http\Controllers\Reports\RouteReportExportController;
 use App\Livewire\Deliveries\DeliveryPlanner;
 use App\Livewire\Deliveries\RouteMonitor;
@@ -9,6 +10,7 @@ use App\Livewire\GasStations\GasStationIndex;
 use App\Livewire\Integrations\IntegrationSettings;
 use App\Livewire\Logbook\TripLogForm;
 use App\Livewire\OilChanges\OilChangeIndex;
+use App\Livewire\Reports\DeliveryReports;
 use App\Livewire\Reports\RouteReports;
 use App\Livewire\Subscription\SubscriptionSettings;
 use App\Livewire\Vehicles\VehicleIndex;
@@ -35,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/entregas', DeliveryPlanner::class)->name('deliveries.planner');
         Route::get('/entregas/modelo', DeliveryImportTemplateController::class)->name('deliveries.template');
         Route::get('/rotas', RouteMonitor::class)->name('deliveries.monitor');
+        Route::get('/relatorios/entregas', DeliveryReports::class)->name('reports.deliveries');
+        Route::get('/relatorios/entregas/exportar', DeliveryReportExportController::class)->name('reports.deliveries.export');
 
         Route::get('/integracoes', IntegrationSettings::class)->name('integrations.index');
 

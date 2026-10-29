@@ -23,6 +23,9 @@ class RouteStop extends Model
         'delivery_id',
         'sequence',
         'distance_from_previous_m',
+        'duration_from_previous_s',
+        'path_polyline',
+        'navigation_steps',
         'arrived_at',
     ];
 
@@ -34,6 +37,8 @@ class RouteStop extends Model
         return [
             'sequence' => 'integer',
             'distance_from_previous_m' => 'integer',
+            'duration_from_previous_s' => 'integer',
+            'navigation_steps' => 'array',
             'arrived_at' => 'datetime',
         ];
     }

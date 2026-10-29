@@ -10,8 +10,11 @@ use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryRoute;
 use App\Models\Driver;
+use App\Models\RouteTemplate;
 use App\Models\User;
 use App\Services\Deliveries\DeliveryImporter;
+use App\Services\Routing\DeliveryRoutePlanner;
+use App\Services\Routing\RoutePlan;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -121,6 +124,75 @@ class DeliveryPlannerTest extends TestCase
         $this->assertSame($driver->id, $route->driver_id);
         $this->assertSame(2, $route->stops()->count());
         $this->assertSame(DeliveryStatus::Routed, $first->refresh()->status);
+    }
+
+    public function test_adds_selected_deliveries_to_an_existing_route(): void
+    {
+        $route = app(DeliveryRoutePlanner::class)->create(['name' => 'Setor Sul', 'scheduled_for' => now()->toDateString(), 'user_id' => $this->admin->id], collect([$this->delivery()]));
+        $late = $this->delivery();
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->set('selected', [$late->id])
+            ->assertSee('Incluir 1 pedido')
+            ->call('addToRoute', $route->id)
+            ->assertHasNoErrors()
+            ->assertSet('selected', []);
+
+        $this->assertSame(2, $route->stops()->count());
+        $this->assertSame(DeliveryStatus::Routed, $late->refresh()->status);
+    }
+
+    public function test_messages_stay_on_screen_while_the_user_keeps_working(): void
+    {
+        $route = app(DeliveryRoutePlanner::class)->create(['name' => 'Setor Sul', 'scheduled_for' => now()->toDateString(), 'user_id' => $this->admin->id], collect([$this->delivery()]));
+        $other = $this->delivery();
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->call('reoptimize', $route->id)
+            ->assertSee('já está otimizada')
+            ->set('selected', [$other->id])
+            ->set('routeName', 'Setor Norte')
+            ->assertSee('já está otimizada')
+            ->call('dismissMessages')
+            ->assertDontSee('já está otimizada');
+    }
+
+    public function test_reoptimize_is_skipped_when_nothing_changed(): void
+    {
+        config(['services.routing.provider' => 'local']);
+        $route = app(DeliveryRoutePlanner::class)->create(['name' => 'Setor Sul', 'scheduled_for' => now()->toDateString(), 'user_id' => $this->admin->id], collect([$this->delivery()]));
+        $optimizedAt = $route->optimized_at;
+        $this->travel(1)->minute();
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->assertDontSee('Reotimizar')
+            ->call('reoptimize', $route->id);
+
+        $this->assertEquals($optimizedAt, $route->refresh()->optimized_at);
+    }
+
+    public function test_shows_the_route_base_before_creating_and_can_optimize_from_scratch(): void
+    {
+        $customer = Customer::factory()->confirmed()->create(['user_id' => $this->admin->id]);
+        RouteTemplate::factory()->create(['user_id' => $this->admin->id, 'name' => 'Setor Sul', 'name_key' => 'setor sul', 'customer_ids' => [$customer->id]]);
+        $delivery = $this->delivery([], $customer);
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->set('selected', [$delivery->id])
+            ->set('routeName', 'Setor Sul')
+            ->assertSee('Usa a rota base salva.')
+            ->assertSee('sem custo de otimização')
+            ->set('optimizeFromScratch', true)
+            ->assertSee('A ordem será otimizada do zero')
+            ->set('optimizeFromScratch', false)
+            ->call('createRoute')
+            ->assertHasNoErrors();
+
+        $this->assertSame(RoutePlan::ORDER_BASE, DeliveryRoute::query()->withoutGlobalScopes()->sole()->order_source);
     }
 
     public function test_cannot_assign_driver_from_another_tenant(): void

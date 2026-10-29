@@ -42,6 +42,7 @@ class Customer extends Model
         'state',
         'zip_code',
         'reference',
+        'phone',
         'address_hash',
         'geocode_status',
         'geocode_error',

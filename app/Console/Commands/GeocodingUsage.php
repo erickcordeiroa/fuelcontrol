@@ -28,6 +28,7 @@ class GeocodingUsage extends Command
 
         $byTenant = GeocodingRequest::query()
             ->withoutGlobalScopes()
+            ->addressLookups()
             ->inMonth($month)
             ->selectRaw('user_id, sum(case when billable then 1 else 0 end) as billable_count, sum(case when billable then 0 else 1 end) as other_count')
             ->groupBy('user_id')

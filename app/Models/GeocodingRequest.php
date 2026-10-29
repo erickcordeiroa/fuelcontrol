@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Uma consulta enviada ao Google Geocoding, usada para acompanhar o consumo e estimar a fatura.
+ * Uma chamada ao provedor (busca de endereço ou rota), usada para a cota da empresa e o teto diário da plataforma.
  */
 class GeocodingRequest extends Model
 {
@@ -21,6 +21,12 @@ class GeocodingRequest extends Model
     public const LOOKUP_ADDRESS = 'address';
 
     public const LOOKUP_PLACE_ID = 'place_id';
+
+    /** Ordem das paradas pelas ruas (Geoapify Route Planner). */
+    public const LOOKUP_ROUTE_PLANNER = 'route_planner';
+
+    /** Trajeto e instruções de navegação (Geoapify Routing). */
+    public const LOOKUP_ROUTING = 'routing';
 
     /**
      * @var list<string>
@@ -32,6 +38,7 @@ class GeocodingRequest extends Model
         'lookup',
         'provider_status',
         'billable',
+        'credits',
     ];
 
     /**
@@ -41,6 +48,7 @@ class GeocodingRequest extends Model
     {
         return [
             'billable' => 'boolean',
+            'credits' => 'integer',
         ];
     }
 
@@ -50,6 +58,16 @@ class GeocodingRequest extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Só buscas de endereço: é o que conta na cota mensal da empresa; rotas usam créditos do teto diário.
+     *
+     * @param  Builder<GeocodingRequest>  $query
+     */
+    public function scopeAddressLookups(Builder $query): void
+    {
+        $query->whereIn('lookup', [self::LOOKUP_ADDRESS, self::LOOKUP_PLACE_ID]);
     }
 
     /**

@@ -104,7 +104,9 @@ código ou endereço, filtros por setor e situação, ordenação por coluna e s
 - **FR-001**: O sistema MUST importar pedidos de .xlsx/.csv no formato do modelo e relatar linhas recusadas com motivo.
 - **FR-002**: O sistema MUST manter uma coordenada por cliente com origem identificada (planilha, busca automática, ajuste manual, GPS confirmado).
 - **FR-003**: Coordenadas confirmadas (GPS ou ajuste manual) MUST ter prioridade sobre qualquer outra origem.
-- **FR-004**: O sistema MUST criar rotas com paradas ordenadas pelo menor percurso a partir do centro de distribuição e estimar a distância.
+- **FR-004**: O sistema MUST criar rotas com paradas ordenadas pelo menor percurso **pelas ruas** a partir do centro de distribuição (Geoapify Route Planner), com distância e tempo reais de cada trecho, o trajeto e as instruções de navegação (Geoapify Routing) para o GPS do app.
+- **FR-004a**: Sem a chave da plataforma, com o teto diário de créditos esgotado ou com falha do serviço, a rota MUST ser criada mesmo assim com a ordem calculada localmente em linha reta, e o administrador MUST ver o aviso para reotimizar depois.
+- **FR-004b**: Reotimizar MUST manter as paradas baixadas (com horário) e recalcular as restantes a partir da última posição do motorista (rota em andamento) ou da última parada baixada.
 - **FR-005**: O sistema MUST permitir reotimizar a rota mantendo as paradas concluídas.
 - **FR-006**: A tabela de pedidos MUST ter paginação, busca, filtros, ordenação e seleção por página.
 - **FR-007**: O mapa MUST mostrar os pedidos do dia com cores por situação e permitir arrastar o pino.
@@ -130,5 +132,6 @@ código ou endereço, filtros por setor e situação, ordenação por coluna e s
 
 ## Assumptions
 
-- Distância estimada em linha reta multiplicada por um fator de estrada.
+- Créditos do Geoapify por rota: Route Planner `n × min(n, 10)` (n = paradas + centro de distribuição) mais 1 por trecho do Routing. Rota de 40 paradas ≈ 410 + 41 = 451 créditos; o plano gratuito (3.000/dia) comporta cerca de 6 rotas desse tamanho por dia.
+- Sem o serviço de rotas, distância estimada em linha reta multiplicada por um fator de estrada (1,3).
 - Centro de distribuição configurado por empresa ou no ambiente.

@@ -23,7 +23,7 @@ class FleetMenu
             [
                 'label' => __('Acompanhamento'),
                 'items' => [
-                    self::item(__('Relatórios'), __('Custos, consumo e viagens da frota'), 'reports', 'reports', 'chart-bar', 'painel inicio dashboard indicadores'),
+                    self::item(__('Relatórios'), __('Combustível, gastos e entregas da frota'), 'reports', 'reports*', 'chart-bar', 'painel inicio dashboard indicadores combustivel gastos entregas custo por entrega'),
                     $isAdmin ? self::item(__('Rotas'), __('Acompanhar entregadores e entregas'), 'deliveries.monitor', 'deliveries.monitor', 'map', 'mapa motorista gps') : null,
                 ],
             ],

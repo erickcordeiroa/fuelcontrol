@@ -56,6 +56,7 @@ class IntegrationSettings extends Component
     private function monthUsage(Carbon $month): array
     {
         $counts = GeocodingRequest::query()
+            ->addressLookups()
             ->inMonth($month)
             ->selectRaw('sum(case when billable then 1 else 0 end) as billable_count, sum(case when billable then 0 else 1 end) as other_count')
             ->first();

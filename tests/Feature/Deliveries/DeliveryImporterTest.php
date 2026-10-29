@@ -52,7 +52,7 @@ class DeliveryImporterTest extends TestCase
         $path = $this->spreadsheet([
             $this->row(['numero_pedido' => 'PED-1', 'valor_pedido' => '1.284,90', 'janela_inicio' => '08:00', 'janela_fim' => '12:00']),
             $this->row(['numero_pedido' => 'PED-2', 'valor_pedido' => 64.3]),
-            $this->row(['codigo_cliente' => 'C-2', 'numero_pedido' => 'PED-3', 'nome' => 'Padaria Pão Dourado', 'setor' => 'Norte']),
+            $this->row(['codigo_cliente' => 'C-2', 'numero_pedido' => 'PED-3', 'nome' => 'Padaria Pão Dourado', 'setor' => 'Norte', 'telefone' => '(13) 3821-4410']),
         ]);
 
         $import = app(DeliveryImporter::class)->import($path, 'pedidos.xlsx', Carbon::parse('2026-10-09'));
@@ -70,6 +70,7 @@ class DeliveryImporterTest extends TestCase
         $this->assertSame(DeliveryStatus::Pending, $first->status);
         $this->assertSame('74270110', $first->customer->zip_code);
         $this->assertSame(6430, (int) Delivery::query()->where('order_number', 'PED-2')->firstOrFail()->getRawOriginal('amount'));
+        $this->assertSame('(13) 3821-4410', Customer::query()->where('external_code', 'C-2')->value('phone'));
 
         Queue::assertPushed(GeocodeCustomer::class, 2);
     }
@@ -216,6 +217,7 @@ class DeliveryImporterTest extends TestCase
             'janela_fim' => '',
             'latitude' => '',
             'longitude' => '',
+            'telefone' => '',
             ...$overrides,
         ];
 

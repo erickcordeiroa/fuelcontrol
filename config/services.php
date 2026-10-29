@@ -82,6 +82,9 @@ return [
     ],
 
     'routing' => [
+        /** geoapify = ordem e distâncias pelas ruas (Route Planner + Routing, mesma chave da busca de endereços); local = linha reta. */
+        'provider' => env('ROUTING_PROVIDER', 'geoapify'),
+
         /** Ponto de partida padrão das rotas (centro de distribuição). */
         'depot_latitude' => env('ROUTING_DEPOT_LATITUDE'),
         'depot_longitude' => env('ROUTING_DEPOT_LONGITUDE'),

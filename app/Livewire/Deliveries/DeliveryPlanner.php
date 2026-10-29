@@ -6,6 +6,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\GeocodeStatus;
 use App\Jobs\GeocodeCustomer;
 use App\Livewire\Concerns\ChecksPlanLimits;
+use App\Livewire\Concerns\KeepsMessages;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryImport;
@@ -16,6 +17,7 @@ use App\Services\Deliveries\DeliveryImporter;
 use App\Services\Geocoding\GeocoderFactory;
 use App\Services\Routing\DeliveryRoutePlanner;
 use App\Services\Routing\RouteMapPresenter;
+use App\Services\Routing\RoutePlan;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -37,7 +40,7 @@ use Livewire\WithPagination;
 #[Title('Entregas')]
 class DeliveryPlanner extends Component
 {
-    use ChecksPlanLimits, WithFileUploads;
+    use ChecksPlanLimits, KeepsMessages, WithFileUploads;
     use WithPagination;
 
     /** Valor do filtro de setor que representa pedidos sem setor. */
@@ -65,6 +68,9 @@ class DeliveryPlanner extends Component
     public ?int $driverId = null;
 
     public ?int $vehicleId = null;
+
+    /** Ignora a rota base com o mesmo nome e otimiza a ordem de novo (gasta créditos do serviço de rotas). */
+    public bool $optimizeFromScratch = false;
 
     /** Cliente com o endereço aberto para edição. */
     public ?int $editingCustomerId = null;
@@ -106,6 +112,12 @@ class DeliveryPlanner extends Component
             $this->date = now()->toDateString();
         }
     }
+
+    /**
+     * Centro de distribuição salvo: redesenha o mapa com o ponto de saída.
+     */
+    #[On('depot-updated')]
+    public function refreshDepot(): void {}
 
     public function updatedDate(): void
     {
@@ -195,7 +207,7 @@ class DeliveryPlanner extends Component
         $this->lastImportId = $import->id;
         $this->reset('spreadsheet');
 
-        session()->flash('status', __(':imported de :total pedido(s) importado(s).', [
+        $this->notify(__(':imported de :total pedido(s) importado(s).', [
             'imported' => $import->imported_rows,
             'total' => $import->total_rows,
         ]));
@@ -254,26 +266,89 @@ class DeliveryPlanner extends Component
                 'scheduled_for' => $this->date,
                 'driver_id' => $validated['driverId'],
                 'vehicle_id' => $validated['vehicleId'],
-            ], $deliveries);
+            ], $deliveries, $this->optimizeFromScratch);
         } catch (InvalidArgumentException $e) {
             $this->addError('selected', $e->getMessage());
 
             return;
         }
 
-        session()->flash('status', __('Rota ":name" criada com :count parada(s).', ['name' => $route->name, 'count' => $deliveries->count()]));
+        session()->flash('status', __('Rota ":name" criada com :count parada(s).', ['name' => $route->name, 'count' => $deliveries->count()]).$this->orderSourceNotice($route).$this->straightLineNotice($route));
 
         $this->redirectRoute('deliveries.monitor', ['data' => $this->date, 'rota' => $route->id], navigate: true);
     }
 
-    public function reoptimize(int $routeId, DeliveryRoutePlanner $planner): void
+    /**
+     * Pedidos selecionados entram numa rota já criada: são encaixados na ordem atual, sem otimizar tudo de novo.
+     */
+    public function addToRoute(int $routeId, DeliveryRoutePlanner $planner): void
     {
         $route = DeliveryRoute::query()->findOrFail($routeId);
         Gate::authorize('update', $route);
 
-        $planner->reoptimize($route);
+        $deliveries = Delivery::query()
+            ->unrouted()
+            ->whereDate('scheduled_for', $route->scheduled_for->toDateString())
+            ->whereKey($this->selected)
+            ->with('customer')
+            ->get();
 
-        session()->flash('status', __('Rota ":name" reotimizada.', ['name' => $route->name]));
+        try {
+            $route = $planner->addDeliveries($route, $deliveries);
+        } catch (InvalidArgumentException $e) {
+            $this->addError('selected', $e->getMessage());
+
+            return;
+        }
+
+        $this->selected = [];
+
+        $this->notify(__(':count pedido(s) incluído(s) na rota ":name", encaixado(s) na ordem atual. Só os trechos novos foram traçados.', ['name' => $route->name, 'count' => $deliveries->count()]).$this->straightLineNotice($route));
+    }
+
+    /**
+     * Só otimiza de novo quando algo mudou (cliente com nova localização ou rota traçada em linha reta):
+     * o trajeto salvo na criação continua valendo e cada nova otimização gasta créditos.
+     */
+    public function reoptimize(int $routeId, DeliveryRoutePlanner $planner): void
+    {
+        $route = DeliveryRoute::query()->with('stops.delivery.customer')->findOrFail($routeId);
+        Gate::authorize('update', $route);
+
+        if ($planner->reoptimizationReason($route) === null) {
+            $this->notify(__('A rota ":name" já está otimizada. Nada mudou desde o último cálculo.', ['name' => $route->name]));
+
+            return;
+        }
+
+        try {
+            $route = $planner->reoptimize($route);
+        } catch (InvalidArgumentException $e) {
+            $this->notify($e->getMessage());
+
+            return;
+        }
+
+        $this->notify(__('Rota ":name" reotimizada.', ['name' => $route->name]).$this->straightLineNotice($route));
+    }
+
+    private function orderSourceNotice(DeliveryRoute $route): string
+    {
+        return match ($route->order_source) {
+            RoutePlan::ORDER_BASE => ' '.__('A ordem seguiu a rota base, sem nova otimização.'),
+            RoutePlan::ORDER_PLANNER => ' '.__('A ordem foi otimizada e salva como rota base para as próximas vezes.'),
+            default => '',
+        };
+    }
+
+    /**
+     * Avisa quando a rota não saiu otimizada ou pelas ruas, com o motivo (limite do dia ou falha do serviço).
+     */
+    private function straightLineNotice(DeliveryRoute $route): string
+    {
+        $notice = $route->routingNotice();
+
+        return $notice === null ? '' : ' '.$notice;
     }
 
     /**
@@ -300,7 +375,7 @@ class DeliveryPlanner extends Component
         Gate::authorize('delete', $route);
 
         if ($route->stops->contains(fn ($stop): bool => $stop->delivery->status->isFinished())) {
-            session()->flash('error', __('A rota ":name" tem entregas baixadas e não pode ser excluída.', ['name' => $route->name]));
+            $this->notifyError(__('A rota ":name" tem entregas baixadas e não pode ser excluída.', ['name' => $route->name]));
 
             return;
         }
@@ -314,7 +389,7 @@ class DeliveryPlanner extends Component
         });
 
         $this->selected = [];
-        session()->flash('status', __('Rota ":name" excluída. Os pedidos voltaram para "Pendente".', ['name' => $route->name]));
+        $this->notify(__('Rota ":name" excluída. Os pedidos voltaram para "Pendente".', ['name' => $route->name]));
     }
 
     public function openAddressEditor(int $customerId): void
@@ -396,7 +471,7 @@ class DeliveryPlanner extends Component
         $this->editingCustomerId = null;
 
         if (! $addressChanged) {
-            session()->flash('status', __('Dados do cliente atualizados.'));
+            $this->notify(__('Dados do cliente atualizados.'));
 
             return;
         }
@@ -405,7 +480,7 @@ class DeliveryPlanner extends Component
 
         $isInRoute = Delivery::query()->where('customer_id', $customer->id)->whereHas('routeStop')->whereIn('status', [DeliveryStatus::Routed, DeliveryStatus::InTransit])->exists();
 
-        session()->flash('status', $isInRoute
+        $this->notify($isInRoute
             ? __('Endereço atualizado e localização sendo buscada de novo. O cliente está numa rota: reotimize a rota depois que ele for localizado.')
             : __('Endereço atualizado. A localização está sendo buscada de novo.'));
     }
@@ -431,6 +506,14 @@ class DeliveryPlanner extends Component
             ->orderBy('id')
             ->get();
 
+        $planner = app(DeliveryRoutePlanner::class);
+        $routes = DeliveryRoute::query()
+            ->whereDate('scheduled_for', $this->date)
+            ->with(['driver', 'vehicle', 'stops.delivery.customer'])
+            ->withCount('stops')
+            ->orderBy('name')
+            ->get();
+
         $mapPayload = $presenter->forPlanning($deliveries, 'planning-'.$this->date);
         $this->dispatch('route-map-update', payload: $mapPayload);
 
@@ -445,18 +528,31 @@ class DeliveryPlanner extends Component
                 'needsReview' => $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status->needsReview())->count(),
                 'waitingGeocode' => $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status === GeocodeStatus::Pending)->count(),
             ],
-            'routes' => DeliveryRoute::query()
-                ->whereDate('scheduled_for', $this->date)
-                ->with(['driver', 'vehicle'])
-                ->withCount('stops')
-                ->orderBy('name')
-                ->get(),
+            'routes' => $routes,
+            'basePreview' => $this->basePreview($planner),
+            'reoptimizationReasons' => $routes->mapWithKeys(fn (DeliveryRoute $route): array => [$route->id => $planner->reoptimizationReason($route)])->all(),
             'drivers' => Driver::query()->orderBy('name')->get(['id', 'name']),
             'vehicles' => Vehicle::query()->orderBy('plate')->get(['id', 'plate', 'model']),
             'lastImport' => $this->lastImportId ? DeliveryImport::query()->find($this->lastImportId) : null,
             'mapPayload' => $mapPayload,
             'geocodingAvailable' => app(GeocoderFactory::class)->isConfigured(),
         ]);
+    }
+
+    /**
+     * Rota base com o nome digitado: quantos clientes ela já conhece entre os pedidos selecionados.
+     *
+     * @return array{customers: int, known: int, new: int, reusable: bool}|null
+     */
+    private function basePreview(DeliveryRoutePlanner $planner): ?array
+    {
+        if (trim($this->routeName) === '' || $this->selected === []) {
+            return null;
+        }
+
+        $deliveries = Delivery::query()->whereKey($this->selected)->get(['id', 'customer_id']);
+
+        return $deliveries->isEmpty() ? null : $planner->basePreview(auth()->user()->tenantOwnerId(), $this->routeName, $deliveries);
     }
 
     /**

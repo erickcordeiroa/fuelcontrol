@@ -5,9 +5,11 @@
         </div>
     @endif
 
+    <x-fleet.report-tabs />
+
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <h1 class="fleet-page-title">{{ __('Relatórios de Rotas') }}</h1>
+            <h1 class="fleet-page-title">{{ __('Combustível e gastos') }}</h1>
             <p class="fleet-page-lead">{{ __('Combustível, despesas e desempenho por viagem e veículo.') }}</p>
         </div>
         @if (app(\App\Services\Billing\PlanLimits::class)->allows(auth()->user()->tenantOwnerId(), 'report_export'))

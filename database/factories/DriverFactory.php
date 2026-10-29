@@ -19,7 +19,7 @@ class DriverFactory extends Factory
         return [
             'name' => fake()->name(),
             'license_number' => fake()->numerify('###########'),
-            'phone' => fake()->optional(0.85)->phoneNumber(),
+            'phone' => fake()->optional(0.85)->numerify('1399#######'),
             'user_id' => null,
             'linked_user_id' => null,
         ];

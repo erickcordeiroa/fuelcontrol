@@ -24,11 +24,11 @@ class DeliveryImportTemplateController extends Controller
         $writer->addRow(Row::fromValues(array_keys(DeliveryImporter::COLUMNS)));
         $writer->addRow(Row::fromValues([
             'C-1042', 'PED-88213', 'Mercearia São Jorge', 'Rua Shitiro Maeji', '410', 'Centro',
-            'Registro', 'SP', '11900-000', 'Portão azul ao lado da farmácia', '1.284,90', 'Centro', '08:00', '12:00', '', '',
+            'Registro', 'SP', '11900-000', 'Portão azul ao lado da farmácia', '1.284,90', 'Centro', '08:00', '12:00', '', '', '(13) 3821-4410',
         ]));
         $writer->addRow(Row::fromValues([
             'C-0877', 'PED-88214', 'Padaria Pão Dourado', 'Avenida Wild José de Souza', '2210', 'Vila Tupi',
-            'Registro', 'SP', '11900-000', 'Esquina com a Avenida Clara Gianotti de Souza', '643,00', 'Oeste', '', '', '', '',
+            'Registro', 'SP', '11900-000', 'Esquina com a Avenida Clara Gianotti de Souza', '643,00', 'Oeste', '', '', '', '', '',
         ]));
         $writer->close();
 

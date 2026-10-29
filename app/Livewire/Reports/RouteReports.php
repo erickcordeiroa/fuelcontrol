@@ -18,7 +18,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
-#[Title('Relatórios de Rotas')]
+#[Title('Relatório de combustível e gastos')]
 class RouteReports extends Component
 {
     use WithPagination;

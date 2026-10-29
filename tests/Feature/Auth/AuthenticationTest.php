@@ -24,7 +24,7 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
 
         $component = Volt::test('pages.auth.login')
             ->set('form.email', $user->email)
@@ -37,6 +37,20 @@ class AuthenticationTest extends TestCase
             ->assertRedirect(route('reports', absolute: false));
 
         $this->assertAuthenticated();
+    }
+
+    public function test_drivers_cannot_log_in_on_the_web(): void
+    {
+        $driver = User::factory()->driverRole()->create();
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $driver->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasErrors(['form.email'])
+            ->assertNoRedirect();
+
+        $this->assertGuest();
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

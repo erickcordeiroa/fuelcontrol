@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Enums\DeliveryRouteStatus;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
+use App\Services\Routing\RoutePlan;
 use Database\Factories\DeliveryRouteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
 class DeliveryRoute extends Model
 {
@@ -30,6 +32,11 @@ class DeliveryRoute extends Model
         'origin_latitude',
         'origin_longitude',
         'total_distance_m',
+        'total_duration_s',
+        'routing_provider',
+        'order_source',
+        'routing_note',
+        'return_path_polyline',
         'optimized_at',
         'started_at',
         'finished_at',
@@ -46,6 +53,7 @@ class DeliveryRoute extends Model
             'origin_latitude' => 'float',
             'origin_longitude' => 'float',
             'total_distance_m' => 'integer',
+            'total_duration_s' => 'integer',
             'optimized_at' => 'datetime',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
@@ -93,12 +101,56 @@ class DeliveryRoute extends Model
     }
 
     /**
-     * Centro de distribuição configurado em services.routing (ROUTING_DEPOT_*).
+     * Aviso para o administrador quando a rota não saiu otimizada ou pelas ruas, com o motivo.
+     */
+    public function routingNotice(): ?string
+    {
+        return match ($this->routing_note) {
+            RoutePlan::NOTE_ORDER_DAILY_LIMIT => __('O limite diário de créditos do serviço de rotas não cobria a otimização: a ordem foi calculada pelo Kilomo e o trajeto saiu pelas ruas. Reotimize amanhã para otimizar pelo serviço.'),
+            RoutePlan::NOTE_DAILY_LIMIT => __('O limite diário de créditos do serviço de rotas acabou: a rota foi traçada em linha reta. Reotimize amanhã para traçar pelas ruas.'),
+            RoutePlan::NOTE_SERVICE_FAILED => __('O serviço de rotas não respondeu: a rota foi traçada em linha reta. Reotimize daqui a pouco para traçar pelas ruas.'),
+            default => null,
+        };
+    }
+
+    public function isRoutedByRoads(): bool
+    {
+        return $this->routing_provider === RoutePlan::PROVIDER_GEOAPIFY;
+    }
+
+    /**
+     * Distância (e tempo, quando calculado pelas ruas) para as listas de rotas.
+     */
+    public function distanceSummary(): string
+    {
+        $km = number_format(($this->total_distance_m ?? 0) / 1000, 1, ',', '.');
+
+        if (! $this->isRoutedByRoads()) {
+            return __(':km km estimados em linha reta', ['km' => $km]);
+        }
+
+        $minutes = (int) ceil(($this->total_duration_s ?? 0) / 60);
+        $duration = $minutes >= 60 ? intdiv($minutes, 60).' h '.str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT).' min' : $minutes.' min';
+
+        return __(':km km pelas ruas · :duration de direção', ['km' => $km, 'duration' => $duration]);
+    }
+
+    /**
+     * Centro de distribuição da empresa (cadastrado na tela de entregas); sem cadastro, o da plataforma em
+     * services.routing (ROUTING_DEPOT_*), se houver.
      *
+     * @param  int|null  $tenantId  Empresa; sem informar, a do usuário logado
      * @return array{lat: float, lng: float}|null
      */
-    public static function defaultOrigin(): ?array
+    public static function defaultOrigin(?int $tenantId = null): ?array
     {
+        $tenantId ??= Auth::user()?->tenantOwnerId();
+        $companyDepot = $tenantId === null ? null : User::query()->find($tenantId)?->depot();
+
+        if ($companyDepot !== null) {
+            return $companyDepot;
+        }
+
         $latitude = config('services.routing.depot_latitude');
         $longitude = config('services.routing.depot_longitude');
 

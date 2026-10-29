@@ -35,6 +35,19 @@ class DeliveryRoutePolicy
         return $this->ownsRoute($user, $deliveryRoute);
     }
 
+    /**
+     * Motorista executa no app (spec 004) só a rota atribuída a ele.
+     */
+    public function drive(User $user, DeliveryRoute $deliveryRoute): bool
+    {
+        $driverId = $user->driver?->id;
+
+        return ! $user->isAdmin()
+            && $driverId !== null
+            && $deliveryRoute->driver_id === $driverId
+            && (int) ($deliveryRoute->user_id ?? 0) === $user->tenantOwnerId();
+    }
+
     private function ownsRoute(User $user, DeliveryRoute $deliveryRoute): bool
     {
         return $user->isAdmin()

@@ -52,6 +52,7 @@ class GeocoderFactory
             ->withoutGlobalScopes()
             ->where('user_id', $tenantId)
             ->where('billable', true)
+            ->addressLookups()
             ->inMonth($now ?? now())
             ->count();
     }
@@ -73,15 +74,18 @@ class GeocoderFactory
     {
         $now ??= now();
 
-        return GeocodingRequest::query()
+        return (int) GeocodingRequest::query()
             ->withoutGlobalScopes()
             ->where('billable', true)
             ->whereBetween('created_at', [$now->copy()->startOfDay(), $now->copy()->endOfDay()])
-            ->count();
+            ->sum('credits');
     }
 
-    public function hasDailyCapacity(): bool
+    /**
+     * Cabe mais esta chamada no teto do dia? Busca de endereço gasta 1 crédito; rotas gastam mais.
+     */
+    public function hasDailyCapacity(int $credits = 1): bool
     {
-        return $this->dailyLimit() <= 0 || $this->usedToday() < $this->dailyLimit();
+        return $this->dailyLimit() <= 0 || $this->usedToday() + $credits <= $this->dailyLimit();
     }
 }

@@ -4,16 +4,7 @@
 @endphp
 
 <div class="w-full space-y-8">
-    @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit" role="status">
-            {{ session('status') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="rounded-xl border border-fleet-danger/30 bg-fleet-danger/10 px-4 py-3 text-sm text-fleet-danger" role="alert">
-            {{ session('error') }}
-        </div>
-    @endif
+    <x-fleet.page-messages :status="$statusMessage" :error="$errorMessage" />
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -121,6 +112,9 @@
             </div>
         </div>
 
+        <div class="space-y-4">
+        <livewire:deliveries.depot-settings />
+
         <div class="fleet-panel space-y-4">
             <div>
                 <p class="fleet-section-title">{{ __('Criar rota') }}</p>
@@ -153,8 +147,24 @@
 
                 <div>
                     <label class="fleet-label" for="route-name">{{ __('Nome da rota') }}</label>
-                    <input id="route-name" type="text" wire:model="routeName" class="fleet-field" placeholder="{{ __('Setor Sul') }}" />
+                    <input id="route-name" type="text" wire:model.live.debounce.500ms="routeName" class="fleet-field" placeholder="{{ __('Setor Sul') }}" />
                     @error('routeName') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                    @if ($basePreview)
+                        <div class="mt-2 rounded-xl border border-fleet-border bg-fleet-page px-3 py-2 text-xs text-fleet-secondary">
+                            @if ($optimizeFromScratch)
+                                {{ __('A ordem será otimizada do zero e vira a nova rota base.') }}
+                            @elseif ($basePreview['reusable'])
+                                <span class="font-semibold text-fleet-ink">{{ __('Usa a rota base salva.') }}</span>
+                                {{ trans_choice('{0} Todos os clientes já estão nela: sem custo de otimização.|{1} :count cliente novo será encaixado na ordem.|[2,*] :count clientes novos serão encaixados na ordem.', $basePreview['new']) }}
+                            @else
+                                {{ __('A seleção mudou muito em relação à rota base (:new de :total clientes são novos): a ordem será otimizada de novo.', ['new' => $basePreview['new'], 'total' => $basePreview['known'] + $basePreview['new']]) }}
+                            @endif
+                            <label class="mt-1.5 flex items-center gap-2 text-fleet-ink">
+                                <input type="checkbox" wire:model.live="optimizeFromScratch" class="rounded border-fleet-border text-fleet-primary focus:ring-fleet-primary/30" />
+                                {{ __('Otimizar do zero') }}
+                            </label>
+                        </div>
+                    @endif
                 </div>
                 <div>
                     <label class="fleet-label" for="route-driver">{{ __('Motorista') }}</label>
@@ -181,6 +191,7 @@
                 </button>
             </form>
         </div>
+        </div>
     </div>
 
     {{-- Rotas do dia --}}
@@ -197,12 +208,25 @@
                             <p class="text-xs text-fleet-secondary">
                                 {{ $route->driver?->name ?? __('Sem motorista') }} · {{ $route->vehicle?->plate ?? __('sem veículo') }} ·
                                 {{ trans_choice(':count parada|:count paradas', $route->stops_count) }} ·
-                                {{ __(':km km estimados', ['km' => number_format(($route->total_distance_m ?? 0) / 1000, 1, ',', '.')]) }} ·
+                                {{ $route->distanceSummary() }} ·
+                                @if ($route->order_source === \App\Services\Routing\RoutePlan::ORDER_BASE)
+                                    {{ __('ordem da rota base') }} ·
+                                @endif
                                 {{ $route->status->label() }}
                             </p>
+                            @if ($reoptimizationReasons[$route->id])
+                                <p class="mt-0.5 text-xs font-medium text-fleet-tertiary">{{ $reoptimizationReasons[$route->id] }}: {{ __('reotimize para atualizar o trajeto.') }}</p>
+                            @endif
                         </div>
-                        <div class="flex shrink-0 gap-2">
-                            <button type="button" wire:click="reoptimize({{ $route->id }})" class="fleet-btn--muted fleet-btn--sm">{{ __('Reotimizar') }}</button>
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                            @if (count($selected) > 0 && $route->status !== \App\Enums\DeliveryRouteStatus::Completed)
+                                <button type="button" wire:click="addToRoute({{ $route->id }})" wire:loading.attr="disabled" wire:target="addToRoute" class="fleet-btn--primary fleet-btn--sm">
+                                    {{ trans_choice('Incluir :count pedido|Incluir :count pedidos', count($selected)) }}
+                                </button>
+                            @endif
+                            @if ($reoptimizationReasons[$route->id])
+                                <button type="button" wire:click="reoptimize({{ $route->id }})" wire:loading.attr="disabled" wire:target="reoptimize" class="fleet-btn--muted fleet-btn--sm">{{ __('Reotimizar') }}</button>
+                            @endif
                             <button
                                 type="button"
                                 wire:click="deleteRoute({{ $route->id }})"

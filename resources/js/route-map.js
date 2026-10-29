@@ -34,20 +34,56 @@ function pinIcon(color, label, square = false) {
     return L.divIcon({ html: el, className: '', iconSize: [0, 0] });
 }
 
-function driverIcon() {
-    const el = document.createElement('div');
-    Object.assign(el.style, {
-        width: '18px',
-        height: '18px',
-        borderRadius: '999px',
-        background: '#EECC5D',
-        border: '3px solid #1E1919',
-        boxShadow: '0 0 0 5px rgb(238 204 93 / 0.35), 0 1px 3px rgb(30 25 25 / 0.35)',
-        boxSizing: 'border-box',
-        transform: 'translate(-50%, -50%)',
+/**
+ * Motorista: ponto amarelo com a borda na cor da rota e o nome sempre visível (tela de acompanhamento na parede).
+ * Parado há muito tempo: borda tracejada e "parado" junto do nome. Rota concluída: só o ponto, sem o nome,
+ * para não cobrir quem ainda está na rua (todos voltam ao centro de distribuição).
+ *
+ * @param {{label: string, color: string, idle: boolean, finished: boolean}} driver
+ */
+function driverIcon(driver) {
+    const wrapper = document.createElement('div');
+    Object.assign(wrapper.style, {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '4px',
+        transform: 'translate(-50%, -100%)',
+        width: 'max-content',
     });
 
-    return L.divIcon({ html: el, className: '', iconSize: [0, 0] });
+    const name = document.createElement('div');
+    name.textContent = driver.idle ? `${driver.label} · parado` : driver.label;
+    Object.assign(name.style, {
+        padding: '2px 8px',
+        borderRadius: '999px',
+        background: driver.color,
+        color: '#fff',
+        font: '600 12px/18px "Inter Variable", system-ui, sans-serif',
+        boxShadow: '0 1px 3px rgb(30 25 25 / 0.35)',
+        whiteSpace: 'nowrap',
+    });
+
+    const dot = document.createElement('div');
+    Object.assign(dot.style, {
+        width: '20px',
+        height: '20px',
+        borderRadius: '999px',
+        background: '#EECC5D',
+        border: `3px ${driver.idle ? 'dashed' : 'solid'} ${driver.color}`,
+        boxShadow: '0 0 0 5px rgb(238 204 93 / 0.35), 0 1px 3px rgb(30 25 25 / 0.35)',
+        boxSizing: 'border-box',
+        marginBottom: '-10px',
+    });
+
+    if (driver.finished) {
+        Object.assign(dot.style, { width: '14px', height: '14px', borderWidth: '2px', boxShadow: '0 1px 3px rgb(30 25 25 / 0.35)', marginBottom: '-7px' });
+        wrapper.append(dot);
+    } else {
+        wrapper.append(name, dot);
+    }
+
+    return L.divIcon({ html: wrapper, className: '', iconSize: [0, 0] });
 }
 
 /**
@@ -140,12 +176,21 @@ export function fleetRouteMap(initialPayload, tiles) {
 
     return {
         payload: initialPayload,
+        isFullscreen: false,
 
         init() {
             leaflet.map = L.map(this.$refs.canvas, { center: BRAZIL_CENTER, zoom: 4, scrollWheelZoom: false });
             requireModifierForWheelZoom(leaflet.map, this.$refs.canvas);
             L.tileLayer(tiles.url, { attribution: tiles.attribution, maxZoom: tiles.maxZoom }).addTo(leaflet.map);
             leaflet.layers = L.layerGroup().addTo(leaflet.map);
+
+            document.addEventListener('fullscreenchange', () => {
+                this.isFullscreen = document.fullscreenElement === this.$root;
+                setTimeout(() => {
+                    leaflet.map?.invalidateSize();
+                    this.fitToContent();
+                }, 50);
+            });
 
             this.render();
         },
@@ -155,20 +200,37 @@ export function fleetRouteMap(initialPayload, tiles) {
             leaflet.map = null;
         },
 
+        /**
+         * Tela cheia do mapa para deixar o acompanhamento aberto numa TV ou monitor.
+         */
+        toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+
+                return;
+            }
+
+            this.$root.requestFullscreen?.().catch(() => {});
+        },
+
         update(payload) {
             this.payload = payload;
             this.render();
         },
 
         render() {
-            const { map, layers } = leaflet;
+            const { layers } = leaflet;
             const payload = this.payload;
 
             layers.clearLayers();
 
-            if (payload.path.length > 1) {
-                L.polyline(payload.path, { color: '#1E1919', opacity: 0.8, weight: 2.5 }).addTo(layers);
-            }
+            payload.paths.forEach((path) => {
+                if (path.points.length > 1) {
+                    L.polyline(path.points, path.dashed
+                        ? { color: path.color, opacity: 0.7, weight: 3, dashArray: '2 8', lineCap: 'round' }
+                        : { color: path.color, opacity: 0.85, weight: 4 }).addTo(layers);
+                }
+            });
 
             if (payload.origin) {
                 L.marker(payload.origin, { icon: pinIcon('#1E1919', 'CD', true), title: 'Centro de distribuição' })
@@ -193,19 +255,26 @@ export function fleetRouteMap(initialPayload, tiles) {
                 }
             });
 
-            if (payload.driver) {
-                L.marker(payload.driver, { icon: driverIcon(), title: payload.driver.label, zIndexOffset: 1000 })
-                    .bindPopup(popupContent(payload.driver.label, ''))
+            payload.drivers.forEach((driver) => {
+                L.marker([driver.lat, driver.lng], { icon: driverIcon(driver), title: driver.label, zIndexOffset: driver.finished ? 500 : (driver.idle ? 2000 : 1000) })
+                    .bindPopup(popupContent(driver.label, driver.subtitle))
                     .addTo(layers);
-            }
+            });
 
             if (payload.fitKey !== leaflet.fittedKey) {
-                const coordinates = this.allCoordinates();
+                this.fitToContent();
+            }
+        },
 
-                if (coordinates.length > 0) {
-                    map.fitBounds(L.latLngBounds(coordinates), { padding: [48, 48], maxZoom: 16 });
-                    leaflet.fittedKey = payload.fitKey;
-                }
+        /**
+         * Enquadra pedidos, centro de distribuição e motoristas; também ao entrar e sair da tela cheia.
+         */
+        fitToContent() {
+            const coordinates = this.allCoordinates();
+
+            if (leaflet.map && coordinates.length > 0) {
+                leaflet.map.fitBounds(L.latLngBounds(coordinates), { padding: [48, 48], maxZoom: 16 });
+                leaflet.fittedKey = this.payload.fitKey;
             }
         },
 
@@ -217,9 +286,7 @@ export function fleetRouteMap(initialPayload, tiles) {
                 coordinates.push([payload.origin.lat, payload.origin.lng]);
             }
 
-            if (payload.driver) {
-                coordinates.push([payload.driver.lat, payload.driver.lng]);
-            }
+            payload.drivers.forEach(({ lat, lng }) => coordinates.push([lat, lng]));
 
             return coordinates;
         },

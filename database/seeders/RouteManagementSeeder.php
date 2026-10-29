@@ -17,6 +17,7 @@ use App\Models\RouteStop;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Routing\DeliveryRoutePlanner;
+use App\Services\Routing\RoutePlan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -83,12 +84,20 @@ class RouteManagementSeeder extends Seeder
 
         $this->purgeDemoData($tenantId);
 
+        if ($admin->depot() === null) {
+            $admin->update(['depot_address' => 'Centro de distribuição (demonstração), Registro - SP', 'depot_latitude' => self::DEPOT['lat'], 'depot_longitude' => self::DEPOT['lng']]);
+        }
+
         $drivers = $this->drivers($tenantId);
         $vehicles = Vehicle::query()->withoutGlobalScopes()->where('user_id', $tenantId)->orderBy('id')->get();
 
         $customersBySector = collect(self::SECTORS)->map(
             fn (array $config, string $sector): Collection => $this->createCustomers($tenantId, $sector, $config),
         );
+
+        /** Dados de demonstração não gastam créditos reais do serviço de rotas: tudo é traçado em linha reta. */
+        $routingProvider = config('services.routing.provider');
+        config(['services.routing.provider' => RoutePlan::PROVIDER_LOCAL]);
 
         foreach ($this->historyDates($today) as $date) {
             $this->seedHistoryDay($tenantId, $date, $customersBySector, $drivers, $vehicles);
@@ -100,6 +109,8 @@ class RouteManagementSeeder extends Seeder
         $import = $this->createImport($tenantId, $tomorrow, failedRows: 2);
         $customersBySector->each(fn (Collection $customers, string $sector) => $this->createDeliveries($tenantId, $import, $sector, $customers->filter(fn (): bool => mt_rand(1, 100) <= 75), $tomorrow));
         $this->finishImport($import);
+
+        config(['services.routing.provider' => $routingProvider]);
 
         $this->command?->info('Dados de demonstração criados: histórico de '.self::HISTORY_DAYS.' dias, hoje ('.$today->format('d/m/Y').') e amanhã. Acesse /entregas e /rotas.');
     }

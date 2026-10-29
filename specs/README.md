@@ -9,7 +9,7 @@ Visão geral do sistema por funcionalidade (spec-kit). Princípios do projeto em
 | [001](001-fleet-fuel-control/spec.md) | Controle de frota e combustível (Diário de Bordo, relatórios, trocas de óleo, cadastros) | Implementado |
 | [002](002-delivery-planning/spec.md) | Planejamento de entregas e roteirização | Implementado |
 | [003](003-route-monitoring/spec.md) | Acompanhamento de rotas | Parcial: tela pronta, depende da 004 |
-| [004](004-driver-app/spec.md) | App do motorista (baixas, motivos, localização) | Não iniciado |
+| [004](004-driver-app/spec.md) | App do motorista (baixas, motivos, localização) | API pronta; app não iniciado (protótipo pronto) |
 | [005](005-geocoding-provider/spec.md) | Busca de endereços com conta única da plataforma | Implementado (cota provisória até a 007) |
 | [006](006-address-cache/spec.md) | Base de endereços já localizados | Implementado |
 | [007](007-plan-limits/spec.md) | Planos e limites por quantidade de veículos | Implementado (valores de exemplo; pagamento na 008) |

@@ -51,13 +51,13 @@ class RouteOptimizer
         $legs = [];
         $previous = $hasOrigin ? 0 : null;
         foreach ($stopPath as $node) {
-            $legs[] = $previous === null ? 0 : $this->roadMeters($matrix[$previous][$node]);
+            $legs[] = $previous === null ? 0 : self::roadMeters($matrix[$previous][$node]);
             $previous = $node;
         }
 
         $total = array_sum($legs);
         if ($closed) {
-            $total += $this->roadMeters($matrix[$previous][0]);
+            $total += self::roadMeters($matrix[$previous][0]);
         }
 
         return ['order' => $order, 'legs_m' => $legs, 'total_m' => $total];
@@ -191,7 +191,7 @@ class RouteOptimizer
         return $path;
     }
 
-    private function roadMeters(float $straightLineMeters): int
+    public static function roadMeters(float $straightLineMeters): int
     {
         return (int) round($straightLineMeters * self::ROAD_FACTOR);
     }

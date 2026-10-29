@@ -2,20 +2,22 @@
     use App\Enums\DeliveryRouteStatus;
 @endphp
 
-<div class="w-full space-y-6" wire:poll.15s.visible>
-    @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit">
-            {{ session('status') }}
-        </div>
-    @endif
+<div id="route-monitor" class="w-full scroll-mt-48 space-y-6 lg:scroll-mt-24" wire:poll.{{ \App\Livewire\Deliveries\RouteMonitor::REFRESH_MINUTES * 60 }}s.visible>
+    <x-fleet.page-messages :status="$statusMessage" :error="$errorMessage" />
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="fleet-page-title">{{ __('Acompanhamento de rotas') }}</h1>
             <p class="fleet-page-lead">
-                {{ __('Posição dos entregadores e situação de cada entrega.') }}
-                <span class="inline-flex items-center gap-1.5 text-fleet-success">
-                    <span class="h-2 w-2 rounded-full bg-fleet-success"></span>{{ __('Atualiza a cada 15 s') }}
+                {{ __('Onde está cada motorista e a situação de cada entrega. Deixe esta tela aberta: ela se atualiza sozinha.') }}
+                <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span class="inline-flex items-center gap-1.5 text-fleet-success">
+                        <span class="h-2 w-2 rounded-full bg-fleet-success"></span>{{ __('Atualiza a cada :min min · última às :time', ['min' => \App\Livewire\Deliveries\RouteMonitor::REFRESH_MINUTES, 'time' => now()->format('H:i')]) }}
+                    </span>
+                    <button type="button" wire:click="$refresh" wire:loading.attr="disabled" class="font-semibold text-fleet-primary-strong underline-offset-4 hover:underline">
+                        <span wire:loading.remove wire:target="$refresh">{{ __('Atualizar agora') }}</span>
+                        <span wire:loading wire:target="$refresh">{{ __('Atualizando…') }}</span>
+                    </button>
                 </span>
             </p>
         </div>
@@ -37,6 +39,45 @@
             <p class="mt-1 text-fleet-body text-fleet-secondary">{{ __('Importe os pedidos e crie as rotas na tela de entregas.') }}</p>
         </div>
     @else
+        @if ($route && $routes->count() > 1)
+            <button type="button" wire:click="showAll" class="fleet-btn--outline fleet-btn--sm">
+                ‹ {{ __('Ver todos os motoristas') }}
+            </button>
+        @endif
+
+        @if ($overview)
+            {{-- Operação do dia: todos os motoristas --}}
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="fleet-panel--inverted">
+                    <p class="text-sm font-medium text-fleet-navy/80">{{ __('Motoristas em rota') }}</p>
+                    <p class="mt-3 font-display text-3xl font-medium tabular-nums">{{ $overview['inProgress'] }} <span class="text-lg font-semibold text-fleet-navy/80">{{ __('de :total', ['total' => $overview['routes']]) }}</span></p>
+                </div>
+                <div class="fleet-panel">
+                    <p class="fleet-section-title">{{ __('Entregas baixadas') }}</p>
+                    <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ $overview['finished'] }} <span class="text-base text-fleet-secondary">{{ __('de :total', ['total' => $overview['stops']]) }}</span></p>
+                    <p class="mt-2 text-xs text-fleet-muted">{{ trans_choice('{0} Nenhuma não entregue|{1} :count não entregue|[2,*] :count não entregues', $overview['failed']) }}</p>
+                </div>
+                <div class="fleet-panel">
+                    <p class="fleet-section-title">{{ __('Parados') }}</p>
+                    <p class="mt-3 font-display text-2xl font-medium tabular-nums {{ $overview['idle'] > 0 ? 'text-fleet-tertiary' : 'text-fleet-navy' }}">{{ $overview['idle'] }}</p>
+                    <p class="mt-2 text-xs text-fleet-muted">{{ __('Sem posição nova há mais de :min min', ['min' => \App\Livewire\Deliveries\RouteMonitor::IDLE_AFTER_MINUTES]) }}</p>
+                </div>
+                <div class="fleet-panel">
+                    <p class="fleet-section-title">{{ __('Sem sinal') }}</p>
+                    <p class="mt-3 font-display text-2xl font-medium tabular-nums {{ $overview['withoutSignal'] > 0 ? 'text-fleet-danger' : 'text-fleet-navy' }}">{{ $overview['withoutSignal'] }}</p>
+                    <p class="mt-2 text-xs text-fleet-muted">{{ __('Rota iniciada sem nenhuma posição do app') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if ($route?->routingNotice())
+            <div class="rounded-xl border border-fleet-tertiary/40 bg-fleet-warning/20 px-4 py-3 text-sm text-fleet-ink" role="status">
+                <span class="font-semibold">{{ __('Rota sem otimização completa.') }}</span>
+                {{ $route->routingNotice() }}
+                <a href="{{ route('deliveries.planner', ['data' => $date]) }}" wire:navigate class="font-semibold text-fleet-primary-strong underline-offset-4 hover:underline">{{ __('Ir para Entregas') }}</a>
+            </div>
+        @endif
+
         @if ($route)
             {{-- Indicadores da rota selecionada --}}
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -79,16 +120,23 @@
                     </p>
                 </div>
             </div>
+        @endif
 
+        @if ($mapPayload)
             {{-- Mapa em largura total --}}
             <div>
-                <x-fleet.route-map :payload="$mapPayload" height="h-[480px] lg:h-[560px]" />
+                <x-fleet.route-map :payload="$mapPayload" height="h-[480px] lg:h-[560px]" fullscreen />
                 <div class="mt-2 flex flex-wrap gap-4 text-xs text-fleet-secondary">
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-success"></span>{{ __('Entregue') }}</span>
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-tertiary"></span>{{ __('Em rota') }}</span>
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-primary"></span>{{ __('Roteirizada') }}</span>
                     <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-fleet-danger"></span>{{ __('Não entregue') }}</span>
-                    <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-full border-2 border-fleet-ink bg-fleet-warning"></span>{{ __('Motorista') }}</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-full border-2 border-fleet-ink bg-fleet-warning"></span>{{ __('Motorista (última posição)') }}</span>
+                    @if ($route)
+                        <span class="inline-flex items-center gap-1.5"><span class="w-5 border-t-2 border-dotted border-fleet-ink"></span>{{ __('Caminho feito') }}</span>
+                    @else
+                        <span>{{ __('Cada rota tem uma cor, a mesma do cartão do motorista.') }}</span>
+                    @endif
                 </div>
             </div>
         @endif
@@ -100,23 +148,29 @@
                     <p class="fleet-section-title">{{ __('Motoristas') }}</p>
                     <p class="text-xs text-fleet-secondary">{{ trans_choice(':count rota|:count rotas', $routes->count()) }}</p>
                 </div>
-                <div class="grid gap-3 overflow-y-auto p-3 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+                <div class="grid gap-3 overflow-y-auto p-3 sm:grid-cols-2 {{ $route ? 'lg:grid-cols-1 2xl:grid-cols-2' : 'lg:grid-cols-3 2xl:grid-cols-4' }}">
                 @foreach ($routes as $item)
                     @php
                         $finished = $item->delivered_count + $item->failed_count;
                         $progress = $item->stops_count > 0 ? round($finished / $item->stops_count * 100) : 0;
                         $idle = in_array($item->id, $idleRouteIds, true);
                         $isSelected = $route?->id === $item->id;
+                        $next = $nextStops[$item->id];
+                        $lastPosition = $item->latestLocation?->recorded_at;
                     @endphp
                     <button
                         type="button"
                         wire:key="monitor-route-{{ $item->id }}"
                         wire:click="selectRoute({{ $item->id }})"
+                        x-on:click="document.getElementById('route-monitor').scrollIntoView({ behavior: 'smooth' })"
                         class="rounded-2xl border bg-fleet-card p-4 text-left shadow-fleet transition hover:border-fleet-primary/50
                             {{ $isSelected ? 'border-fleet-primary ring-1 ring-fleet-primary' : ($idle ? 'border-fleet-tertiary' : 'border-fleet-border') }}"
                     >
                         <div class="flex items-start justify-between gap-2">
-                            <p class="truncate font-semibold text-fleet-ink">{{ $item->driver?->name ?? __('Sem motorista') }}</p>
+                            <p class="flex min-w-0 items-center gap-2 font-semibold text-fleet-ink">
+                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {{ $routeColors[$item->id] }}"></span>
+                                <span class="truncate">{{ $item->driver?->name ?? __('Sem motorista') }}</span>
+                            </p>
                             <span class="shrink-0 text-xs font-semibold tabular-nums text-fleet-secondary">{{ $finished }}/{{ $item->stops_count }}</span>
                         </div>
                         <p class="truncate text-xs text-fleet-secondary">{{ $item->name }} · {{ $item->vehicle?->plate ?? __('sem veículo') }}</p>
@@ -131,7 +185,13 @@
                             @else
                                 {{ $item->status->label() }}
                             @endif
+                            @if ($lastPosition)
+                                · {{ __('posição às :time', ['time' => $lastPosition->format('H:i')]) }}
+                            @endif
                         </p>
+                        @if ($next && $item->status === DeliveryRouteStatus::InProgress)
+                            <p class="mt-1 truncate text-xs text-fleet-muted">{{ __('Próxima: :seq. :name', ['seq' => $next->sequence, 'name' => $next->delivery->customer->name]) }}</p>
+                        @endif
                     </button>
                 @endforeach
                 </div>
@@ -141,7 +201,7 @@
                 <div class="flex max-h-[560px] flex-col overflow-hidden rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
                     <div class="flex items-center justify-between gap-2 border-b border-fleet-border px-4 py-3">
                         <p class="fleet-section-title">{{ __('Entregas') }} · {{ $route->name }}</p>
-                        <p class="text-xs text-fleet-secondary">{{ __(':km km estimados', ['km' => number_format(($route->total_distance_m ?? 0) / 1000, 1, ',', '.')]) }}</p>
+                        <p class="text-xs text-fleet-secondary">{{ $route->distanceSummary() }}</p>
                     </div>
                     <ol class="divide-y divide-fleet-border overflow-y-auto">
                         @foreach ($route->stops as $stop)
@@ -159,8 +219,8 @@
                                     @endif
                                     <div class="mt-1 flex flex-wrap items-center gap-2">
                                         <x-fleet.status-pill :color="$delivery->status->color()" :label="$delivery->status->label()" />
-                                        @if ($delivery->delivered_at)
-                                            <span class="text-xs text-fleet-secondary">{{ $delivery->delivered_at->format('H:i') }}</span>
+                                        @if ($stop->arrived_at ?? $delivery->delivered_at)
+                                            <span class="text-xs text-fleet-secondary">{{ ($stop->arrived_at ?? $delivery->delivered_at)->format('H:i') }}</span>
                                         @endif
                                         @if ($delivery->failure_reason)
                                             <span class="text-xs text-fleet-danger">{{ $delivery->failure_reason }}</span>
