@@ -4,6 +4,7 @@ namespace App\Livewire\Vehicles;
 
 use App\Livewire\Concerns\ChecksPlanLimits;
 use App\Livewire\Concerns\ConfirmsDeletes;
+use App\Livewire\Concerns\SendsToasts;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,7 @@ use Livewire\WithPagination;
 #[Title('Veículos')]
 class VehicleIndex extends Component
 {
-    use ChecksPlanLimits, ConfirmsDeletes;
+    use ChecksPlanLimits, ConfirmsDeletes, SendsToasts;
     use WithPagination;
 
     public bool $showModal = false;
@@ -138,7 +139,7 @@ class VehicleIndex extends Component
                 'ideal_consumption' => $this->parseIdealConsumption(),
             ]);
 
-            session()->flash('status', __('Veículo atualizado.'));
+            $this->toast(__('Veículo atualizado.'));
         } else {
             Gate::authorize('create', Vehicle::class);
 
@@ -164,7 +165,7 @@ class VehicleIndex extends Component
                 'ideal_consumption' => $this->parseIdealConsumption(),
             ]);
 
-            session()->flash('status', __('Veículo criado.'));
+            $this->toast(__('Veículo criado.'));
         }
 
         $this->closeModal();
@@ -180,7 +181,7 @@ class VehicleIndex extends Component
             $this->closeModal();
         }
 
-        session()->flash('status', __('Veículo removido.'));
+        $this->toast(__('Veículo removido.'));
     }
 
     public function render()

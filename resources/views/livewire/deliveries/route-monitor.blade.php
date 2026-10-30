@@ -3,8 +3,6 @@
 @endphp
 
 <div id="route-monitor" class="w-full scroll-mt-48 space-y-6 lg:scroll-mt-24" wire:poll.{{ \App\Livewire\Deliveries\RouteMonitor::REFRESH_MINUTES * 60 }}s.visible>
-    <x-fleet.page-messages :status="$statusMessage" :error="$errorMessage" />
-
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="fleet-page-title">{{ __('Acompanhamento de rotas') }}</h1>

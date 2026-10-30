@@ -5,6 +5,7 @@ namespace App\Livewire\Drivers;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\ChecksPlanLimits;
 use App\Livewire\Concerns\ConfirmsDeletes;
+use App\Livewire\Concerns\SendsToasts;
 use App\Models\Driver;
 use App\Models\User;
 use Closure;
@@ -19,7 +20,7 @@ use Livewire\WithPagination;
 #[Title('Motoristas')]
 class DriverIndex extends Component
 {
-    use ChecksPlanLimits, ConfirmsDeletes;
+    use ChecksPlanLimits, ConfirmsDeletes, SendsToasts;
     use WithPagination;
 
     public bool $showModal = false;
@@ -118,7 +119,7 @@ class DriverIndex extends Component
             $this->syncAppAccess($driver, $validated['app_password'] ?? '');
         });
 
-        session()->flash('status', $this->editingId === null ? __('Motorista criado.') : __('Motorista atualizado.'));
+        $this->toast($this->editingId === null ? __('Motorista criado.') : __('Motorista atualizado.'));
 
         $this->closeModal();
     }
@@ -209,7 +210,7 @@ class DriverIndex extends Component
             $this->closeModal();
         }
 
-        session()->flash('status', __('Motorista removido.'));
+        $this->toast(__('Motorista removido.'));
     }
 
     public function render()

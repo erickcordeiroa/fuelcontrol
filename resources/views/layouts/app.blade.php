@@ -58,6 +58,8 @@
             </div>
         </div>
 
+        <x-fleet.toasts />
+
         @livewireScripts
     </body>
 </html>

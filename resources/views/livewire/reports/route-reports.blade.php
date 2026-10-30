@@ -1,9 +1,4 @@
 <div class="space-y-8">
-    @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit">
-            {{ session('status') }}
-        </div>
-    @endif
 
     <x-fleet.report-tabs />
 

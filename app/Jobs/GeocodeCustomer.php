@@ -73,7 +73,7 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
         }
 
         if ($known?->isKnownNotFound()) {
-            $this->markFailed($customer, __('Endereço não encontrado. Arraste o pino até o local ou informe latitude e longitude na planilha.'));
+            $this->markFailed($customer, __('Endereço não encontrado. Clique em "Editar endereço" e marque o local no mapa.'));
 
             return;
         }
@@ -90,7 +90,7 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
         if (! $geocoders->hasQuotaFor($customer->user_id)) {
             $customer->forceFill([
                 'geocode_status' => GeocodeStatus::Pending,
-                'geocode_error' => __('Cota mensal de busca de endereços atingida. Arraste o pino até o local ou informe latitude e longitude na planilha.'),
+                'geocode_error' => __('Cota mensal de busca de endereços atingida. Clique em "Editar endereço" e marque o local no mapa.'),
             ])->save();
 
             return;
@@ -115,7 +115,7 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
 
         if ($result === null || ! $this->isInCustomerCity($customer, $result)) {
             $addressBook->rememberNotFound($customer, $provider);
-            $this->markFailed($customer, __('Endereço não encontrado. Arraste o pino até o local ou informe latitude e longitude na planilha.'));
+            $this->markFailed($customer, __('Endereço não encontrado. Clique em "Editar endereço" e marque o local no mapa.'));
 
             return;
         }

@@ -131,21 +131,24 @@ class RouteMonitorTest extends TestCase
             ->assertViewHas('mapPayload', fn (array $payload): bool => $payload['paths'][1]['dashed'] === true && count($payload['paths'][1]['points']) === 2);
     }
 
-    public function test_messages_stay_until_closed_and_route_notice_stays_visible(): void
+    public function test_session_message_becomes_a_side_notification_and_route_notice_stays_visible(): void
     {
         $route = $this->routeWithStops([['name' => 'Cliente A', 'amount' => 10.0, 'status' => DeliveryStatus::Routed]]);
         $route->update(['routing_note' => RoutePlan::NOTE_DAILY_LIMIT]);
-        session()->flash('status', 'Rota "Setor Sul" criada com 1 parada(s).');
+
+        $this->actingAs($this->admin)
+            ->withSession(['status' => 'Rota "Setor Sul" criada com 1 parada(s).', 'warning' => 'Limite do dia.'])
+            ->get(route('deliveries.monitor'))
+            ->assertOk()
+            ->assertSee('fleetToasts(', false)
+            ->assertSee('criada com 1 parada', false)
+            ->assertSee('Limite do dia.', false);
 
         Livewire::actingAs($this->admin)
             ->test(RouteMonitor::class)
-            ->assertSee('criada com 1 parada')
             ->call('$refresh')
-            ->assertSee('criada com 1 parada')
             ->assertSee('Rota sem otimização completa.')
-            ->assertSee('limite diário de créditos')
-            ->call('dismissMessages')
-            ->assertDontSee('criada com 1 parada');
+            ->assertSee('limite diário de créditos');
     }
 
     public function test_screen_refreshes_every_ten_minutes_and_can_refresh_now(): void

@@ -3,6 +3,7 @@
 namespace App\Livewire\OilChanges;
 
 use App\Livewire\Concerns\ConfirmsDeletes;
+use App\Livewire\Concerns\SendsToasts;
 use App\Models\OilChange;
 use App\Models\Vehicle;
 use App\Services\OilChangeAlertService;
@@ -18,7 +19,7 @@ use Livewire\WithPagination;
 #[Title('Trocas de óleo')]
 class OilChangeIndex extends Component
 {
-    use ConfirmsDeletes;
+    use ConfirmsDeletes, SendsToasts;
     use WithPagination;
 
     public bool $showModal = false;
@@ -112,7 +113,7 @@ class OilChangeIndex extends Component
                 'notes' => $validated['notes'] !== '' ? $validated['notes'] : null,
             ]);
 
-            session()->flash('status', __('Troca de óleo atualizada.'));
+            $this->toast(__('Troca de óleo atualizada.'));
         } else {
             Gate::authorize('create', OilChange::class);
 
@@ -128,7 +129,7 @@ class OilChangeIndex extends Component
                 'notes' => $validated['notes'] !== '' ? $validated['notes'] : null,
             ]);
 
-            session()->flash('status', __('Troca de óleo registrada.'));
+            $this->toast(__('Troca de óleo registrada.'));
         }
 
         $this->closeModal();
@@ -144,7 +145,7 @@ class OilChangeIndex extends Component
             $this->closeModal();
         }
 
-        session()->flash('status', __('Troca de óleo removida.'));
+        $this->toast(__('Troca de óleo removida.'));
     }
 
     public function render()

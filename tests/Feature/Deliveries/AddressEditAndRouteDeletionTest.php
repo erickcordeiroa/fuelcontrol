@@ -45,7 +45,7 @@ class AddressEditAndRouteDeletionTest extends TestCase
             ->call('saveAddress')
             ->assertHasNoErrors()
             ->assertSet('editingCustomerId', null)
-            ->assertSee('A localização está sendo buscada de novo.');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'A localização está sendo buscada de novo'));
 
         $customer->refresh();
         $this->assertSame('Rua Shitiro Maeji', $customer->street);
@@ -74,20 +74,64 @@ class AddressEditAndRouteDeletionTest extends TestCase
         Queue::assertNothingPushed();
     }
 
-    public function test_customer_in_a_route_gets_a_reoptimize_warning(): void
+    public function test_customer_in_a_route_has_the_address_locked(): void
     {
         Queue::fake();
-        $customer = Customer::factory()->confirmed()->create(['user_id' => $this->admin->id]);
+        $customer = Customer::factory()->confirmed(-24.49, -47.84)->create(['user_id' => $this->admin->id, 'number' => '100']);
         $route = DeliveryRoute::factory()->create(['user_id' => $this->admin->id]);
         $delivery = Delivery::factory()->forTenant($this->admin->id)->status(DeliveryStatus::Routed)->create(['customer_id' => $customer->id]);
         RouteStop::factory()->create(['delivery_route_id' => $route->id, 'delivery_id' => $delivery->id]);
 
         Livewire::actingAs($this->admin)
             ->test(DeliveryPlanner::class)
+            ->assertSee('Em rota: endereço travado')
+            ->assertDontSee('wire:click="openAddressEditor('.$customer->id.')"', false)
             ->call('openAddressEditor', $customer->id)
-            ->set('addressForm.number', '9999')
+            ->assertSet('editingCustomerId', null)
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'já está numa rota'))
+            ->call('moveCustomer', $customer->id, -24.50, -47.85)
+            ->call('retryGeocoding', $customer->id);
+
+        $customer->refresh();
+        $this->assertSame('100', $customer->number);
+        $this->assertSame(['lat' => -24.49, 'lng' => -47.84], $customer->coordinates());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_marking_the_customer_on_the_map_saves_a_manual_location_without_searching(): void
+    {
+        Queue::fake();
+        $customer = Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Failed, 'geocode_error' => 'Endereço não encontrado.']);
+        Delivery::factory()->forTenant($this->admin->id)->create(['customer_id' => $customer->id]);
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->assertSee('Editar endereço e marcar no mapa')
+            ->call('openAddressEditor', $customer->id)
+            ->assertSet('pinLatitude', '')
+            ->set('pinLatitude', '-24,4961')
+            ->set('pinLongitude', '-47.8471')
             ->call('saveAddress')
-            ->assertSee('reotimize a rota');
+            ->assertHasNoErrors()
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'O pedido já pode entrar numa rota'));
+
+        $customer->refresh();
+        $this->assertSame(GeocodeStatus::Manual, $customer->geocode_status);
+        $this->assertSame(['lat' => -24.4961, 'lng' => -47.8471], $customer->coordinates());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_pin_coordinates_are_validated(): void
+    {
+        $customer = Customer::factory()->create(['user_id' => $this->admin->id]);
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->call('openAddressEditor', $customer->id)
+            ->set('pinLatitude', '95')
+            ->set('pinLongitude', '')
+            ->call('saveAddress')
+            ->assertHasErrors(['pinLatitude', 'pinLongitude']);
     }
 
     public function test_address_validation(): void
@@ -124,7 +168,7 @@ class AddressEditAndRouteDeletionTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(DeliveryPlanner::class)
             ->call('deleteRoute', $route->id)
-            ->assertSee('Rota "Setor Sul" excluída.');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'Rota "Setor Sul" excluída.'));
 
         $this->assertModelMissing($route);
         $this->assertSame(0, RouteStop::query()->count());
@@ -140,7 +184,7 @@ class AddressEditAndRouteDeletionTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(DeliveryPlanner::class)
             ->call('deleteRoute', $route->id)
-            ->assertSee('tem entregas baixadas e não pode ser excluída');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'tem entregas baixadas e não pode ser excluída'));
 
         $this->assertModelExists($route);
     }

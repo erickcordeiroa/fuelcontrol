@@ -1,9 +1,4 @@
 <div class="w-full space-y-8">
-    @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit">
-            {{ session('status') }}
-        </div>
-    @endif
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

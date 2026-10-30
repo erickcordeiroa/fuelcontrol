@@ -143,20 +143,29 @@ class DeliveryPlannerTest extends TestCase
         $this->assertSame(DeliveryStatus::Routed, $late->refresh()->status);
     }
 
-    public function test_messages_stay_on_screen_while_the_user_keeps_working(): void
+    public function test_actions_answer_with_a_side_notification(): void
     {
         $route = app(DeliveryRoutePlanner::class)->create(['name' => 'Setor Sul', 'scheduled_for' => now()->toDateString(), 'user_id' => $this->admin->id], collect([$this->delivery()]));
-        $other = $this->delivery();
 
         Livewire::actingAs($this->admin)
             ->test(DeliveryPlanner::class)
             ->call('reoptimize', $route->id)
-            ->assertSee('já está otimizada')
-            ->set('selected', [$other->id])
-            ->set('routeName', 'Setor Norte')
-            ->assertSee('já está otimizada')
-            ->call('dismissMessages')
-            ->assertDontSee('já está otimizada');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'já está otimizada'));
+    }
+
+    public function test_address_problems_raise_a_warning_notification_with_a_shortcut_to_the_list(): void
+    {
+        $failed = $this->delivery([], Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Failed]));
+        $this->delivery();
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->assertDispatched('toast', fn (string $name, array $params): bool => $params['type'] === 'warning'
+                && str_contains($params['message'], '1 endereço não foi encontrado')
+                && str_contains($params['action']['url'], 'localizacao=problemas'))
+            ->set('locationFilter', DeliveryPlanner::LOCATION_PROBLEMS)
+            ->assertSee($failed->order_number)
+            ->assertViewHas('deliveries', fn ($deliveries): bool => $deliveries->total() === 1);
     }
 
     public function test_warns_when_address_searches_are_stuck_in_the_queue(): void
