@@ -152,6 +152,27 @@ class Customer extends Model
     }
 
     /**
+     * Cliente com localização mas ainda marcado como "Aguardando" (ex.: "Tentar de novo" num cliente já localizado):
+     * acerta o status pela posição que ele tem. Devolve true se corrigiu.
+     */
+    public function settleWaitingStatus(): bool
+    {
+        if ($this->geocode_status !== GeocodeStatus::Pending || ! $this->hasCoordinates()) {
+            return false;
+        }
+
+        $status = match (true) {
+            $this->confirmed_latitude !== null && $this->confirmed_longitude !== null => GeocodeStatus::Manual,
+            $this->location_type === null || $this->location_type === 'ROOFTOP' => GeocodeStatus::Resolved,
+            default => GeocodeStatus::Approximate,
+        };
+
+        $this->forceFill(['geocode_status' => $status, 'geocode_error' => null])->save();
+
+        return true;
+    }
+
+    /**
      * Substitui a posição por uma coordenada própria (GPS da baixa ou ajuste do admin).
      */
     public function confirmLocation(float $latitude, float $longitude, GeocodeStatus $status = GeocodeStatus::Confirmed): void

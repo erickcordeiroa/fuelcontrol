@@ -1,10 +1,11 @@
-const SUCCESS_VISIBLE_MS = 8000;
+/** Quanto tempo cada tipo fica na tela; erro não está aqui porque fica até a pessoa fechar. */
+const VISIBLE_MS = { success: 8000, warning: 15000 };
 
 let nextId = 1;
 
 /**
- * Notificações laterais (canto superior direito). Sucesso some sozinho depois de alguns segundos (pausa com o mouse
- * em cima); aviso e erro ficam até a pessoa fechar. Recebe o evento "toast" disparado pelo Livewire
+ * Notificações laterais (canto superior direito). Sucesso some em 8 s e aviso em 15 s (pausa com o mouse em cima);
+ * erro fica até a pessoa fechar. Recebe o evento "toast" disparado pelo Livewire
  * ($this->dispatch('toast', ...)) e as mensagens de sessão da página (status, warning, error).
  *
  * @param {Array<{type: string, message: string, action?: {label: string, url: string}|null}>} initial
@@ -28,14 +29,15 @@ export function fleetToasts(initial = []) {
             const item = { id: nextId++, type: toast.type ?? 'success', message: toast.message, action: toast.action ?? null, timer: null };
             this.items.push(item);
 
-            if (item.type === 'success') {
-                this.schedule(item);
-            }
+            this.schedule(item);
         },
 
         schedule(item) {
             clearTimeout(item.timer);
-            item.timer = setTimeout(() => this.remove(item.id), SUCCESS_VISIBLE_MS);
+
+            if (VISIBLE_MS[item.type]) {
+                item.timer = setTimeout(() => this.remove(item.id), VISIBLE_MS[item.type]);
+            }
         },
 
         pause(item) {
@@ -43,9 +45,7 @@ export function fleetToasts(initial = []) {
         },
 
         resume(item) {
-            if (item.type === 'success') {
-                this.schedule(item);
-            }
+            this.schedule(item);
         },
 
         remove(id) {

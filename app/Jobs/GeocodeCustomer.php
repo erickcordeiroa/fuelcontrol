@@ -61,6 +61,8 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
         $customer = $this->customer->refresh();
 
         if (! $customer->needsGeocoding()) {
+            $customer->settleWaitingStatus();
+
             return;
         }
 

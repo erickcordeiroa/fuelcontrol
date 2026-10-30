@@ -168,6 +168,21 @@ class DeliveryPlannerTest extends TestCase
             ->assertViewHas('deliveries', fn ($deliveries): bool => $deliveries->total() === 1);
     }
 
+    public function test_retry_on_an_already_located_customer_fixes_the_status_without_searching(): void
+    {
+        Queue::fake();
+        $customer = Customer::factory()->located()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'location_type' => 'ROOFTOP']);
+        $this->delivery([], $customer);
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->call('retryGeocoding', $customer->id)
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'já está localizado'));
+
+        Queue::assertNothingPushed();
+        $this->assertSame(GeocodeStatus::Resolved, $customer->refresh()->geocode_status);
+    }
+
     public function test_warns_when_address_searches_are_stuck_in_the_queue(): void
     {
         $customer = Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null]);

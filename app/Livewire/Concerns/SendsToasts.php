@@ -3,8 +3,8 @@
 namespace App\Livewire\Concerns;
 
 /**
- * Notificação lateral (resources/views/components/fleet/toasts.blade.php). Sucesso some sozinho em alguns segundos;
- * aviso e erro ficam até a pessoa fechar. Antes de um redirect, use session()->flash('status'|'warning'|'error').
+ * Notificação lateral (resources/views/components/fleet/toasts.blade.php). Sucesso some em 8 s e aviso em 15 s;
+ * erro fica até a pessoa fechar. Antes de um redirect, use session()->flash('status'|'warning'|'error').
  */
 trait SendsToasts
 {
