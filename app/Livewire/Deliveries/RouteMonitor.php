@@ -4,7 +4,6 @@ namespace App\Livewire\Deliveries;
 
 use App\Enums\DeliveryRouteStatus;
 use App\Enums\DeliveryStatus;
-use App\Livewire\Concerns\KeepsMessages;
 use App\Models\DeliveryRoute;
 use App\Models\RouteStop;
 use App\Services\Routing\RouteMapPresenter;
@@ -23,8 +22,6 @@ use Livewire\Component;
 #[Title('Acompanhamento de rotas')]
 class RouteMonitor extends Component
 {
-    use KeepsMessages;
-
     /**
      * Sem posição nova há mais que isso, com a rota em andamento, o motorista aparece como parado.
      */

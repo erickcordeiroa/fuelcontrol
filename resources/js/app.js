@@ -78,6 +78,8 @@ import { fleetBrPlateField, formatBrPlateFromChars } from './br-plate-mask';
 import { fleetKmField, formatKmFromDigits } from './br-km-mask';
 import { fleetBrDateField } from './br-date-mask';
 import { fleetRouteMap } from './route-map';
+import { fleetToasts } from './toasts';
+import { fleetPinPicker } from './pin-picker';
 
 window.fleetFormatBrlDigits = formatBrlFromDigits;
 window.fleetAllowDigitsOnlyKeydown = allowDigitsOnlyKeydown;
@@ -90,6 +92,8 @@ window.fleetKmField = fleetKmField;
 window.fleetFormatKmFromDigits = formatKmFromDigits;
 window.fleetBrDateField = fleetBrDateField;
 window.fleetRouteMap = fleetRouteMap;
+window.fleetToasts = fleetToasts;
+window.fleetPinPicker = fleetPinPicker;
 
 const normalizeFleetSearchText = (value = '') =>
     value

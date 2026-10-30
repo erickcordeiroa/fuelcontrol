@@ -88,7 +88,7 @@ class PlanLimitsTest extends TestCase
             ->test(SubscriptionSettings::class)
             ->assertSee('Até 2 veículos')
             ->call('changePlan', 'profissional')
-            ->assertSee('Plano alterado para');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'Plano alterado para'));
 
         $this->assertSame('profissional', Subscription::query()->withoutGlobalScopes()->sole()->plan);
         $this->assertTrue(app(PlanLimits::class)->canAdd($this->admin->id, 'vehicles'));
@@ -114,7 +114,7 @@ class PlanLimitsTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(SubscriptionSettings::class)
             ->call('changePlan', 'empresa')
-            ->assertSee('Este plano é contratado com a nossa equipe.');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'Este plano é contratado com a nossa equipe.'));
 
         $this->assertNull(Subscription::query()->withoutGlobalScopes()->first());
     }
@@ -171,7 +171,7 @@ class PlanLimitsTest extends TestCase
             ->test(SubscriptionSettings::class)
             ->assertDontSee('Parceiros')
             ->call('changePlan', 'parceiros')
-            ->assertSee('Este plano é contratado com a nossa equipe.');
+            ->assertDispatched('toast', fn (string $name, array $params): bool => str_contains($params['message'], 'Este plano é contratado com a nossa equipe.'));
 
         $this->assertNull(Subscription::query()->withoutGlobalScopes()->first());
     }

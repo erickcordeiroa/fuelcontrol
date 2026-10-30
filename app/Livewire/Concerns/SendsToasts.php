@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Livewire\Concerns;
+
+/**
+ * Notificação lateral (resources/views/components/fleet/toasts.blade.php). Sucesso some sozinho em alguns segundos;
+ * aviso e erro ficam até a pessoa fechar. Antes de um redirect, use session()->flash('status'|'warning'|'error').
+ */
+trait SendsToasts
+{
+    protected function toast(string $message, string $type = 'success', ?string $actionLabel = null, ?string $actionUrl = null): void
+    {
+        $this->dispatch('toast',
+            type: $type,
+            message: $message,
+            action: $actionLabel !== null && $actionUrl !== null ? ['label' => $actionLabel, 'url' => $actionUrl] : null,
+        );
+    }
+
+    protected function toastWarning(string $message, ?string $actionLabel = null, ?string $actionUrl = null): void
+    {
+        $this->toast($message, 'warning', $actionLabel, $actionUrl);
+    }
+
+    protected function toastError(string $message): void
+    {
+        $this->toast($message, 'error');
+    }
+}

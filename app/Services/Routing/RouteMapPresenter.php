@@ -38,10 +38,16 @@ class RouteMapPresenter
      */
     public function forPlanning(Collection $deliveries, string $fitKey): array
     {
+        /** Cliente numa rota ainda aberta não pode ter o pino arrastado (mudaria a rota já criada). */
+        $lockedCustomerIds = $deliveries
+            ->filter(fn (Delivery $delivery): bool => $delivery->routeStop !== null && in_array($delivery->status, [DeliveryStatus::Routed, DeliveryStatus::InTransit], true))
+            ->pluck('customer_id')
+            ->flip();
+
         $points = $deliveries
             ->filter(fn (Delivery $delivery): bool => $delivery->customer->hasCoordinates())
             ->unique('customer_id')
-            ->map(function (Delivery $delivery): array {
+            ->map(function (Delivery $delivery) use ($lockedCustomerIds): array {
                 $customer = $delivery->customer;
                 $coordinates = $customer->coordinates();
                 $status = $customer->geocode_status;
@@ -60,7 +66,7 @@ class RouteMapPresenter
                         $delivery->status === DeliveryStatus::Pending => DeliveryStatus::Pending->color(),
                         default => DeliveryStatus::Routed->color(),
                     },
-                    'draggable' => true,
+                    'draggable' => ! $lockedCustomerIds->has($delivery->customer_id),
                 ];
             })
             ->values()

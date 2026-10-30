@@ -4,12 +4,6 @@
 @endphp
 
 <div class="w-full space-y-8">
-    @if (session('status'))
-        <div class="rounded-xl border border-fleet-success/30 bg-fleet-success/10 px-4 py-3 text-sm text-fleet-profit" role="status">{{ session('status') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="rounded-xl border border-fleet-danger/30 bg-fleet-danger/10 px-4 py-3 text-sm text-fleet-danger" role="alert">{{ session('error') }}</div>
-    @endif
 
     <div>
         <h1 class="fleet-page-title">{{ __('Assinatura') }}</h1>

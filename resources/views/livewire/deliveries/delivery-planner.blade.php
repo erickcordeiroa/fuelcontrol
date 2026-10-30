@@ -3,8 +3,7 @@
     use App\Enums\GeocodeStatus;
 @endphp
 
-<div class="w-full space-y-8">
-    <x-fleet.page-messages :status="$statusMessage" :error="$errorMessage" />
+<div class="w-full space-y-8" @if ($stats['waitingGeocode'] > 0) wire:poll.20s.visible @endif>
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -91,7 +90,11 @@
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Revisar endereço') }}</p>
             <p class="mt-3 font-display text-2xl font-medium tabular-nums {{ $stats['needsReview'] > 0 ? 'text-fleet-tertiary' : 'text-fleet-ink' }}">{{ $stats['needsReview'] }}</p>
-            <p class="mt-2 text-xs text-fleet-muted">{{ __('Arraste o pino até a porta do cliente') }}</p>
+            @if ($stats['needsReview'] > 0)
+                <button type="button" wire:click="$set('locationFilter', '{{ \App\Livewire\Deliveries\DeliveryPlanner::LOCATION_PROBLEMS }}')" class="mt-2 text-left text-xs font-semibold text-fleet-primary-strong underline-offset-4 hover:underline">{{ __('Ver na lista e marcar no mapa') }}</button>
+            @else
+                <p class="mt-2 text-xs text-fleet-muted">{{ __('Nenhum endereço com problema') }}</p>
+            @endif
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Aguardando localização') }}</p>
@@ -253,12 +256,12 @@
             ->values()
             ->all();
         $isPageSelected = $pageRoutableIds !== [] && array_diff($pageRoutableIds, $selected) === [];
-        $hasFilters = $search !== '' || $sectorFilter !== '' || $statusFilter !== '';
+        $hasFilters = $search !== '' || $sectorFilter !== '' || $statusFilter !== '' || $locationFilter !== '';
         $sortableHeaders = ['order_number' => __('Pedido'), 'customer' => __('Cliente'), 'sector' => __('Setor')];
     @endphp
     <div class="overflow-hidden rounded-2xl border border-fleet-border bg-fleet-card shadow-fleet">
         <div class="flex flex-col gap-3 border-b border-fleet-border px-4 py-3 lg:flex-row lg:items-end lg:justify-between">
-            <div class="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <div class="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
                 <div>
                     <label class="fleet-label" for="delivery-search">{{ __('Buscar') }}</label>
                     <input id="delivery-search" type="search" wire:model.live.debounce.400ms="search" class="fleet-field" placeholder="{{ __('Nº do pedido, cliente, código ou endereço') }}" />
@@ -281,6 +284,14 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="fleet-label" for="delivery-location">{{ __('Localização') }}</label>
+                    <select id="delivery-location" wire:model.live="locationFilter" class="fleet-field">
+                        <option value="">{{ __('Todas') }}</option>
+                        <option value="{{ \App\Livewire\Deliveries\DeliveryPlanner::LOCATION_PROBLEMS }}">{{ __('Com problema') }}</option>
+                        <option value="{{ \App\Livewire\Deliveries\DeliveryPlanner::LOCATION_WAITING }}">{{ __('Aguardando busca') }}</option>
+                    </select>
+                </div>
             </div>
             <div class="flex items-end gap-3">
                 @if ($hasFilters)
@@ -297,7 +308,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto" wire:loading.class="opacity-60" wire:target="search,sectorFilter,statusFilter,perPage,sortBy,gotoPage,nextPage,previousPage,clearFilters">
+        <div class="overflow-x-auto" wire:loading.class="opacity-60" wire:target="search,sectorFilter,statusFilter,locationFilter,perPage,sortBy,gotoPage,nextPage,previousPage,clearFilters">
             <table class="min-w-full divide-y divide-fleet-border text-fleet-body">
                 <thead class="fleet-table-head">
                     <tr>
@@ -334,6 +345,7 @@
                         @php
                             $customer = $delivery->customer;
                             $routable = $delivery->routeStop === null && $delivery->status === DeliveryStatus::Pending && $customer->hasCoordinates();
+                            $addressLocked = in_array($customer->id, $lockedCustomerIds, true);
                         @endphp
                         <tr wire:key="delivery-{{ $delivery->id }}">
                             <td class="px-4 py-3">
@@ -345,7 +357,13 @@
                             <td class="max-w-xs px-4 py-3">
                                 <p class="truncate font-medium text-fleet-ink" title="{{ $customer->name }}">{{ $customer->name }}</p>
                                 <p class="truncate text-xs text-fleet-secondary" title="{{ $customer->fullAddress() }}">{{ $customer->external_code }} · {{ $customer->fullAddress() }}</p>
-                                <button type="button" wire:click="openAddressEditor({{ $customer->id }})" class="fleet-btn-text mt-1">{{ __('Editar endereço') }}</button>
+                                @if ($addressLocked)
+                                    <p class="mt-1 text-xs text-fleet-muted">{{ __('Em rota: endereço travado') }}</p>
+                                @else
+                                    <button type="button" wire:click="openAddressEditor({{ $customer->id }})" class="fleet-btn-text mt-1">
+                                        {{ $customer->hasCoordinates() ? __('Editar endereço') : __('Editar endereço e marcar no mapa') }}
+                                    </button>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-fleet-secondary">{{ $delivery->sector ?? '—' }}</td>
                             <td class="px-4 py-3">
@@ -353,7 +371,7 @@
                                 @if ($customer->geocode_error)
                                     <p class="mt-1 max-w-[16rem] text-xs text-fleet-danger">{{ $customer->geocode_error }}</p>
                                 @endif
-                                @if (in_array($customer->geocode_status, [GeocodeStatus::Failed, GeocodeStatus::Pending], true) && $geocodingAvailable)
+                                @if (! $addressLocked && in_array($customer->geocode_status, [GeocodeStatus::Failed, GeocodeStatus::Pending], true) && $geocodingAvailable)
                                     <button type="button" wire:click="retryGeocoding({{ $customer->id }})" class="mt-1 text-xs font-semibold text-fleet-primary hover:underline">{{ __('Tentar de novo') }}</button>
                                 @endif
                             </td>
@@ -389,17 +407,17 @@
 
     @if ($editingCustomerId)
         @teleport('body')
-            <div class="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="address-editor-title" x-data x-on:keydown.escape.window="$wire.closeAddressEditor()">
+            <div wire:key="address-editor-{{ $editingCustomerId }}" class="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="address-editor-title" x-data x-on:keydown.escape.window="$wire.closeAddressEditor()">
                 <div class="absolute inset-0 bg-fleet-ink/50" wire:click="closeAddressEditor"></div>
-                <div class="relative z-10 flex min-h-full items-start justify-center overflow-y-auto px-4 pb-10 pt-24 sm:pt-32">
+                <div class="relative z-10 flex h-full items-start justify-center overflow-y-auto px-4 pb-10 pt-10 sm:pt-16">
                     <form wire:submit="saveAddress" class="w-full max-w-2xl rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet-card" onclick="event.stopPropagation()">
                         <div class="mb-1 flex items-start justify-between gap-4">
-                            <h2 id="address-editor-title" class="fleet-modal-title">{{ __('Editar endereço') }}</h2>
+                            <h2 id="address-editor-title" class="fleet-modal-title">{{ __('Endereço e localização') }}</h2>
                             <button type="button" wire:click="closeAddressEditor" class="fleet-icon-btn fleet-icon-btn--ghost" aria-label="{{ __('Fechar') }}">
                                 <x-icons.x-mark class="h-5 w-5" />
                             </button>
                         </div>
-                        <p class="mb-5 text-sm text-fleet-secondary">{{ __('Se o endereço mudar, a localização antiga é descartada e a busca é feita de novo.') }}</p>
+                        <p class="mb-5 text-sm text-fleet-secondary">{{ __('Corrija o endereço ou marque no mapa onde fica o cliente. Com o pino marcado, o pedido já pode entrar numa rota, sem esperar a busca.') }}</p>
 
                         <div class="grid gap-4 sm:grid-cols-6">
                             <div class="sm:col-span-4">
@@ -439,9 +457,30 @@
                             </div>
                         </div>
 
+                        <div class="mt-6" x-data="fleetPinPicker(@js($pinLatitude !== '' && $pinLongitude !== '' ? ['lat' => (float) $pinLatitude, 'lng' => (float) $pinLongitude] : null), @js($pinCenter), @js($mapTiles))">
+                            <p class="fleet-label">{{ __('Localização no mapa') }}</p>
+                            <p class="text-xs text-fleet-secondary">{{ __('Clique no mapa na porta do cliente ou arraste o pino. Para mover o mapa, arraste com o mouse; use + e − para aproximar.') }}</p>
+                            <div wire:ignore class="relative mt-2 overflow-hidden rounded-xl border border-fleet-border">
+                                <div x-ref="canvas" class="h-72 w-full"></div>
+                                <p x-show="! hasPin" class="pointer-events-none absolute inset-x-0 top-3 z-[500] mx-auto w-max rounded-full bg-fleet-ink/80 px-3 py-1 text-xs font-medium text-white">{{ __('Sem localização: clique no mapa para marcar') }}</p>
+                            </div>
+                            <div class="mt-3 grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="fleet-label" for="address-pin-lat">{{ __('Latitude') }}</label>
+                                    <input id="address-pin-lat" type="text" inputmode="decimal" wire:model="pinLatitude" x-on:change="fromFields()" class="fleet-field tabular-nums" placeholder="-24,4961" />
+                                    @error('pinLatitude') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="fleet-label" for="address-pin-lng">{{ __('Longitude') }}</label>
+                                    <input id="address-pin-lng" type="text" inputmode="decimal" wire:model="pinLongitude" x-on:change="fromFields()" class="fleet-field tabular-nums" placeholder="-47,8471" />
+                                    @error('pinLongitude') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mt-6 flex flex-wrap justify-end gap-3">
                             <button type="button" wire:click="closeAddressEditor" class="fleet-btn--outline">{{ __('Cancelar') }}</button>
-                            <button type="submit" class="fleet-btn--primary" wire:loading.attr="disabled" wire:target="saveAddress">{{ __('Salvar endereço') }}</button>
+                            <button type="submit" class="fleet-btn--primary" wire:loading.attr="disabled" wire:target="saveAddress">{{ __('Salvar') }}</button>
                         </div>
                     </form>
                 </div>

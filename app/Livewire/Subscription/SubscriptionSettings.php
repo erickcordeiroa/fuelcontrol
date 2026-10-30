@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Subscription;
 
+use App\Livewire\Concerns\SendsToasts;
 use App\Services\Billing\PlanLimits;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -15,6 +16,8 @@ use Livewire\Component;
 #[Title('Assinatura')]
 class SubscriptionSettings extends Component
 {
+    use SendsToasts;
+
     public function mount(): void
     {
         abort_unless(auth()->user()->isAdmin(), 403);
@@ -27,14 +30,14 @@ class SubscriptionSettings extends Component
         $plan = $planLimits->plans()->get($planKey);
 
         if ($plan === null || $plan['price_cents'] === null || ! ($plan['public'] ?? true)) {
-            session()->flash('error', __('Este plano é contratado com a nossa equipe.'));
+            $this->toastError(__('Este plano é contratado com a nossa equipe.'));
 
             return;
         }
 
         $planLimits->changePlan($this->tenantId(), $planKey);
 
-        session()->flash('status', __('Plano alterado para ":plan".', ['plan' => $plan['name']]));
+        $this->toast(__('Plano alterado para ":plan".', ['plan' => $plan['name']]));
     }
 
     public function render(PlanLimits $planLimits): View

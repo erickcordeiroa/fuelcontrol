@@ -6,7 +6,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\GeocodeStatus;
 use App\Jobs\GeocodeCustomer;
 use App\Livewire\Concerns\ChecksPlanLimits;
-use App\Livewire\Concerns\KeepsMessages;
+use App\Livewire\Concerns\SendsToasts;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryImport;
@@ -40,10 +40,14 @@ use Livewire\WithPagination;
 #[Title('Entregas')]
 class DeliveryPlanner extends Component
 {
-    use ChecksPlanLimits, KeepsMessages, WithFileUploads;
+    use ChecksPlanLimits, SendsToasts, WithFileUploads;
     use WithPagination;
 
     /** Valor do filtro de setor que representa pedidos sem setor. */
+    public const LOCATION_PROBLEMS = 'problemas';
+
+    public const LOCATION_WAITING = 'aguardando';
+
     public const WITHOUT_SECTOR = '~';
 
     /** @var list<int> */
@@ -95,6 +99,18 @@ class DeliveryPlanner extends Component
     #[Url(as: 'situacao', except: '')]
     public string $statusFilter = '';
 
+    /** Filtro de localização: endereços com problema (não encontrado ou aproximado) ou aguardando a busca. */
+    #[Url(as: 'localizacao', except: '')]
+    public string $locationFilter = '';
+
+    /** Quantos endereços com problema já foram avisados em notificação (avisa de novo só se aumentar). */
+    public int $notifiedAddressProblems = 0;
+
+    /** Posição marcada no mapa do editor de endereço (vazia = sem posição). */
+    public string $pinLatitude = '';
+
+    public string $pinLongitude = '';
+
     #[Url(as: 'ordem', except: 'sector')]
     public string $sortField = 'sector';
 
@@ -127,6 +143,7 @@ class DeliveryPlanner extends Component
 
         $this->selected = [];
         $this->lastImportId = null;
+        $this->notifiedAddressProblems = 0;
         $this->resetPage();
     }
 
@@ -136,6 +153,11 @@ class DeliveryPlanner extends Component
     }
 
     public function updatedSectorFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedLocationFilter(): void
     {
         $this->resetPage();
     }
@@ -167,7 +189,7 @@ class DeliveryPlanner extends Component
 
     public function clearFilters(): void
     {
-        $this->reset('search', 'sectorFilter', 'statusFilter');
+        $this->reset('search', 'sectorFilter', 'statusFilter', 'locationFilter');
         $this->resetPage();
     }
 
@@ -207,7 +229,7 @@ class DeliveryPlanner extends Component
         $this->lastImportId = $import->id;
         $this->reset('spreadsheet');
 
-        $this->notify(__(':imported de :total pedido(s) importado(s).', [
+        $this->toast(__(':imported de :total pedido(s) importado(s).', [
             'imported' => $import->imported_rows,
             'total' => $import->total_rows,
         ]));
@@ -273,7 +295,11 @@ class DeliveryPlanner extends Component
             return;
         }
 
-        session()->flash('status', __('Rota ":name" criada com :count parada(s).', ['name' => $route->name, 'count' => $deliveries->count()]).$this->orderSourceNotice($route).$this->straightLineNotice($route));
+        session()->flash('status', __('Rota ":name" criada com :count parada(s).', ['name' => $route->name, 'count' => $deliveries->count()]).$this->orderSourceNotice($route));
+
+        if ($route->routingNotice() !== null) {
+            session()->flash('warning', $route->routingNotice());
+        }
 
         $this->redirectRoute('deliveries.monitor', ['data' => $this->date, 'rota' => $route->id], navigate: true);
     }
@@ -303,7 +329,8 @@ class DeliveryPlanner extends Component
 
         $this->selected = [];
 
-        $this->notify(__(':count pedido(s) incluído(s) na rota ":name", encaixado(s) na ordem atual. Só os trechos novos foram traçados.', ['name' => $route->name, 'count' => $deliveries->count()]).$this->straightLineNotice($route));
+        $this->toast(__(':count pedido(s) incluído(s) na rota ":name", encaixado(s) na ordem atual. Só os trechos novos foram traçados.', ['name' => $route->name, 'count' => $deliveries->count()]));
+        $this->warnAboutRouting($route);
     }
 
     /**
@@ -316,7 +343,7 @@ class DeliveryPlanner extends Component
         Gate::authorize('update', $route);
 
         if ($planner->reoptimizationReason($route) === null) {
-            $this->notify(__('A rota ":name" já está otimizada. Nada mudou desde o último cálculo.', ['name' => $route->name]));
+            $this->toast(__('A rota ":name" já está otimizada. Nada mudou desde o último cálculo.', ['name' => $route->name]));
 
             return;
         }
@@ -324,12 +351,13 @@ class DeliveryPlanner extends Component
         try {
             $route = $planner->reoptimize($route);
         } catch (InvalidArgumentException $e) {
-            $this->notify($e->getMessage());
+            $this->toastError($e->getMessage());
 
             return;
         }
 
-        $this->notify(__('Rota ":name" reotimizada.', ['name' => $route->name]).$this->straightLineNotice($route));
+        $this->toast(__('Rota ":name" reotimizada.', ['name' => $route->name]));
+        $this->warnAboutRouting($route);
     }
 
     private function orderSourceNotice(DeliveryRoute $route): string
@@ -342,13 +370,13 @@ class DeliveryPlanner extends Component
     }
 
     /**
-     * Avisa quando a rota não saiu otimizada ou pelas ruas, com o motivo (limite do dia ou falha do serviço).
+     * Avisa, em notificação que fica até fechar, quando a rota não saiu otimizada ou pelas ruas, com o motivo.
      */
-    private function straightLineNotice(DeliveryRoute $route): string
+    private function warnAboutRouting(DeliveryRoute $route): void
     {
-        $notice = $route->routingNotice();
-
-        return $notice === null ? '' : ' '.$notice;
+        if ($route->routingNotice() !== null) {
+            $this->toastWarning($route->routingNotice());
+        }
     }
 
     /**
@@ -363,7 +391,36 @@ class DeliveryPlanner extends Component
         }
 
         $customer = Customer::query()->findOrFail($customerId);
+
+        if ($this->refuseIfInRoute($customer)) {
+            return;
+        }
+
         $customer->confirmLocation($latitude, $longitude, GeocodeStatus::Manual);
+        $this->toast(__('Localização de ":name" salva.', ['name' => $customer->name]));
+    }
+
+    /**
+     * Cliente numa rota ainda não concluída: endereço e posição ficam travados para não mudar a rota por baixo.
+     */
+    private function isInOpenRoute(Customer $customer): bool
+    {
+        return Delivery::query()
+            ->where('customer_id', $customer->id)
+            ->whereHas('routeStop')
+            ->whereIn('status', [DeliveryStatus::Routed, DeliveryStatus::InTransit])
+            ->exists();
+    }
+
+    private function refuseIfInRoute(Customer $customer): bool
+    {
+        if (! $this->isInOpenRoute($customer)) {
+            return false;
+        }
+
+        $this->toastError(__('":name" já está numa rota: o endereço não pode mais ser alterado. Para mudar, exclua a rota em "Rotas do dia" e crie de novo.', ['name' => $customer->name]));
+
+        return true;
     }
 
     /**
@@ -375,7 +432,7 @@ class DeliveryPlanner extends Component
         Gate::authorize('delete', $route);
 
         if ($route->stops->contains(fn ($stop): bool => $stop->delivery->status->isFinished())) {
-            $this->notifyError(__('A rota ":name" tem entregas baixadas e não pode ser excluída.', ['name' => $route->name]));
+            $this->toastError(__('A rota ":name" tem entregas baixadas e não pode ser excluída.', ['name' => $route->name]));
 
             return;
         }
@@ -389,7 +446,7 @@ class DeliveryPlanner extends Component
         });
 
         $this->selected = [];
-        $this->notify(__('Rota ":name" excluída. Os pedidos voltaram para "Pendente".', ['name' => $route->name]));
+        $this->toast(__('Rota ":name" excluída. Os pedidos voltaram para "Pendente".', ['name' => $route->name]));
     }
 
     public function openAddressEditor(int $customerId): void
@@ -397,6 +454,14 @@ class DeliveryPlanner extends Component
         Gate::authorize('create', DeliveryRoute::class);
 
         $customer = Customer::query()->findOrFail($customerId);
+
+        if ($this->refuseIfInRoute($customer)) {
+            return;
+        }
+
+        $coordinates = $customer->coordinates();
+        $this->pinLatitude = $coordinates === null ? '' : (string) $coordinates['lat'];
+        $this->pinLongitude = $coordinates === null ? '' : (string) $coordinates['lng'];
 
         $this->editingCustomerId = $customer->id;
         $this->addressForm = [
@@ -425,6 +490,8 @@ class DeliveryPlanner extends Component
         Gate::authorize('create', DeliveryRoute::class);
 
         $this->addressForm['zip_code'] = preg_replace('/\D+/', '', $this->addressForm['zip_code']) ?? '';
+        $this->pinLatitude = str_replace(',', '.', trim($this->pinLatitude));
+        $this->pinLongitude = str_replace(',', '.', trim($this->pinLongitude));
         $this->addressForm['state'] = mb_strtoupper(trim($this->addressForm['state']));
 
         $validated = $this->validate([
@@ -435,6 +502,8 @@ class DeliveryPlanner extends Component
             'addressForm.state' => ['required', 'string', 'size:2', 'alpha'],
             'addressForm.zip_code' => ['required', 'digits:8'],
             'addressForm.reference' => ['nullable', 'string', 'max:500'],
+            'pinLatitude' => ['nullable', 'required_with:pinLongitude', 'numeric', 'between:-90,90'],
+            'pinLongitude' => ['nullable', 'required_with:pinLatitude', 'numeric', 'between:-180,180'],
         ], attributes: [
             'addressForm.street' => __('rua'),
             'addressForm.number' => __('número'),
@@ -443,9 +512,19 @@ class DeliveryPlanner extends Component
             'addressForm.state' => __('UF'),
             'addressForm.zip_code' => __('CEP'),
             'addressForm.reference' => __('referência'),
+            'pinLatitude' => __('latitude'),
+            'pinLongitude' => __('longitude'),
         ])['addressForm'];
 
         $customer = Customer::query()->findOrFail($this->editingCustomerId);
+
+        if ($this->refuseIfInRoute($customer)) {
+            $this->editingCustomerId = null;
+
+            return;
+        }
+
+        $pinMoved = $this->pinMoved($customer);
 
         $address = [
             'street' => trim($validated['street']),
@@ -458,7 +537,7 @@ class DeliveryPlanner extends Component
         $addressHash = Customer::hashAddress($address);
         $addressChanged = $addressHash !== $customer->address_hash;
 
-        if ($addressChanged) {
+        if ($addressChanged && ! $pinMoved) {
             $customer->resetLocation();
         }
 
@@ -470,19 +549,38 @@ class DeliveryPlanner extends Component
 
         $this->editingCustomerId = null;
 
+        if ($pinMoved) {
+            $customer->confirmLocation((float) $this->pinLatitude, (float) $this->pinLongitude, GeocodeStatus::Manual);
+            $this->toast(__('Endereço e localização de ":name" salvos. O pedido já pode entrar numa rota.', ['name' => $customer->name]));
+
+            return;
+        }
+
         if (! $addressChanged) {
-            $this->notify(__('Dados do cliente atualizados.'));
+            $this->toast(__('Dados do cliente atualizados.'));
 
             return;
         }
 
         GeocodeCustomer::dispatch($customer);
 
-        $isInRoute = Delivery::query()->where('customer_id', $customer->id)->whereHas('routeStop')->whereIn('status', [DeliveryStatus::Routed, DeliveryStatus::InTransit])->exists();
+        $this->toast(__('Endereço atualizado. A localização está sendo buscada de novo; se não for encontrada, você será avisado aqui.'));
+    }
 
-        $this->notify($isInRoute
-            ? __('Endereço atualizado e localização sendo buscada de novo. O cliente está numa rota: reotimize a rota depois que ele for localizado.')
-            : __('Endereço atualizado. A localização está sendo buscada de novo.'));
+    /**
+     * O pino foi colocado ou arrastado no mapa do editor (diferente da posição que o cliente já tinha).
+     */
+    private function pinMoved(Customer $customer): bool
+    {
+        if ($this->pinLatitude === '' || $this->pinLongitude === '') {
+            return false;
+        }
+
+        $current = $customer->coordinates();
+
+        return $current === null
+            || abs($current['lat'] - (float) $this->pinLatitude) > 0.000001
+            || abs($current['lng'] - (float) $this->pinLongitude) > 0.000001;
     }
 
     public function retryGeocoding(int $customerId): void
@@ -490,9 +588,15 @@ class DeliveryPlanner extends Component
         Gate::authorize('create', DeliveryRoute::class);
 
         $customer = Customer::query()->findOrFail($customerId);
+
+        if ($this->refuseIfInRoute($customer)) {
+            return;
+        }
+
         $customer->forceFill(['geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null])->save();
 
         GeocodeCustomer::dispatch($customer);
+        $this->toast(__('Buscando de novo a localização de ":name".', ['name' => $customer->name]));
     }
 
     public function render(): View
@@ -516,8 +620,22 @@ class DeliveryPlanner extends Component
 
         $mapPayload = $presenter->forPlanning($deliveries, 'planning-'.$this->date);
         $this->dispatch('route-map-update', payload: $mapPayload);
+        $this->warnAboutAddressProblems($deliveries);
+
+        $lockedCustomerIds = $deliveries
+            ->filter(fn (Delivery $d): bool => $d->routeStop !== null && in_array($d->status, [DeliveryStatus::Routed, DeliveryStatus::InTransit], true))
+            ->pluck('customer_id')
+            ->unique()
+            ->all();
 
         return view('livewire.deliveries.delivery-planner', [
+            'lockedCustomerIds' => $lockedCustomerIds,
+            'pinCenter' => $this->pinCenter($deliveries),
+            'mapTiles' => [
+                'url' => config('services.map_tiles.url'),
+                'attribution' => config('services.map_tiles.attribution'),
+                'maxZoom' => config('services.map_tiles.max_zoom'),
+            ],
             'deliveries' => $this->paginatedDeliveries(),
             'statusOptions' => DeliveryStatus::cases(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
@@ -540,6 +658,47 @@ class DeliveryPlanner extends Component
             'mapPayload' => $mapPayload,
             'geocodingAvailable' => app(GeocoderFactory::class)->isConfigured(),
         ]);
+    }
+
+    /**
+     * Notificação com os endereços que impedem roteirizar (não encontrados ou aproximados). Avisa ao abrir a página
+     * e de novo só quando aparecem novos (por exemplo, quando a busca em segundo plano termina sem achar).
+     *
+     * @param  Collection<int, Delivery>  $deliveries
+     */
+    private function warnAboutAddressProblems(Collection $deliveries): void
+    {
+        $failed = $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status === GeocodeStatus::Failed)->count();
+        $approximate = $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status === GeocodeStatus::Approximate)->count();
+        $problems = $failed + $approximate;
+
+        if ($problems > $this->notifiedAddressProblems) {
+            $parts = array_filter([
+                $failed > 0 ? trans_choice(':count endereço não foi encontrado|:count endereços não foram encontrados', $failed) : null,
+                $approximate > 0 ? trans_choice(':count está com a posição aproximada|:count estão com a posição aproximada', $approximate) : null,
+            ]);
+
+            $this->toastWarning(
+                ucfirst(implode(' e ', $parts)).'. '.__('Abra "Editar endereço" e marque o local no mapa para poder roteirizar.'),
+                __('Ver endereços com problema'),
+                route('deliveries.planner', ['data' => $this->date, 'localizacao' => self::LOCATION_PROBLEMS]),
+            );
+        }
+
+        $this->notifiedAddressProblems = $problems;
+    }
+
+    /**
+     * Onde o mapa do editor de endereço abre quando o cliente ainda não tem posição: centro de distribuição
+     * ou o primeiro cliente localizado do dia.
+     *
+     * @param  Collection<int, Delivery>  $deliveries
+     * @return array{lat: float, lng: float}|null
+     */
+    private function pinCenter(Collection $deliveries): ?array
+    {
+        return DeliveryRoute::defaultOrigin()
+            ?? $deliveries->map(fn (Delivery $d): ?array => $d->customer->coordinates())->filter()->first();
     }
 
     /**
@@ -586,6 +745,8 @@ class DeliveryPlanner extends Component
             ->when($this->sectorFilter === self::WITHOUT_SECTOR, fn (Builder $query) => $query->whereNull('sector'))
             ->when($this->sectorFilter !== '' && $this->sectorFilter !== self::WITHOUT_SECTOR, fn (Builder $query) => $query->where('sector', $this->sectorFilter))
             ->when($status !== null, fn (Builder $query) => $query->where('status', $status))
+            ->when($this->locationFilter === self::LOCATION_PROBLEMS, fn (Builder $query) => $query->whereHas('customer', fn (Builder $customer) => $customer->whereIn('geocode_status', [GeocodeStatus::Failed, GeocodeStatus::Approximate])))
+            ->when($this->locationFilter === self::LOCATION_WAITING, fn (Builder $query) => $query->whereHas('customer', fn (Builder $customer) => $customer->where('geocode_status', GeocodeStatus::Pending)))
             ->when(
                 $this->sortField === 'customer',
                 fn (Builder $query) => $query->orderBy(

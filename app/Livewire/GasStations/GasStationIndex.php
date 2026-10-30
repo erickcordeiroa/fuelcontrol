@@ -4,6 +4,7 @@ namespace App\Livewire\GasStations;
 
 use App\Enums\FuelType;
 use App\Livewire\Concerns\ConfirmsDeletes;
+use App\Livewire\Concerns\SendsToasts;
 use App\Models\GasStation;
 use App\Models\GasStationFuelOffering;
 use App\Support\BrazilianNumber;
@@ -23,7 +24,7 @@ use Livewire\WithPagination;
 #[Title('Postos')]
 class GasStationIndex extends Component
 {
-    use ConfirmsDeletes;
+    use ConfirmsDeletes, SendsToasts;
     use WithPagination;
 
     public bool $showModal = false;
@@ -199,7 +200,7 @@ class GasStationIndex extends Component
             $station->fuelOfferings()->whereNotIn('id', $keptIds)->delete();
         });
 
-        session()->flash('status', $this->editingId === null ? __('Posto criado.') : __('Posto atualizado.'));
+        $this->toast($this->editingId === null ? __('Posto criado.') : __('Posto atualizado.'));
         $this->closeModal();
     }
 
@@ -233,7 +234,7 @@ class GasStationIndex extends Component
             $this->closeModal();
         }
 
-        session()->flash('status', __('Posto removido.'));
+        $this->toast(__('Posto removido.'));
     }
 
     public function render()
