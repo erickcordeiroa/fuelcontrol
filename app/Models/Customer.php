@@ -29,6 +29,11 @@ class Customer extends Model
     public const GOOGLE_CACHE_DAYS = 30;
 
     /**
+     * Esperando a busca há mais que isso, o processamento em segundo plano provavelmente está parado.
+     */
+    public const GEOCODE_STALE_MINUTES = 10;
+
+    /**
      * @var list<string>
      */
     protected $fillable = [

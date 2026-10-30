@@ -28,6 +28,11 @@ class GeocodeCustomer implements ShouldBeUnique, ShouldQueue
 
     public int $timeout = 30;
 
+    /**
+     * Trava de "já está na fila" expira sozinha: se o job se perder, o cliente pode voltar para a fila depois.
+     */
+    public int $uniqueFor = 3600;
+
     public function __construct(public Customer $customer) {}
 
     /**

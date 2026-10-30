@@ -159,6 +159,23 @@ class DeliveryPlannerTest extends TestCase
             ->assertDontSee('já está otimizada');
     }
 
+    public function test_warns_when_address_searches_are_stuck_in_the_queue(): void
+    {
+        $customer = Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null]);
+        $this->delivery([], $customer);
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->assertSee('A busca roda sozinha em segundo plano.')
+            ->assertDontSee('a busca automática parece parada');
+
+        $customer->forceFill(['updated_at' => now()->subMinutes(Customer::GEOCODE_STALE_MINUTES + 1)])->saveQuietly();
+
+        Livewire::actingAs($this->admin)
+            ->test(DeliveryPlanner::class)
+            ->assertSee('1 esperando há mais de 10 min: a busca automática parece parada.');
+    }
+
     public function test_reoptimize_is_skipped_when_nothing_changed(): void
     {
         config(['services.routing.provider' => 'local']);

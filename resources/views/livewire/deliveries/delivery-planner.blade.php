@@ -96,7 +96,11 @@
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Aguardando localização') }}</p>
             <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ $stats['waitingGeocode'] }}</p>
-            <p class="mt-2 text-xs text-fleet-muted">{{ __('Processado pela fila (queue:work)') }}</p>
+            @if ($stats['geocodeStalled'] > 0)
+                <p class="mt-2 text-xs font-semibold text-fleet-tertiary">{{ __(':count esperando há mais de :min min: a busca automática parece parada. Avise o suporte do Kilomo.', ['count' => $stats['geocodeStalled'], 'min' => \App\Models\Customer::GEOCODE_STALE_MINUTES]) }}</p>
+            @else
+                <p class="mt-2 text-xs text-fleet-muted">{{ __('A busca roda sozinha em segundo plano.') }}</p>
+            @endif
         </div>
     </div>
 
