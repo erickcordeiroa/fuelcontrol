@@ -527,6 +527,9 @@ class DeliveryPlanner extends Component
                 'unrouted' => $deliveries->filter(fn (Delivery $d): bool => $d->routeStop === null && $d->status === DeliveryStatus::Pending)->count(),
                 'needsReview' => $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status->needsReview())->count(),
                 'waitingGeocode' => $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status === GeocodeStatus::Pending)->count(),
+                'geocodeStalled' => $deliveries->filter(fn (Delivery $d): bool => $d->customer->geocode_status === GeocodeStatus::Pending
+                    && $d->customer->geocode_error === null
+                    && $d->customer->updated_at?->lt(now()->subMinutes(Customer::GEOCODE_STALE_MINUTES)))->count(),
             ],
             'routes' => $routes,
             'basePreview' => $this->basePreview($planner),

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Geocoding\AddressBook;
 use App\Services\Geocoding\Geocoder;
 use App\Services\Geocoding\GeocoderFactory;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
@@ -83,5 +84,37 @@ class GeocodingDailyLimitTest extends TestCase
 
         Queue::assertPushed(GeocodeCustomer::class, 1);
         Queue::assertPushed(GeocodeCustomer::class, fn (GeocodeCustomer $job): bool => $job->customer->is($held));
+    }
+
+    public function test_resume_command_requeues_customers_waiting_too_long_for_a_lost_job(): void
+    {
+        Queue::fake();
+
+        $stale = Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null]);
+        $stale->forceFill(['updated_at' => now()->subMinutes(Customer::GEOCODE_STALE_MINUTES + 1)])->saveQuietly();
+        Customer::factory()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null]);
+
+        $this->artisan('geocoding:resume-pending')->assertSuccessful();
+
+        Queue::assertPushed(GeocodeCustomer::class, 1);
+        Queue::assertPushed(GeocodeCustomer::class, fn (GeocodeCustomer $job): bool => $job->customer->is($stale));
+    }
+
+    public function test_scheduler_processes_the_queue_every_minute_and_resumes_pending_searches(): void
+    {
+        $events = collect(app(Schedule::class)->events());
+
+        $worker = $events->first(fn ($event): bool => str_contains($event->command, 'queue:work') && str_contains($event->command, '--stop-when-empty'));
+        $this->assertNotNull($worker);
+        $this->assertSame('* * * * *', $worker->expression);
+        $this->assertTrue($worker->withoutOverlapping);
+
+        $resume = $events->first(fn ($event): bool => str_contains($event->command, 'geocoding:resume-pending'));
+        $this->assertSame('*/15 * * * *', $resume->expression);
+    }
+
+    public function test_job_lock_expires_so_a_lost_job_does_not_block_the_customer_forever(): void
+    {
+        $this->assertSame(3600, (new GeocodeCustomer(Customer::factory()->create(['user_id' => $this->admin->id])))->uniqueFor);
     }
 }
