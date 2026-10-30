@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Vehicles;
 
+use App\Livewire\Concerns\ChecksPlanLimits;
 use App\Livewire\Concerns\ConfirmsDeletes;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +16,7 @@ use Livewire\WithPagination;
 #[Title('Veículos')]
 class VehicleIndex extends Component
 {
-    use ConfirmsDeletes;
+    use ChecksPlanLimits, ConfirmsDeletes;
     use WithPagination;
 
     public bool $showModal = false;
@@ -35,6 +36,10 @@ class VehicleIndex extends Component
     public function openCreateModal(): void
     {
         Gate::authorize('create', Vehicle::class);
+
+        if (! $this->planAllowsAdding('vehicles')) {
+            return;
+        }
 
         $this->editingId = null;
         $this->resetForm();
@@ -136,6 +141,10 @@ class VehicleIndex extends Component
             session()->flash('status', __('Veículo atualizado.'));
         } else {
             Gate::authorize('create', Vehicle::class);
+
+            if (! $this->planAllowsAdding('vehicles')) {
+                return;
+            }
 
             $this->ideal_consumption = str_replace(',', '.', trim($this->ideal_consumption));
 

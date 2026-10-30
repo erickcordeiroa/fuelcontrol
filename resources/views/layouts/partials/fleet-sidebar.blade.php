@@ -1,123 +1,45 @@
 @php
     $user = auth()->user();
     $isAdmin = $user->isAdmin();
+    $menu = \App\Support\FleetMenu::for($user);
 
-    $navIcon = function (bool $active): string {
-        return $active
-            ? 'inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fleet-primary text-white shadow-sm'
-            : 'inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fleet-primary/10 text-fleet-primary';
-    };
 @endphp
 
-<aside class="hidden w-64 shrink-0 flex-col border-r border-fleet-border bg-fleet-sidebar lg:flex">
-    <div class="px-6 py-8">
+<aside class="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-fleet-border bg-fleet-sidebar lg:sticky lg:top-0 lg:flex lg:h-[100dvh]">
+    <a href="{{ route('reports') }}" wire:navigate class="mx-5 mt-6 flex items-center" aria-label="{{ __('Kilomo — página inicial') }}">
+        <img src="{{ asset('img/logo.png') }}" alt="Kilomo" class="h-8 w-auto" />
+    </a>
+
+    <div class="mx-5 mt-6 border-t border-fleet-border pt-4">
         @if ($isAdmin && filled($user->company_name))
-            <p class="mt-2 text-sm font-semibold text-fleet-ink">{{ $user->company_name }}</p>
-            <p class="mt-0.5 text-fleet-body text-fleet-secondary">{{ __('Administrador') }}</p>
+            <p class="text-sm font-medium leading-snug text-fleet-ink">{{ $user->company_name }}</p>
+            <p class="mt-0.5 text-sm text-fleet-secondary">{{ __('Administrador') }}</p>
         @else
-            <p class="mt-2 text-sm font-semibold text-fleet-ink">{{ $isAdmin ? __('Função Administrador') : __('Motorista') }}</p>
+            <p class="text-sm font-medium leading-snug text-fleet-ink">{{ $user->name }}</p>
+            <p class="mt-0.5 text-sm text-fleet-secondary">{{ $isAdmin ? __('Administrador') : __('Motorista') }}</p>
         @endif
     </div>
 
-    <nav class="flex-1 space-y-1 px-3">
-        <a
-            href="{{ route('dashboard') }}"
-            wire:navigate
-            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                {{ request()->routeIs('dashboard') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-        >
-            <span class="{{ $navIcon(request()->routeIs('dashboard')) }}" aria-hidden="true">
-                <x-icons.home class="h-4 w-4" />
-            </span>
-            {{ __('Painel') }}
-        </a>
-
-        @if ($isAdmin)
-            <a
-                href="{{ route('vehicles.index') }}"
-                wire:navigate
-                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                    {{ request()->routeIs('vehicles.*') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-            >
-                <span class="{{ $navIcon(request()->routeIs('vehicles.*')) }}" aria-hidden="true">
-                    <x-icons.truck class="h-4 w-4" />
-                </span>
-                {{ __('Veículos') }}
-            </a>
-            <a
-                href="{{ route('drivers.index') }}"
-                wire:navigate
-                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                    {{ request()->routeIs('drivers.*') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-            >
-                <span class="{{ $navIcon(request()->routeIs('drivers.*')) }}" aria-hidden="true">
-                    <x-icons.users class="h-4 w-4" />
-                </span>
-                {{ __('Motoristas') }}
-            </a>
-            <a
-                href="{{ route('gas-stations.index') }}"
-                wire:navigate
-                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                    {{ request()->routeIs('gas-stations.*') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-            >
-                <span class="{{ $navIcon(request()->routeIs('gas-stations.*')) }}" aria-hidden="true">
-                    <x-icons.building-storefront class="h-4 w-4" />
-                </span>
-                {{ __('Postos') }}
-            </a>
-            <a
-                href="{{ route('oil-changes.index') }}"
-                wire:navigate
-                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                    {{ request()->routeIs('oil-changes.*') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-            >
-                <span class="{{ $navIcon(request()->routeIs('oil-changes.*')) }}" aria-hidden="true">
-                    <x-icons.wrench class="h-4 w-4" />
-                </span>
-                {{ __('Trocas de óleo') }}
-            </a>
-        @endif
-
-        <a
-            href="{{ route('logbook') }}"
-            wire:navigate
-            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                {{ request()->routeIs('logbook') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-        >
-            <span class="{{ $navIcon(request()->routeIs('logbook')) }}" aria-hidden="true">
-                <x-icons.clipboard-document class="h-4 w-4" />
-            </span>
-            {{ __('Diário de Bordo') }}
-        </a>
-
-        <a
-            href="{{ route('reports') }}"
-            wire:navigate
-            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                {{ request()->routeIs('reports') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-        >
-            <span class="{{ $navIcon(request()->routeIs('reports')) }}" aria-hidden="true">
-                <x-icons.chart-bar class="h-4 w-4" />
-            </span>
-            {{ __('Relatórios') }}
-        </a>
-
-        <a
-            href="{{ route('profile') }}"
-            wire:navigate
-            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-                {{ request()->routeIs('profile') ? 'bg-white text-fleet-ink shadow-fleet' : 'text-fleet-secondary hover:bg-white/80' }}"
-        >
-            <span class="{{ $navIcon(request()->routeIs('profile')) }}" aria-hidden="true">
-                <x-icons.user-circle class="h-4 w-4" />
-            </span>
-            {{ __('Perfil') }}
-        </a>
+    <nav class="mt-6 flex-1 space-y-6 px-3 pb-6" aria-label="{{ __('Menu principal') }}">
+        @foreach ($menu as $section)
+            <div>
+                <p class="px-3 pb-1.5 text-sm font-medium text-fleet-secondary">{{ $section['label'] }}</p>
+                <div class="space-y-0.5">
+                    @foreach ($section['items'] as $item)
+                        @php($isActive = request()->routeIs($item['active']))
+                        <a
+                            href="{{ route($item['route']) }}"
+                            wire:navigate
+                            @if ($isActive) aria-current="page" @endif
+                            class="flex items-center gap-3 rounded-pill px-3.5 py-2 text-base transition-colors duration-150
+                                {{ $isActive ? 'bg-fleet-ink font-medium text-fleet-on-dark' : 'text-fleet-ink hover:bg-[#e4ddd3]' }}"
+                        >
+                            <x-dynamic-component :component="'icons.'.$item['icon']" class="h-[18px] w-[18px] shrink-0 {{ $isActive ? 'text-fleet-on-dark' : 'text-fleet-secondary' }}" />
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
     </nav>
-
-    <!-- <div class="mt-auto space-y-1 border-t border-fleet-border px-3 py-4"> -->
-        <!-- <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Configurações') }}</div> -->
-        <!-- <div class="rounded-xl px-3 py-2 text-fleet-body text-fleet-muted">{{ __('Suporte') }}</div> -->
-    <!-- </div> -->
 </aside>

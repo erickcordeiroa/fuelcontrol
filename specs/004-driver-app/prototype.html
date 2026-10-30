@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kilomo Motorista</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: um celular centrado (tela cheia no telefone); telas Entrar → Rota em pilha → Detalhe, com folha de motivo. Segue o DESIGN.md do Kilomo. */
+:root {
+  --canvas: #F7F5F2; --lift: #EEE9E2; --paper: #FFFFFF;
+  --ink: #1E1919; --ink-mute: #524A3E; --ink-soft: #6B6560;
+  --line: #D3CEC9; --blue: #0061FE; --blue-press: #0044AF; --on-blue: #F7F5F2;
+  --info-soft: #DEEBFF; --ok: #175641; --ok-soft: #DCEFE6; --err: #B42318; --err-soft: #FBE4E1;
+  --warn: #7A5A00; --warn-soft: #FBF1CF; --dark: #1E1919; --on-dark: #F7F5F2; --on-dark-mute: #A8A39D;
+  --leaf: #86B52A; --stage: #E4DED5; --shadow: 0 1px 2px rgba(30,25,25,.06), 0 8px 24px rgba(30,25,25,.08);
+  --display: "Space Grotesk", system-ui, sans-serif; --body: Inter, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --canvas: #161414; --lift: #221F1E; --paper: #1D1A19; --ink: #F2EEE8; --ink-mute: #C9C1B6; --ink-soft: #A39C94;
+  --line: #3A3533; --blue: #3D86FF; --blue-press: #6AA2FF; --on-blue: #0B0A0A; --info-soft: #14284A;
+  --ok: #7FD1AE; --ok-soft: #12352A; --err: #FF8A7E; --err-soft: #3E1714; --warn: #F0D27A; --warn-soft: #3A3014;
+  --dark: #000000; --on-dark: #F7F5F2; --on-dark-mute: #8E8B87; --stage: #0D0C0C; --shadow: 0 8px 24px rgba(0,0,0,.4); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --canvas: #161414; --lift: #221F1E; --paper: #1D1A19; --ink: #F2EEE8; --ink-mute: #C9C1B6; --ink-soft: #A39C94;
+  --line: #3A3533; --blue: #3D86FF; --blue-press: #6AA2FF; --on-blue: #0B0A0A; --info-soft: #14284A;
+  --ok: #7FD1AE; --ok-soft: #12352A; --err: #FF8A7E; --err-soft: #3E1714; --warn: #F0D27A; --warn-soft: #3A3014;
+  --dark: #000000; --on-dark: #F7F5F2; --on-dark-mute: #8E8B87; --stage: #0D0C0C; --shadow: 0 8px 24px rgba(0,0,0,.4); color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { background: var(--stage); color: var(--ink); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased }
+button, input, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px }
+
+.stage { min-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.stage-note { font-size: 13px; color: var(--ink-soft); text-align: center; max-width: 390px }
+.stage-note button { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: underline; font-size: 13px }
+.phone { width: 100%; max-width: 390px; height: min(820px, calc(100dvh - 110px)); min-height: 600px; background: var(--canvas);
+  border-radius: 36px; border: 8px solid var(--dark); overflow: hidden; position: relative; display: flex; flex-direction: column; box-shadow: var(--shadow) }
+@media (max-width: 480px) {
+  .stage { padding: 0 }
+  .stage-note { display: none }
+  .phone { max-width: none; height: 100dvh; min-height: 0; border: 0; border-radius: 0 }
+}
+
+.screen { flex: 1; display: flex; flex-direction: column; min-height: 0 }
+.scroll { flex: 1; overflow-y: auto; min-height: 0 }
+.pad { padding: 20px }
+.wordmark { font: 600 22px/1 var(--display); letter-spacing: -.5px; color: var(--ink) }
+.wordmark span { color: var(--leaf) }
+.eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft) }
+h1, h2 { font-family: var(--display); font-weight: 500; margin: 0; text-wrap: balance }
+h1 { font-size: 28px; line-height: 1.15; letter-spacing: -.4px }
+h2 { font-size: 22px; line-height: 1.2 }
+.muted { color: var(--ink-soft) }
+.num { font-variant-numeric: tabular-nums }
+
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; border-radius: 999px;
+  border: 1px solid transparent; font-weight: 600; font-size: 16px; padding: 0 20px; text-decoration: none }
+.btn-primary { background: var(--blue); color: var(--on-blue) }
+.btn-primary:active { background: var(--blue-press) }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--ink) }
+.btn-ok { background: var(--ok); color: var(--paper) }
+.btn-err { background: transparent; border-color: var(--err); color: var(--err) }
+.btn[disabled] { opacity: .45; cursor: not-allowed }
+
+/* Entrar */
+.login { justify-content: space-between }
+.login-hero { background: var(--dark); color: var(--on-dark); padding: 40px 24px 28px; display: grid; gap: 18px }
+.login-hero .wordmark { color: var(--on-dark) }
+.login-hero p { margin: 0; color: var(--on-dark-mute); max-width: 30ch }
+.form { display: grid; gap: 16px; padding: 24px }
+.field { display: grid; gap: 6px }
+.field label { font-size: 14px; font-weight: 500 }
+.field input, .field textarea { width: 100%; min-height: 52px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); padding: 12px 14px; font-size: 17px }
+.field textarea { min-height: 84px; resize: none; font-size: 15px }
+.hint { font-size: 13px; color: var(--ink-soft) }
+.error-msg { font-size: 14px; color: var(--err) }
+
+/* Rota */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--canvas) }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--lift); display: grid; place-items: center; font-weight: 600; font-size: 14px; border: 0 }
+.route-head { display: grid; gap: 14px; padding: 20px 20px 16px }
+.route-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: var(--ink-mute) }
+.progress { display: grid; gap: 6px }
+.bar { height: 8px; background: var(--lift); border-radius: 999px; overflow: hidden; display: flex }
+.bar i { display: block; height: 100% }
+.bar .b-ok { background: var(--ok) } .bar .b-err { background: var(--err) }
+.progress-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft) }
+
+.stack { list-style: none; margin: 0; padding: 18px 20px 24px; display: grid; gap: 0 }
+.stack { gap: 10px }
+.stop { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start }
+.stack-label { list-style: none; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line) }
+.seq { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 600 15px/1 var(--display); background: var(--paper); border: 2px solid var(--line); color: var(--ink-mute); z-index: 1 }
+.stop.is-next .seq { background: var(--blue); border-color: var(--blue); color: var(--on-blue) }
+.stop.is-ok .seq { background: var(--ok); border-color: var(--ok); color: var(--paper) }
+.stop.is-err .seq { background: var(--err-soft); border-color: var(--err); color: var(--err) }
+.card { text-align: left; width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; min-width: 0 }
+.stop.is-next .card { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue) }
+.stop.is-ok .card, .stop.is-err .card { background: transparent }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px }
+.card-name { font-weight: 600; font-size: 15px; line-height: 1.3 }
+.stop.is-ok .card-name, .stop.is-err .card-name { color: var(--ink-mute) }
+.card-addr { font-size: 14px; color: var(--ink-mute); overflow-wrap: anywhere }
+.card-foot { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-soft) }
+.chip { flex: none; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap }
+.c-routed { background: var(--lift); color: var(--ink-mute) }
+.c-transit { background: var(--info-soft); color: var(--blue) }
+.c-ok { background: var(--ok-soft); color: var(--ok) }
+.c-err { background: var(--err-soft); color: var(--err) }
+.c-route { background: var(--warn-soft); color: var(--warn) }
+.c-done { background: var(--ok-soft); color: var(--ok) }
+
+.dock { padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--canvas); display: grid; gap: 8px }
+
+/* Detalhe */
+.back { display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; font-weight: 500; color: var(--ink) }
+.detail { display: grid; gap: 18px; padding: 20px }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden }
+.fact { background: var(--paper); padding: 12px 14px; display: grid; gap: 2px; min-width: 0 }
+.fact span { font-size: 12px; color: var(--ink-soft) }
+.fact b { font-weight: 600; font-size: 16px }
+.fact.wide { grid-column: 1 / -1 }
+.addr-block { display: grid; gap: 4px }
+.addr-block p { margin: 0 }
+.ref { font-size: 14px; color: var(--ink-mute); background: var(--lift); border-radius: 10px; padding: 10px 12px }
+.nav-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.result { border-radius: 14px; padding: 14px; display: grid; gap: 4px; font-size: 14px }
+.result.ok { background: var(--ok-soft); color: var(--ok) }
+.result.err { background: var(--err-soft); color: var(--err) }
+.result b { font-size: 15px }
+
+/* Folha de motivo */
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; z-index: 5 }
+.sheet { width: 100%; background: var(--canvas); border-radius: 20px 20px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; max-height: 88%; overflow-y: auto }
+.grip { width: 40px; height: 4px; border-radius: 4px; background: var(--line); justify-self: center }
+.reasons { display: grid; gap: 8px; border: 0; margin: 0; padding: 0 }
+.reason { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); font-weight: 500 }
+.reason input { width: 20px; height: 20px; accent-color: var(--blue); margin: 0 }
+.reason:has(input:checked) { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue) }
+
+.toast { position: absolute; left: 20px; right: 20px; bottom: 96px; background: var(--dark); color: var(--on-dark); border-radius: 12px; padding: 12px 14px; font-size: 14px; z-index: 6; transition: opacity .2s }
+.done-card { margin: 0 20px; padding: 18px; border-radius: 16px; background: var(--dark); color: var(--on-dark); display: grid; gap: 6px }
+.done-card p { margin: 0; color: var(--on-dark-mute); font-size: 14px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone" id="phone" aria-live="polite"></div>
+  <p class="stage-note">Modelo do app do motorista com dados de exemplo de Registro-SP. Nada é enviado de verdade. <button type="button" id="reset">Recomeçar</button></p>
+</div>
+
+<script>
+const STATUS = {
+  routed: { label: 'Roteirizada', cls: 'c-routed' },
+  in_transit: { label: 'Em rota', cls: 'c-transit' },
+  delivered: { label: 'Entregue', cls: 'c-ok' },
+  failed: { label: 'Não entregue', cls: 'c-err' },
+};
+const ROUTE_STATUS = { planned: ['Planejada', 'c-routed'], in_progress: ['Em andamento', 'c-route'], completed: ['Concluída', 'c-done'] };
+const REASONS = ['Cliente ausente', 'Estabelecimento fechado', 'Recusou o pedido', 'Endereço não encontrado', 'Outro motivo'];
+
+const STOPS = [
+  { order: '10482', name: 'Mercado Bom Preço', street: 'Av. Prefeito Jonas Banks Leite, 456', district: 'Centro', ref: 'Entrada de carga pela lateral, portão azul.', value: 1840.5, window: '08:00 – 10:00', km: 2.1, phone: '(13) 3821-4410' },
+  { order: '10483', name: 'Padaria Vale do Ribeira', street: 'Rua José Antônio de Campos, 312', district: 'Centro', ref: 'Falar com o Sr. Tadashi no balcão.', value: 642.0, window: '08:00 – 11:00', km: 0.8, phone: '(13) 3821-2287' },
+  { order: '10487', name: 'Restaurante Sabor da Ribeira', street: 'Rua Capitão João Pocci, 221', district: 'Centro', ref: 'Fundos do restaurante, tocar a campainha.', value: 975.3, window: '09:00 – 11:30', km: 1.2, phone: '(13) 3822-1903' },
+  { order: '10490', name: 'Empório Takano', street: 'Rua Tamekishi Takano, 88', district: 'Vila Tupy', ref: 'Esquina com a farmácia.', value: 418.9, window: '09:00 – 12:00', km: 1.9, phone: '(13) 99714-2210' },
+  { order: '10491', name: 'Lanchonete Ponto Certo', street: 'Av. Wild José de Souza, 1050', district: 'Vila São Francisco', ref: 'Ao lado do posto de combustível.', value: 289.0, window: '10:00 – 14:00', km: 2.4, phone: '(13) 99630-5541' },
+  { order: '10495', name: 'Mercearia Dona Cida', street: 'Av. Clara Gianotti de Souza, 740', district: 'Agrochá', ref: 'Portão verde, cachorro preso.', value: 356.6, window: '10:00 – 15:00', km: 3.0, phone: '(13) 99812-0074' },
+  { order: '10498', name: 'Supermercado Ribeira', street: 'Rua Shitiro Maeji, 1500', district: 'Jardim Paulistano', ref: 'Doca 2, apresentar a nota no guichê.', value: 2310.0, window: '13:00 – 16:00', km: 2.6, phone: '(13) 3828-7700' },
+];
+
+const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const hhmm = d => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function fresh() {
+  return {
+    view: 'login', loggedIn: false, routeStatus: 'planned', startedAt: null, finishedAt: null,
+    open: null, sheet: false, reason: null, other: '', toast: null,
+    stops: STOPS.map((s, i) => ({ ...s, seq: i + 1, status: 'routed', at: null, reason: null })),
+  };
+}
+let S = fresh();
+let toastTimer;
+const phone = document.getElementById('phone');
+
+function set(patch) { S = { ...S, ...patch }; render(); }
+function toast(msg) { clearTimeout(toastTimer); set({ toast: msg }); toastTimer = setTimeout(() => set({ toast: null }), 2600); }
+function nextStop() { return S.stops.find(s => s.status === 'routed' || s.status === 'in_transit'); }
+function counts() {
+  const ok = S.stops.filter(s => s.status === 'delivered').length;
+  const err = S.stops.filter(s => s.status === 'failed').length;
+  return { ok, err, done: ok + err, total: S.stops.length };
+}
+
+/* Telas */
+function loginView() {
+  return `<form class="screen login" id="login-form" novalidate>
+    <div class="login-hero">
+      <div class="wordmark">Kilo<span>mo</span></div>
+      <div><p class="eyebrow" style="color:var(--on-dark-mute);margin:0 0 6px">Motorista</p><h1>Suas entregas do dia, na ordem certa.</h1></div>
+      <p>Entre com o número do celular cadastrado pela sua empresa.</p>
+    </div>
+    <div class="form">
+      <div class="field"><label for="phone-input">Celular</label>
+        <input id="phone-input" inputmode="tel" autocomplete="tel" placeholder="(13) 99999-0000" value="(13) 99722-1580"></div>
+      <div class="field"><label for="pass-input">Senha</label>
+        <input id="pass-input" type="password" autocomplete="current-password" value="kilomo"></div>
+      <p class="error-msg" id="login-error" hidden></p>
+      <button class="btn btn-primary" type="submit">Entrar</button>
+      <p class="hint">Esqueceu a senha? Peça ao administrador da sua empresa para gerar uma nova.</p>
+    </div>
+  </form>`;
+}
+
+function routeView() {
+  const c = counts();
+  const [rLabel, rCls] = ROUTE_STATUS[S.routeStatus];
+  const next = nextStop();
+  const km = S.stops.reduce((a, s) => a + s.km, 0);
+  const total = S.stops.reduce((a, s) => a + s.value, 0);
+  let dock = '';
+  if (S.routeStatus === 'planned') dock = `<button class="btn btn-primary" data-act="start">Iniciar rota</button>`;
+  else if (S.routeStatus === 'in_progress' && next) dock = `<button class="btn btn-primary" data-act="open" data-seq="${next.seq}">Ir para a parada ${next.seq}</button>`;
+  else if (S.routeStatus === 'in_progress') dock = `<button class="btn btn-primary" data-act="finish">Finalizar rota</button>`;
+
+  return `<div class="screen">
+    <div class="topbar"><div class="wordmark" style="font-size:19px">Kilo<span>mo</span></div>
+      <button class="avatar" data-act="logout" aria-label="Sair (Carlos Nakamura)" title="Sair">CN</button></div>
+    <div class="scroll">
+      <div class="route-head">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div><p class="eyebrow" style="margin:0 0 4px">Quinta, 29 de outubro</p><h1>Rota Centro</h1></div>
+          <span class="chip ${rCls}">${rLabel}</span>
+        </div>
+        <div class="route-meta num"><span>${c.total} paradas</span><span>${km.toFixed(1).replace('.', ',')} km</span><span>Fiorino · FKR-2B47</span><span>${brl(total)}</span></div>
+        <div class="progress">
+          <div class="bar" role="img" aria-label="${c.ok} entregues e ${c.err} não entregues de ${c.total}">
+            <i class="b-ok" style="width:${c.ok / c.total * 100}%"></i><i class="b-err" style="width:${c.err / c.total * 100}%"></i></div>
+          <div class="progress-row num"><span>${c.done} de ${c.total} baixadas</span><span>${c.ok} entregue${c.ok === 1 ? '' : 's'} · ${c.err} não entregue${c.err === 1 ? '' : 's'}</span></div>
+        </div>
+      </div>
+      ${S.routeStatus === 'completed' ? `<div class="done-card"><h2>Rota concluída</h2><p>Iniciada às ${hhmm(S.startedAt)} e finalizada às ${hhmm(S.finishedAt)}. O painel da empresa já mostra o resultado.</p></div>` : ''}
+      <ol class="stack" aria-label="Paradas na ordem da rota">${stackItems()}</ol>
+    </div>
+    ${dock ? `<div class="dock">${dock}</div>` : ''}
+  </div>`;
+}
+
+/* Pendentes na ordem da rota; as baixadas vão para o fim da fila, na ordem em que foram baixadas. */
+function stackItems() {
+  const open = S.stops.filter(s => s.status === 'routed' || s.status === 'in_transit');
+  const done = S.stops.filter(s => s.status === 'delivered' || s.status === 'failed').sort((a, b) => a.at - b.at);
+  return open.map(stopItem).join('')
+    + (done.length ? `<li class="stack-label eyebrow">Baixadas (${done.length})</li>` + done.map(stopItem).join('') : '');
+}
+
+function stopItem(s) {
+  const next = nextStop();
+  const state = s.status === 'delivered' ? 'is-ok' : s.status === 'failed' ? 'is-err' : (S.routeStatus === 'in_progress' && next && next.seq === s.seq ? 'is-next' : '');
+  const st = STATUS[s.status];
+  const foot = s.at ? `<span class="num">${s.status === 'delivered' ? 'Entregue' : 'Baixada'} às ${hhmm(s.at)}</span>${s.reason ? `<span>${esc(s.reason)}</span>` : ''}`
+    : `<span class="num">${s.window}</span><span class="num">${brl(s.value)}</span>`;
+  return `<li class="stop ${state}">
+    <span class="seq num" aria-hidden="true">${s.status === 'delivered' ? '✓' : s.seq}</span>
+    <button class="card" data-act="open" data-seq="${s.seq}" aria-label="Parada ${s.seq}: ${esc(s.name)}, ${st.label}">
+      <span class="card-top"><span class="card-name">${esc(s.name)}</span><span class="chip ${st.cls}">${st.label}</span></span>
+      <span class="card-addr">${esc(s.street)} · ${esc(s.district)}</span>
+      <span class="card-foot">${foot}</span>
+    </button></li>`;
+}
+
+function detailView() {
+  const s = S.stops.find(x => x.seq === S.open);
+  const st = STATUS[s.status];
+  const q = encodeURIComponent(`${s.street}, ${s.district}, Registro - SP`);
+  const next = nextStop();
+  const canAct = S.routeStatus === 'in_progress' && next && next.seq === s.seq;
+  let actions;
+  if (s.status === 'delivered' || s.status === 'failed') {
+    actions = `<div class="result ${s.status === 'delivered' ? 'ok' : 'err'}">
+      <b>${s.status === 'delivered' ? 'Entregue' : 'Não entregue'} às ${hhmm(s.at)}</b>
+      ${s.reason ? '<span>Motivo: ' + esc(s.reason) + '</span>' : ''}</div>`;
+  } else if (S.routeStatus === 'planned') {
+    actions = `<p class="hint">Inicie a rota para dar baixa nas entregas.</p>`;
+  } else if (!canAct) {
+    actions = `<p class="ref">Siga a ordem da rota: dê baixa na parada ${next.seq}, ${esc(next.name)}, antes desta.</p>`;
+  } else {
+    actions = '';
+  }
+  return `<div class="screen">
+    <div class="topbar"><button class="back" data-act="back">‹ Rota</button><span class="chip ${st.cls}">${st.label}</span></div>
+    <div class="scroll"><div class="detail">
+      <div><p class="eyebrow" style="margin:0 0 4px">Parada ${s.seq} de ${S.stops.length} · Pedido ${s.order}</p><h1>${esc(s.name)}</h1></div>
+      <div class="addr-block"><p style="font-size:17px">${esc(s.street)}</p><p class="muted">${esc(s.district)} · Registro - SP</p></div>
+      <p class="ref"><b>Referência:</b> ${esc(s.ref)}</p>
+      <div class="nav-row">
+        <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&destination=${q}" target="_blank" rel="noopener">Google Maps</a>
+        <a class="btn btn-ghost" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">Waze</a>
+      </div>
+      <div class="facts num">
+        <div class="fact"><span>Valor</span><b>${brl(s.value)}</b></div>
+        <div class="fact"><span>Janela</span><b>${s.window}</b></div>
+        <div class="fact"><span>Distância do trecho</span><b>${s.km.toFixed(1).replace('.', ',')} km</b></div>
+        <div class="fact"><span>Telefone</span><b style="user-select:all">${s.phone}</b></div>
+      </div>
+      ${actions}
+    </div></div>
+    ${canAct ? `<div class="dock">
+      <button class="btn btn-ok" data-act="deliver">Entregue</button>
+      <button class="btn btn-err" data-act="fail">Não entregue</button></div>` : ''}
+  </div>`;
+}
+
+function sheetView() {
+  const needText = S.reason === 'Outro motivo';
+  const ready = S.reason && (!needText || S.other.trim().length >= 3);
+  return `<div class="scrim" data-act="close-sheet"><form class="sheet" id="reason-form" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <span class="grip"></span>
+    <div><h2 id="sheet-title">Por que não foi entregue?</h2><p class="hint" style="margin:4px 0 0">O motivo aparece para a empresa no acompanhamento da rota.</p></div>
+    <fieldset class="reasons"><legend class="eyebrow" style="margin-bottom:8px">Motivo</legend>
+      ${REASONS.map((r, i) => `<label class="reason"><input type="radio" name="reason" id="reason-${i}" value="${r}" ${S.reason === r ? 'checked' : ''}>${r}</label>`).join('')}
+    </fieldset>
+    ${needText ? `<div class="field"><label for="other-input">Descreva o motivo</label><textarea id="other-input" maxlength="140" placeholder="Ex.: portão trancado, sem resposta no interfone">${esc(S.other)}</textarea></div>` : ''}
+    <button class="btn btn-primary" type="submit" ${ready ? '' : 'disabled'}>Confirmar “Não entregue”</button>
+    <button class="btn btn-ghost" type="button" data-act="close-sheet-btn">Cancelar</button>
+  </form></div>`;
+}
+
+function render() {
+  const scrollEl = phone.querySelector('.scroll');
+  const keep = scrollEl ? scrollEl.scrollTop : 0;
+  const sameView = phone.dataset.view === S.view + (S.open || '');
+  let html = S.view === 'login' ? loginView() : S.view === 'route' ? routeView() : detailView();
+  if (S.sheet) html += sheetView();
+  if (S.toast && !S.sheet) html += `<div class="toast" role="status">${esc(S.toast)}</div>`;
+  phone.innerHTML = html;
+  phone.dataset.view = S.view + (S.open || '');
+  const sc = phone.querySelector('.scroll');
+  if (sc && sameView) sc.scrollTop = keep;
+  const other = document.getElementById('other-input');
+  if (other && S.sheet && document.activeElement !== other && S.reason === 'Outro motivo') { other.focus(); other.setSelectionRange(other.value.length, other.value.length); }
+}
+
+/* Ações */
+phone.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'close-sheet' && e.target !== el) return;
+  const now = new Date();
+  switch (act) {
+    case 'start':
+      S.stops.forEach(s => { s.status = 'in_transit'; });
+      set({ routeStatus: 'in_progress', startedAt: now });
+      toast('Rota iniciada.');
+      break;
+    case 'open': set({ view: 'detail', open: Number(el.dataset.seq) }); break;
+    case 'back': set({ view: 'route', open: null }); break;
+    case 'deliver': {
+      const s = S.stops.find(x => x.seq === S.open);
+      Object.assign(s, { status: 'delivered', at: now, reason: null });
+      set({ view: 'route', open: null });
+      toast(`Parada ${s.seq} entregue. ${nextStop() ? 'Próxima: ' + nextStop().name + '.' : 'Todas as paradas baixadas.'}`);
+      break;
+    }
+    case 'fail': set({ sheet: true, reason: null, other: '' }); break;
+    case 'close-sheet': case 'close-sheet-btn': set({ sheet: false }); break;
+    case 'finish': set({ routeStatus: 'completed', finishedAt: now }); toast('Rota finalizada.'); break;
+    case 'logout': S = fresh(); render(); break;
+  }
+});
+
+phone.addEventListener('change', e => {
+  if (e.target.name === 'reason') { S.reason = e.target.value; render(); }
+});
+phone.addEventListener('input', e => {
+  if (e.target.id === 'other-input') {
+    S.other = e.target.value;
+    const btn = phone.querySelector('#reason-form button[type=submit]');
+    if (btn) btn.disabled = S.other.trim().length < 3;
+  }
+});
+phone.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'login-form') {
+    const tel = document.getElementById('phone-input').value.replace(/\D/g, '');
+    const pass = document.getElementById('pass-input').value;
+    const err = document.getElementById('login-error');
+    if (tel.length < 10) { err.textContent = 'Digite o celular com DDD, por exemplo (13) 99722-1580.'; err.hidden = false; return; }
+    if (!pass) { err.textContent = 'Digite a senha.'; err.hidden = false; return; }
+    set({ view: 'route', loggedIn: true });
+    return;
+  }
+  if (e.target.id === 'reason-form') {
+    const s = S.stops.find(x => x.seq === S.open);
+    const reason = S.reason === 'Outro motivo' ? S.other.trim() : S.reason;
+    Object.assign(s, { status: 'failed', at: new Date(), reason });
+    set({ sheet: false, view: 'route', open: null });
+    toast(`Parada ${s.seq} marcada como não entregue.`);
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sheet) set({ sheet: false }); });
+document.getElementById('reset').addEventListener('click', () => { S = fresh(); render(); });
+
+render();
+</script>
+</body>
+</html>

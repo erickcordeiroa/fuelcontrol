@@ -22,13 +22,13 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('reports', absolute: false), navigate: true);
     }
 }; ?>
 
 <div>
     <div class="mb-8 text-center lg:text-left">
-        <h1 class="font-headline text-2xl font-bold text-on-surface">{{ __('Entrar') }}</h1>
+        <h1 class="fleet-page-title">{{ __('Entrar') }}</h1>
         <p class="mt-2 text-sm font-medium text-on-surface-variant">
             {{ __('Acesse sua conta para continuar.') }}
         </p>
@@ -74,7 +74,7 @@ new #[Layout('layouts.guest')] class extends Component
                     wire:model="form.remember"
                     id="remember"
                     type="checkbox"
-                    class="rounded border-outline accent-[#3d9d80] shadow-sm focus:ring-[#3d9d80]/30"
+                    class="rounded border-outline text-fleet-primary focus:ring-fleet-primary"
                     name="remember"
                 >
                 <span class="text-sm text-on-surface-variant">{{ __('Lembrar-me') }}</span>
@@ -82,7 +82,7 @@ new #[Layout('layouts.guest')] class extends Component
 
             @if (Route::has('password.request'))
                 <a
-                    class="text-sm font-medium text-[#2c745f] underline decoration-[#3d9d80]/30 underline-offset-2 hover:text-[#245d4b]"
+                    class="text-sm font-medium text-fleet-primary underline decoration-fleet-primary/40 underline-offset-4 hover:decoration-fleet-primary"
                     href="{{ route('password.request') }}"
                     wire:navigate
                 >
@@ -100,7 +100,7 @@ new #[Layout('layouts.guest')] class extends Component
         @if (Route::has('register'))
             <p class="text-center text-sm text-on-surface-variant">
                 {{ __('Não tem conta?') }}
-                <a href="{{ route('register') }}" wire:navigate class="font-semibold text-[#2c745f] hover:text-[#245d4b]">{{ __('Cadastrar empresa') }}</a>
+                <a href="{{ route('register') }}" wire:navigate class="font-semibold text-fleet-primary underline-offset-4 hover:underline">{{ __('Cadastrar empresa') }}</a>
             </p>
         @endif
     </form>

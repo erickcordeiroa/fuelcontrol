@@ -1,26 +1,11 @@
-<nav class="flex flex-wrap items-center justify-end gap-2">
+<nav class="flex items-center justify-end gap-1 sm:gap-2" aria-label="{{ __('Acesso') }}">
     @auth
-        <a
-            href="{{ url('/dashboard') }}"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-        >
-            {{ __('Painel') }}
-        </a>
+        <a href="{{ route('reports') }}" class="fleet-btn--primary px-3 sm:px-4">{{ __('Acessar o sistema') }}</a>
     @else
-        <a
-            href="{{ route('login') }}"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-        >
-            {{ __('Entrar') }}
-        </a>
+        <a href="{{ route('login') }}" class="fleet-btn px-3 text-fleet-ink hover:bg-fleet-page sm:px-4">{{ __('Entrar') }}</a>
 
         @if (Route::has('register'))
-            <a
-                href="{{ route('register') }}"
-                class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-slate-900/15 transition hover:bg-slate-800"
-            >
-                {{ __('Cadastrar empresa') }}
-            </a>
+            <a href="{{ route('register') }}" class="fleet-btn--outline whitespace-nowrap px-3 sm:px-4">{{ __('Cadastrar empresa') }}</a>
         @endif
     @endauth
 </nav>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\PricePerLiterCast;
 use App\Enums\FuelType;
+use App\Models\Concerns\Auditable;
 use Database\Factories\GasStationFuelOfferingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GasStationFuelOffering extends Model
 {
     /** @use HasFactory<GasStationFuelOfferingFactory> */
-    use HasFactory;
+    use Auditable, HasFactory;
 
     /**
      * @var list<string>
@@ -49,5 +50,15 @@ class GasStationFuelOffering extends Model
     public function tripFuels(): HasMany
     {
         return $this->hasMany(Fuel::class, 'gas_station_fuel_offering_id');
+    }
+
+    /**
+     * O preço por combustível pertence à empresa dona do posto.
+     */
+    public function auditTenantId(): ?int
+    {
+        $tenantId = GasStation::query()->withoutGlobalScopes()->whereKey($this->gas_station_id)->value('user_id');
+
+        return $tenantId === null ? null : (int) $tenantId;
     }
 }

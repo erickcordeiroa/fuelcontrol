@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\UserRole;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +36,14 @@ class LoginForm extends Form
 
             throw ValidationException::withMessages([
                 'form.email' => trans('auth.failed'),
+            ]);
+        }
+
+        if (Auth::user()->role === UserRole::Driver) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'form.email' => __('Motoristas acessam pelo app no celular.'),
             ]);
         }
 

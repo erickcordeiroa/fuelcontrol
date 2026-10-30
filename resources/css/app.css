@@ -1,11 +1,27 @@
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/inter';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Tokens de runtime (DESIGN.md). As mesmas cores vivem em tailwind.config.js (fleet-*);
+ * aqui ficam as que CSS puro e JS precisam.
+ */
 :root {
-    --fuelly-primary: #3d9d80;
-    --fuelly-secondary: #58c466;
-    --fuelly-dark: #3f4954;
+    --kilomo-canvas: #f7f5f2;
+    --kilomo-ink: #1e1919;
+    --kilomo-blue: #0061fe;
+    --kilomo-blue-press: #0044af;
+    --kilomo-success: #175641;
+    --kilomo-error: #b42318;
+    --kilomo-warning: #eecc5d;
+
+    /* Nomes antigos, mantidos para telas que ainda os referenciam. */
+    --kilomo-primary: var(--kilomo-blue);
+    --kilomo-secondary: var(--kilomo-blue-press);
+    --kilomo-dark: var(--kilomo-ink);
 }
 
 [x-cloak] {
@@ -20,99 +36,143 @@
             'GRAD' 0,
             'opsz' 24;
     }
-
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(20px);
-    }
 }
 
 @layer base {
     html {
         @apply antialiased;
+        scrollbar-color: #c9c2b9 transparent;
     }
 
     body {
-        @apply text-fleet-ink;
-        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        @apply bg-fleet-page font-sans text-fleet-ink;
+        font-feature-settings: 'cv11';
+    }
+
+    h1,
+    h2,
+    h3 {
+        text-wrap: balance;
+    }
+
+    ::selection {
+        background-color: rgb(0 97 254 / 0.16);
+        color: #1e1919;
+    }
+
+    input,
+    textarea {
+        caret-color: #0061fe;
+    }
+
+    a {
+        text-underline-offset: 0.2em;
+    }
+
+    :focus-visible {
+        outline: 2px solid #0061fe;
+        outline-offset: 2px;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: #d3cec9;
+        border: 3px solid transparent;
+        border-radius: 9999px;
+        background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #a69171;
     }
 }
 
 @layer components {
-    /* —— Tipografia —— */
+    /* —— Tipografia: Space Grotesk 500 nos títulos, Inter no resto —— */
     .fleet-page-title {
-        @apply text-2xl font-bold tracking-tight text-fleet-ink;
+        @apply font-display text-[1.625rem] font-medium leading-tight tracking-[-0.01em] text-fleet-ink sm:text-[2rem];
     }
 
     .fleet-page-lead {
-        @apply mt-1 text-sm font-medium text-fleet-secondary;
+        @apply mt-1.5 max-w-[72ch] text-base leading-relaxed text-fleet-secondary;
     }
 
     .fleet-section-title {
-        @apply text-xs font-semibold uppercase tracking-wide text-fleet-muted;
+        @apply font-display text-lg font-medium leading-snug text-fleet-ink;
     }
 
     .fleet-modal-title {
-        @apply text-fleet-modal text-fleet-ink;
+        @apply font-display text-fleet-modal text-fleet-ink;
     }
 
     .fleet-label {
-        @apply mb-0 block text-fleet-label uppercase text-fleet-secondary;
+        @apply mb-0 block text-fleet-label text-fleet-ink;
     }
 
     .fleet-label--compact {
-        @apply mb-0 block text-[10px] font-semibold uppercase tracking-wide text-fleet-muted;
+        @apply mb-0 block text-xs font-medium text-fleet-secondary;
     }
 
     .fleet-table-head {
-        @apply bg-fleet-page text-left text-fleet-label uppercase text-fleet-muted;
+        @apply border-b border-fleet-border bg-fleet-sidebar text-left text-sm font-medium text-fleet-secondary;
     }
 
-    /* —— Campos (inputs, selects) —— */
+    .fleet-table-head th {
+        @apply font-medium;
+    }
+
+    /* —— Campos: brancos, fio suave, 8px; foco com borda azul de 2px —— */
     .fleet-field {
-        @apply mt-1 block w-full rounded-xl border border-fleet-border bg-white px-3 py-2 text-fleet-body text-fleet-ink shadow-sm;
+        @apply mt-1.5 block w-full rounded border border-fleet-border bg-white px-3.5 py-2.5 text-base text-fleet-ink shadow-none transition-[border-color,box-shadow] duration-150;
         @apply placeholder:text-fleet-muted;
-        @apply focus:border-fleet-primary focus:outline-none focus:ring-2 focus:ring-fleet-primary/20;
+        @apply hover:border-fleet-hairline-strong;
+        @apply focus:border-fleet-primary focus:outline-none focus:ring-1 focus:ring-fleet-primary;
+        @apply disabled:cursor-not-allowed disabled:bg-fleet-page disabled:text-fleet-muted;
+    }
+
+    .fleet-field[aria-invalid='true'] {
+        @apply border-fleet-danger;
     }
 
     .fleet-search-field {
-        @apply w-full rounded-xl border border-fleet-border bg-fleet-primary/[0.07] py-2.5 pl-10 pr-3 text-fleet-body text-fleet-ink shadow-sm;
+        @apply w-full rounded-pill border border-fleet-border bg-white py-2.5 pl-11 pr-4 text-base text-fleet-ink transition-[border-color,box-shadow] duration-150;
         @apply placeholder:text-fleet-muted;
-        @apply focus:border-fleet-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-fleet-primary/20;
+        @apply hover:border-fleet-hairline-strong;
+        @apply focus:border-fleet-primary focus:outline-none focus:ring-1 focus:ring-fleet-primary;
     }
 
-    /* —— Botões —— */
+    /* —— Botões: sempre pílula, rótulo em 500 —— */
     .fleet-btn {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition;
-        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary/35 focus-visible:ring-offset-2;
+        @apply inline-flex min-h-[2.5rem] cursor-pointer select-none items-center justify-center gap-2 rounded-pill px-6 py-2 text-center text-base font-medium leading-tight transition-[background-color,border-color,color,transform] duration-150 ease-standard;
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary focus-visible:ring-offset-2 focus-visible:ring-offset-fleet-page;
+        @apply active:translate-y-px;
         @apply disabled:pointer-events-none disabled:opacity-45;
     }
 
     .fleet-btn--primary {
-        @apply fleet-btn border border-transparent text-white active:opacity-100;
-        @apply focus-visible:ring-fleet-primary/45;
-        background-color: var(--fuelly-primary);
-    }
-
-    .fleet-btn--primary:hover {
-        background-color: var(--fuelly-secondary);
+        @apply fleet-btn border border-fleet-primary bg-fleet-primary text-fleet-on-dark;
+        @apply hover:border-fleet-primary-strong hover:bg-fleet-primary-strong;
     }
 
     .fleet-btn--secondary {
-        @apply fleet-btn border border-transparent bg-fleet-primary/10 text-fleet-primary hover:bg-fleet-primary/[0.16];
+        @apply fleet-btn border border-transparent bg-fleet-surface text-fleet-ink hover:bg-[#e4ddd3];
     }
 
     .fleet-btn--outline {
-        @apply fleet-btn border-2 border-fleet-primary bg-white text-fleet-primary hover:bg-fleet-primary/[0.06];
+        @apply fleet-btn border border-fleet-ink bg-transparent text-fleet-ink hover:bg-fleet-surface;
     }
 
     .fleet-btn--muted {
-        @apply fleet-btn border border-fleet-border bg-white text-fleet-secondary hover:bg-fleet-page;
+        @apply fleet-btn border border-fleet-border bg-white text-fleet-ink hover:border-fleet-hairline-strong hover:bg-fleet-page;
     }
 
     .fleet-btn--danger {
-        @apply fleet-btn border border-transparent bg-fleet-danger text-white hover:opacity-90;
-        @apply focus-visible:ring-fleet-danger/40;
+        @apply fleet-btn border border-fleet-danger bg-fleet-danger text-fleet-on-dark hover:bg-[#8f1b12];
+        @apply focus-visible:ring-fleet-danger;
     }
 
     .fleet-btn--block {
@@ -120,37 +180,38 @@
     }
 
     .fleet-btn--lg {
-        @apply px-5 py-3;
+        @apply min-h-[3rem] px-7 py-3;
     }
 
     .fleet-btn--sm {
-        @apply px-3 py-1.5 text-xs;
+        @apply min-h-[2.25rem] px-4 py-1.5 text-sm;
     }
 
     .fleet-btn-text {
-        @apply inline-flex items-center gap-1 text-xs font-semibold text-fleet-primary hover:underline;
+        @apply inline-flex items-center gap-1 text-sm font-medium text-fleet-primary-strong underline-offset-4 hover:underline;
     }
 
     /* Botões só ícone (ações em tabela, fechar modal) */
     .fleet-icon-btn {
-        @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-transparent text-fleet-primary transition;
-        @apply hover:bg-fleet-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary/30;
+        @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-pill border border-transparent text-fleet-ink transition-colors duration-150;
+        @apply hover:bg-fleet-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-fleet-primary focus-visible:ring-offset-2;
     }
 
     .fleet-icon-btn--danger {
-        @apply text-fleet-danger hover:bg-fleet-danger/10 focus-visible:ring-fleet-danger/30;
+        @apply text-fleet-danger hover:bg-fleet-danger/[0.08] hover:text-fleet-danger focus-visible:ring-fleet-danger;
     }
 
     .fleet-icon-btn--ghost {
-        @apply text-fleet-muted hover:bg-fleet-page hover:text-fleet-ink;
+        @apply text-fleet-muted hover:bg-fleet-surface hover:text-fleet-ink;
     }
 
-    /* Painéis */
+    /* —— Painéis do produto: brancos sobre o creme —— */
     .fleet-panel {
         @apply rounded-2xl border border-fleet-border bg-fleet-card p-6 shadow-fleet;
     }
 
+    /* Destaque: creme elevado, sem sombra — o número principal da tela. */
     .fleet-panel--inverted {
-        @apply rounded-2xl bg-fleet-primary p-6 text-white shadow-fleet-card;
+        @apply rounded-xl bg-fleet-surface p-6 text-fleet-ink;
     }
 }

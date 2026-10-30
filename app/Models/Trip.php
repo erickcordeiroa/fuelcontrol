@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\MoneyBrlCentsCast;
 use App\Enums\ExpenseType;
 use App\Enums\TripStatus;
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToTenant;
 use App\Support\PricePerLiter;
 use Database\Factories\TripFactory;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Trip extends Model
 {
     /** @use HasFactory<TripFactory> */
-    use BelongsToTenant, HasFactory;
+    use Auditable, BelongsToTenant, HasFactory;
 
     /**
      * @var list<string>

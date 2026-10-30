@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="fleet-page-title">{{ __('Motoristas') }}</h1>
-            <p class="fleet-page-lead">{{ __('CNH, contato e vínculo opcional com usuário.') }}</p>
+            <p class="fleet-page-lead">{{ __('CNH, celular e acesso ao app do motorista.') }}</p>
         </div>
         <button type="button" wire:click="openCreateModal" class="fleet-btn--primary">
             <x-icons.plus class="h-5 w-5 shrink-0" />
@@ -22,7 +22,8 @@
                 <tr>
                     <th class="px-4 py-3">{{ __('Nome') }}</th>
                     <th class="px-4 py-3">{{ __('CNH') }}</th>
-                    <th class="px-4 py-3">{{ __('Usuário') }}</th>
+                    <th class="px-4 py-3">{{ __('Celular') }}</th>
+                    <th class="px-4 py-3">{{ __('App') }}</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
@@ -31,7 +32,8 @@
                     <tr wire:key="d-{{ $driver->id }}">
                         <td class="px-4 py-3 font-medium text-fleet-ink">{{ $driver->name }}</td>
                         <td class="px-4 py-3 text-fleet-secondary">{{ $driver->license_number }}</td>
-                        <td class="max-w-xl truncate px-4 py-3 text-fleet-secondary" title="{{ $driver->linkedUser?->email ?? '' }}">{{ $driver->linkedUser?->email ?? '—' }}</td>
+                        <td class="px-4 py-3 text-fleet-secondary tabular-nums">{{ $driver->formattedPhone() ?? '—' }}</td>
+                        <td class="px-4 py-3 text-fleet-secondary">{{ $driver->linked_user_id ? __('Com acesso') : __('Sem senha') }}</td>
                         <td class="px-4 py-3 text-right">
                             <div class="inline-flex items-center justify-end gap-1">
                                 <button
@@ -57,7 +59,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhum motorista cadastrado.') }}</td>
+                        <td colspan="5" class="px-4 py-8 text-center text-fleet-muted">{{ __('Nenhum motorista cadastrado.') }}</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -135,14 +137,16 @@
                                 @error('phone') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="fleet-label" for="driver-user">{{ __('Usuário (opcional)') }}</label>
-                                <select id="driver-user" wire:model="linked_user_id" class="fleet-field">
-                                    <option value="">{{ __('Sem vínculo') }}</option>
-                                    @foreach ($linkableUsers as $u)
-                                        <option value="{{ $u->id }}">{{ $u->name }} — {{ $u->email }}</option>
-                                    @endforeach
-                                </select>
-                                @error('linked_user_id') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
+                                <label class="fleet-label" for="driver-app-password">{{ __('Senha do app') }}</label>
+                                <input id="driver-app-password" type="password" wire:model="app_password" autocomplete="new-password" class="fleet-field" />
+                                <p class="mt-1 text-xs text-fleet-muted">
+                                    @if ($hasAppAccess)
+                                        {{ __('Acesso ao app ativo. Preencha só para trocar a senha; o motorista precisará entrar de novo no celular.') }}
+                                    @else
+                                        {{ __('O motorista entra no app com o celular acima e esta senha (mínimo de 6 caracteres).') }}
+                                    @endif
+                                </p>
+                                @error('app_password') <p class="mt-1 text-xs text-fleet-danger">{{ $message }}</p> @enderror
                             </div>
                             <div class="flex flex-wrap gap-2 sm:col-span-2">
                                 <button type="submit" class="fleet-btn--primary fleet-btn--lg">{{ __('Salvar') }}</button>

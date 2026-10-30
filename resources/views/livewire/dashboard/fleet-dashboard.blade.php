@@ -6,21 +6,21 @@
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="fleet-panel--inverted">
-            <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Custo combustível') }}</p>
-            <p class="mt-3 text-3xl font-bold">R$ {{ number_format($metrics['total_fuel_cost'], 2, ',', '.') }}</p>
+            <p class="text-sm font-medium text-white/75">{{ __('Custo combustível') }}</p>
+            <p class="mt-3 font-display text-3xl font-medium tabular-nums">R$ {{ number_format($metrics['total_fuel_cost'], 2, ',', '.') }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Outras despesas') }}</p>
-            <p class="mt-3 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_other_expenses'], 2, ',', '.') }}</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">R$ {{ number_format($metrics['total_other_expenses'], 2, ',', '.') }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Total operacional') }}</p>
-            <p class="mt-3 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_operational_cost'], 2, ',', '.') }}</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">R$ {{ number_format($metrics['total_operational_cost'], 2, ',', '.') }}</p>
             <p class="mt-2 text-xs text-fleet-muted">{{ __('Combustível + pedágio, ajudante e alimentação') }}</p>
         </div>
         <div class="fleet-panel">
             <p class="fleet-section-title">{{ __('Litros abastecidos') }}</p>
-            <p class="mt-3 text-2xl font-bold text-fleet-ink">{{ number_format($metrics['total_liters'], 2, ',', '.') }} L</p>
+            <p class="mt-3 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ number_format($metrics['total_liters'], 2, ',', '.') }} L</p>
         </div>
     </div>
 

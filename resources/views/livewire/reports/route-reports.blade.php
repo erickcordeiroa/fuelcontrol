@@ -5,19 +5,30 @@
         </div>
     @endif
 
+    <x-fleet.report-tabs />
+
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <h1 class="fleet-page-title">{{ __('Relatórios de Rotas') }}</h1>
+            <h1 class="fleet-page-title">{{ __('Combustível e gastos') }}</h1>
             <p class="fleet-page-lead">{{ __('Combustível, despesas e desempenho por viagem e veículo.') }}</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ $exportPdfUrl }}" target="_blank" rel="noopener" class="fleet-btn--outline fleet-btn--sm">
-                {{ __('Export PDF') }}
-            </a>
-            <a href="{{ $exportCsvUrl }}" class="fleet-btn--outline fleet-btn--sm">
-                {{ __('Export Excel') }}
-            </a>
-        </div>
+        @if (app(\App\Services\Billing\PlanLimits::class)->allows(auth()->user()->tenantOwnerId(), 'report_export'))
+            <div class="flex gap-2">
+                <a href="{{ $exportPdfUrl }}" target="_blank" rel="noopener" class="fleet-btn--outline fleet-btn--sm">
+                    {{ __('Exportar PDF') }}
+                </a>
+                <a href="{{ $exportCsvUrl }}" class="fleet-btn--outline fleet-btn--sm">
+                    {{ __('Exportar Excel') }}
+                </a>
+            </div>
+        @else
+            <p class="max-w-xs text-sm text-fleet-secondary">
+                {{ __('Exportar em PDF e Excel está nos planos a partir de 10 veículos.') }}
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('subscription.index') }}" wire:navigate class="font-medium text-fleet-primary-strong underline-offset-4 hover:underline">{{ __('Ver planos') }}</a>
+                @endif
+            </p>
+        @endif
     </div>
 
     <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
@@ -80,20 +91,20 @@
 
     <div class="grid gap-4 lg:grid-cols-4">
         <div class="fleet-panel--inverted !p-5">
-            <p class="text-xs font-semibold uppercase tracking-wide text-white/70">{{ __('Custo combustível') }}</p>
-            <p class="mt-2 text-2xl font-bold">R$ {{ number_format($metrics['total_fuel_cost'], 2, ',', '.') }}</p>
+            <p class="text-sm font-medium text-fleet-navy/80">{{ __('Custo combustível') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums">R$ {{ number_format($metrics['total_fuel_cost'], 2, ',', '.') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Outras despesas') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_other_expenses'], 2, ',', '.') }}</p>
+            <p class="text-sm font-medium text-fleet-muted">{{ __('Outras despesas') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy">R$ {{ number_format($metrics['total_other_expenses'], 2, ',', '.') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Total operacional') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">R$ {{ number_format($metrics['total_operational_cost'], 2, ',', '.') }}</p>
+            <p class="text-sm font-medium text-fleet-muted">{{ __('Total operacional') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy">R$ {{ number_format($metrics['total_operational_cost'], 2, ',', '.') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Litros') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">{{ number_format($metrics['total_liters'], 2, ',', '.') }} L</p>
+            <p class="text-sm font-medium text-fleet-muted">{{ __('Litros') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ number_format($metrics['total_liters'], 2, ',', '.') }} L</p>
         </div>
     </div>
 
@@ -111,15 +122,15 @@
             };
 
             $consumoLabelClass = match (true) {
-                $isAboveIdeal => 'text-xs font-semibold uppercase tracking-wide text-fleet-profit',
-                $isBelowIdeal => 'text-xs font-semibold uppercase tracking-wide text-fleet-danger',
-                default => 'text-xs font-semibold uppercase tracking-wide text-fleet-muted',
+                $isAboveIdeal => 'text-sm font-medium text-fleet-profit',
+                $isBelowIdeal => 'text-sm font-medium text-fleet-danger',
+                default => 'text-sm font-medium text-fleet-muted',
             };
 
             $consumoValueClass = match (true) {
-                $isAboveIdeal => 'mt-2 text-2xl font-bold text-fleet-profit',
-                $isBelowIdeal => 'mt-2 text-2xl font-bold text-fleet-danger',
-                default => 'mt-2 text-2xl font-bold text-fleet-ink',
+                $isAboveIdeal => 'mt-2 font-display text-2xl font-medium tabular-nums text-fleet-profit',
+                $isBelowIdeal => 'mt-2 font-display text-2xl font-medium tabular-nums text-fleet-danger',
+                default => 'mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy',
             };
         @endphp
         <div class="{{ $consumoCardClass }}">
@@ -140,8 +151,8 @@
             @endif
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('Preço médio por KM') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">
+            <p class="text-sm font-medium text-fleet-muted">{{ __('Preço médio por KM') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy">
                 @if ($metrics['cost_per_km'] !== null)
                     R$ {{ number_format($metrics['cost_per_km'], 2, ',', '.') }}
                 @else
@@ -151,22 +162,32 @@
             <p class="mt-1 text-xs text-fleet-muted">{{ __('Custo total de combustível ÷ km rodados no período') }}</p>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-5 shadow-fleet">
-            <p class="text-xs font-semibold uppercase tracking-wide text-fleet-muted">{{ __('KM rodados (período)') }}</p>
-            <p class="mt-2 text-2xl font-bold text-fleet-ink">{{ number_format($metrics['total_km'], 0, ',', '.') }} km</p>
+            <p class="text-sm font-medium text-fleet-muted">{{ __('KM rodados (período)') }}</p>
+            <p class="mt-2 font-display text-2xl font-medium tabular-nums text-fleet-navy">{{ number_format($metrics['total_km'], 0, ',', '.') }} km</p>
         </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Consumo Mensal (Valor)') }}</h3>
-            <div class="mt-4 h-64" wire:ignore>
-                <canvas id="reportLine"></canvas>
+            <div class="relative mt-4 h-64">
+                <div class="h-full" wire:ignore>
+                    <canvas id="reportLine"></canvas>
+                </div>
+                @unless ($hasLineChartData)
+                    <p class="absolute inset-0 flex items-center justify-center border border-dashed border-fleet-border text-sm text-fleet-secondary">{{ __('Sem lançamentos no período para montar o gráfico.') }}</p>
+                @endunless
             </div>
         </div>
         <div class="rounded-2xl border border-fleet-border bg-fleet-card p-4 shadow-fleet">
             <h3 class="text-sm font-semibold text-fleet-ink">{{ __('Consumo médio por veículo (km/L)') }}</h3>
-            <div class="mt-4 h-64" wire:ignore>
-                <canvas id="reportBars"></canvas>
+            <div class="relative mt-4 h-64">
+                <div class="h-full" wire:ignore>
+                    <canvas id="reportBars"></canvas>
+                </div>
+                @unless ($hasBarChartData)
+                    <p class="absolute inset-0 flex items-center justify-center border border-dashed border-fleet-border text-sm text-fleet-secondary">{{ __('Sem lançamentos no período para montar o gráfico.') }}</p>
+                @endunless
             </div>
         </div>
     </div>
@@ -294,9 +315,9 @@
                             <td class="px-4 py-3 text-right font-mono text-sm font-semibold text-fleet-ink">R$ {{ number_format($trip->operationalCost(), 2, ',', '.') }}</td>
                             <td class="px-4 py-3">
                                 @if ($trip->status->value === 'completed')
-                                    <span class="rounded-full bg-fleet-success/15 px-2 py-1 text-xs font-semibold uppercase text-fleet-profit">{{ __('Concluído') }}</span>
+                                    <span class="rounded-full bg-fleet-success/15 px-2 py-1 text-xs font-semibold text-fleet-profit">{{ __('Concluído') }}</span>
                                 @else
-                                    <span class="rounded-full bg-fleet-primary/15 px-2 py-1 text-xs font-semibold uppercase text-fleet-primary">{{ __('Em curso') }}</span>
+                                    <span class="rounded-full bg-fleet-primary/15 px-2 py-1 text-xs font-semibold text-fleet-primary">{{ __('Em curso') }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">
@@ -360,7 +381,7 @@
                             @else
                                 <table class="mt-3 w-full text-left text-sm">
                                     <thead>
-                                        <tr class="text-xs uppercase text-fleet-muted">
+                                        <tr class="text-xs font-semibold text-fleet-ink">
                                             <th class="pb-2 pr-2 font-medium">{{ __('Campo') }}</th>
                                             <th class="pb-2 pr-2 font-medium">{{ __('Antes') }}</th>
                                             <th class="pb-2 font-medium">{{ __('Depois') }}</th>

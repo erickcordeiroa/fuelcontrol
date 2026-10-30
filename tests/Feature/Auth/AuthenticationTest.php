@@ -24,7 +24,7 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
 
         $component = Volt::test('pages.auth.login')
             ->set('form.email', $user->email)
@@ -34,9 +34,23 @@ class AuthenticationTest extends TestCase
 
         $component
             ->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('reports', absolute: false));
 
         $this->assertAuthenticated();
+    }
+
+    public function test_drivers_cannot_log_in_on_the_web(): void
+    {
+        $driver = User::factory()->driverRole()->create();
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $driver->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasErrors(['form.email'])
+            ->assertNoRedirect();
+
+        $this->assertGuest();
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
@@ -56,17 +70,13 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_dashboard_can_be_rendered_for_authenticated_users(): void
+    public function test_old_dashboard_url_redirects_to_reports(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user);
 
-        $response = $this->get('/dashboard');
-
-        $response
-            ->assertOk()
-            ->assertSee(__('Painel operacional'), false);
+        $this->get('/dashboard')->assertRedirect('/relatorios');
     }
 
     public function test_users_can_logout(): void

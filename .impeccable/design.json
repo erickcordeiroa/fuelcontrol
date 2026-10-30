@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T16:49:59.038402+00:00",
+  "title": "Design System: Kilomo",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Azul elétrico",
+        "canonical": "#0061FE",
+        "tonalRamp": [
+          "#10213C",
+          "#13356C",
+          "#1048A2",
+          "#0759DF",
+          "#3F84F3",
+          "#93B5EC",
+          "#D0DCF1",
+          "#ECF1F8"
+        ]
+      },
+      "primary-press": {
+        "role": "primary",
+        "displayName": "Azul pressionado",
+        "canonical": "#0044AF",
+        "tonalRamp": [
+          "#10213C",
+          "#13366C",
+          "#1049A2",
+          "#075BDF",
+          "#3F85F3",
+          "#93B5EC",
+          "#D0DDF1",
+          "#ECF1F8"
+        ]
+      },
+      "on-primary": {
+        "role": "primary",
+        "displayName": "Creme sobre azul",
+        "canonical": "#F7F5F2",
+        "tonalRamp": [
+          "#2C2721",
+          "#4A4235",
+          "#6B5D48",
+          "#8C7859",
+          "#AE9D84",
+          "#CAC1B5",
+          "#E4E1DC",
+          "#F4F3F1"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#1E1919",
+        "tonalRamp": [
+          "#282424",
+          "#443C3C",
+          "#605353",
+          "#7D6969",
+          "#A19191",
+          "#C3BBBB",
+          "#E2DFDF",
+          "#F3F2F2"
+        ]
+      },
+      "ink-mute": {
+        "role": "neutral",
+        "displayName": "Tinta suave",
+        "canonical": "#524A3E",
+        "tonalRamp": [
+          "#292723",
+          "#46413A",
+          "#635B4F",
+          "#827664",
+          "#A59B8D",
+          "#C5C0B9",
+          "#E3E1DE",
+          "#F3F2F1"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Tinta clara",
+        "canonical": "#6B6560",
+        "tonalRamp": [
+          "#272625",
+          "#42403D",
+          "#5D5955",
+          "#79726D",
+          "#9E9994",
+          "#C2BFBD",
+          "#E1E0DF",
+          "#F3F2F2"
+        ]
+      },
+      "ink-warm": {
+        "role": "neutral",
+        "displayName": "Tinta quente",
+        "canonical": "#393633",
+        "tonalRamp": [
+          "#272625",
+          "#42403D",
+          "#5D5955",
+          "#79736D",
+          "#9E9994",
+          "#C2BFBD",
+          "#E1E0DF",
+          "#F3F2F2"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Fio",
+        "canonical": "#A69171",
+        "tonalRamp": [
+          "#2B2721",
+          "#4A4236",
+          "#6A5D48",
+          "#8B785A",
+          "#AE9D84",
+          "#C9C1B5",
+          "#E4E1DD",
+          "#F4F3F1"
+        ]
+      },
+      "hairline-soft": {
+        "role": "neutral",
+        "displayName": "Fio suave",
+        "canonical": "#D3CEC9",
+        "tonalRamp": [
+          "#292624",
+          "#44403B",
+          "#615952",
+          "#7E7368",
+          "#A29990",
+          "#C4BFBB",
+          "#E2E0DF",
+          "#F3F2F2"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Creme",
+        "canonical": "#F7F5F2",
+        "tonalRamp": [
+          "#2C2721",
+          "#4A4235",
+          "#6B5D48",
+          "#8C7859",
+          "#AE9D84",
+          "#CAC1B5",
+          "#E4E1DC",
+          "#F4F3F1"
+        ]
+      },
+      "canvas-lift": {
+        "role": "neutral",
+        "displayName": "Creme elevado",
+        "canonical": "#EEE9E2",
+        "tonalRamp": [
+          "#2C2720",
+          "#4B4234",
+          "#6C5C46",
+          "#8F7757",
+          "#B09D82",
+          "#CBC1B4",
+          "#E5E1DC",
+          "#F4F3F1"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#999999",
+          "#BFBFBF",
+          "#E0E0E0",
+          "#F2F2F2"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Escuro",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#999999",
+          "#BFBFBF",
+          "#E0E0E0",
+          "#F2F2F2"
+        ]
+      },
+      "surface-dark-elevated": {
+        "role": "neutral",
+        "displayName": "Escuro elevado",
+        "canonical": "#292C31",
+        "tonalRamp": [
+          "#242628",
+          "#3C3F44",
+          "#535860",
+          "#69707C",
+          "#9197A1",
+          "#BBBEC3",
+          "#DFE0E2",
+          "#F2F2F3"
+        ]
+      },
+      "on-dark": {
+        "role": "neutral",
+        "displayName": "Sobre escuro",
+        "canonical": "#F7F5F2",
+        "tonalRamp": [
+          "#2C2721",
+          "#4A4235",
+          "#6B5D48",
+          "#8C7859",
+          "#AE9D84",
+          "#CAC1B5",
+          "#E4E1DC",
+          "#F4F3F1"
+        ]
+      },
+      "on-dark-mute": {
+        "role": "neutral",
+        "displayName": "Sobre escuro suave",
+        "canonical": "#8E8B87",
+        "tonalRamp": [
+          "#272626",
+          "#41403E",
+          "#5B5A57",
+          "#767370",
+          "#9C9996",
+          "#C1BFBE",
+          "#E1E0E0",
+          "#F2F2F2"
+        ]
+      },
+      "surface-info-soft": {
+        "role": "tertiary",
+        "displayName": "Faixa informativa",
+        "canonical": "#DEEBFF",
+        "tonalRamp": [
+          "#10223C",
+          "#13366C",
+          "#104AA2",
+          "#075CDF",
+          "#3F86F3",
+          "#93B6EC",
+          "#D0DDF1",
+          "#ECF1F8"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Sucesso",
+        "canonical": "#175641",
+        "tonalRamp": [
+          "#19332B",
+          "#265A48",
+          "#2F8467",
+          "#34B188",
+          "#65CDAA",
+          "#A5D9C8",
+          "#D7EAE4",
+          "#EFF6F3"
+        ]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Erro",
+        "canonical": "#B42318",
+        "tonalRamp": [
+          "#371815",
+          "#62221E",
+          "#912921",
+          "#C52C20",
+          "#DE5E54",
+          "#E1A29D",
+          "#EDD5D4",
+          "#F7EEEE"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Atenção",
+        "canonical": "#EECC5D",
+        "tonalRamp": [
+          "#383014",
+          "#64531C",
+          "#95791E",
+          "#CAA11B",
+          "#E2C050",
+          "#E3D29B",
+          "#EEE8D3",
+          "#F7F5ED"
+        ]
+      },
+      "warning-ink": {
+        "role": "tertiary",
+        "displayName": "Atenção (texto)",
+        "canonical": "#7A5A00",
+        "tonalRamp": [
+          "#3C3110",
+          "#6C5513",
+          "#A27C10",
+          "#DFA607",
+          "#F3C43F",
+          "#ECD493",
+          "#F1E8D0",
+          "#F8F5EC"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-xl": {
+        "displayName": "Display XL",
+        "purpose": "Título do topo da home."
+      },
+      "display-lg": {
+        "displayName": "Display LG",
+        "purpose": "Títulos de seção da home."
+      },
+      "display-md": {
+        "displayName": "Display MD",
+        "purpose": "Título de página nas telas internas."
+      },
+      "heading-sm": {
+        "displayName": "Título pequeno",
+        "purpose": "Títulos de painel e cartão."
+      },
+      "body-md": {
+        "displayName": "Corpo",
+        "purpose": "Texto corrido."
+      },
+      "label-sm": {
+        "displayName": "Rótulo",
+        "purpose": "Rótulos de campo e cabeçalhos de tabela."
+      },
+      "button-md": {
+        "displayName": "Botão",
+        "purpose": "Rótulos de botão."
+      }
+    },
+    "shadows": [
+      {
+        "name": "level-1",
+        "value": "0 1px 2px rgb(0 0 0 / 0.04)",
+        "purpose": "Painéis brancos das telas internas (com fio suave)."
+      },
+      {
+        "name": "level-2",
+        "value": "0 8px 24px rgb(0 0 0 / 0.08)",
+        "purpose": "Cartão de produto na home, menus suspensos e modais."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Transições de estado (150ms) e o desenho da rota na home (1400ms)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary-pill",
+      "description": "A única ação azul preenchida da área.",
+      "html": "<button class=\"ds-btn-primary\">Entrar na plataforma</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;min-height:40px;padding:8px 24px;border:1px solid #0061FE;border-radius:100px;background:#0061FE;color:#F7F5F2;font:500 16px/1.2 'Inter Variable',system-ui,sans-serif;cursor:pointer;transition:background-color .15s cubic-bezier(.2,0,0,1),transform .15s}.ds-btn-primary:hover{background:#0044AF;border-color:#0044AF}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:2px solid #0061FE;outline-offset:2px}"
+    },
+    {
+      "name": "Botão contorno",
+      "kind": "button",
+      "refersTo": "button-secondary-outline",
+      "description": "Par do botão principal.",
+      "html": "<button class=\"ds-btn-outline\">Cadastrar empresa</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;min-height:40px;padding:8px 24px;border:1px solid #1E1919;border-radius:100px;background:transparent;color:#1E1919;font:500 16px/1.2 'Inter Variable',system-ui,sans-serif;cursor:pointer;transition:background-color .15s}.ds-btn-outline:hover{background:#EEE9E2}.ds-btn-outline:focus-visible{outline:2px solid #0061FE;outline-offset:2px}"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "text-input",
+      "description": "Branco, fio suave, 8px; foco azul.",
+      "html": "<label class=\"ds-label\">Nome da rota<input class=\"ds-input\" placeholder=\"Setor Sul\"></label>",
+      "css": ".ds-label{display:block;color:#1E1919;font:500 14px/20px 'Inter Variable',system-ui,sans-serif}.ds-input{display:block;width:100%;margin-top:6px;padding:10px 14px;border:1px solid #D3CEC9;border-radius:8px;background:#fff;color:#1E1919;font:400 16px/24px 'Inter Variable',system-ui,sans-serif;transition:border-color .15s,box-shadow .15s}.ds-input::placeholder{color:#6B6560}.ds-input:hover{border-color:#A69171}.ds-input:focus{outline:none;border-color:#0061FE;box-shadow:0 0 0 1px #0061FE}"
+    },
+    {
+      "name": "Painel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Painel branco do produto sobre o creme.",
+      "html": "<div class=\"ds-panel\"><p class=\"ds-panel-title\">Km restantes</p><p class=\"ds-panel-value\">11,2 km</p></div>",
+      "css": ".ds-panel{padding:24px;border:1px solid #D3CEC9;border-radius:16px;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .04);color:#1E1919}.ds-panel-title{margin:0;font:500 18px/1.2 'Space Grotesk Variable',system-ui,sans-serif}.ds-panel-value{margin:12px 0 0;font:500 26px/1.3 'Space Grotesk Variable',system-ui,sans-serif;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Item de menu",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Menu creme elevado; item ativo em pílula de tinta.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-item ds-active\" href=\"#\">Rotas</a><a class=\"ds-rail-item\" href=\"#\">Relatórios</a></nav>",
+      "css": ".ds-rail{width:256px;padding:12px;background:#EEE9E2}.ds-rail-item{display:block;padding:8px 14px;border-radius:100px;color:#1E1919;text-decoration:none;font:400 16px/1.4 'Inter Variable',system-ui,sans-serif;transition:background-color .15s}.ds-rail-item:hover{background:#E4DDD3}.ds-rail-item.ds-active{background:#1E1919;color:#F7F5F2;font-weight:500}.ds-rail-item:focus-visible{outline:2px solid #0061FE;outline-offset:2px}"
+    },
+    {
+      "name": "Cartão da faixa escura",
+      "kind": "card",
+      "refersTo": "card-dark",
+      "description": "Cartão na faixa escura da home.",
+      "html": "<div class=\"ds-dark\"><p class=\"ds-dark-title\">Mapa</p><p class=\"ds-dark-body\">OpenStreetMap, exibido pelo Leaflet.</p></div>",
+      "css": ".ds-dark{padding:24px;border-radius:12px;background:#292C31;color:#F7F5F2}.ds-dark-title{margin:0;font:500 18px/1.2 'Space Grotesk Variable',system-ui,sans-serif}.ds-dark-body{margin:8px 0 0;color:#8E8B87;font:400 16px/1.5 'Inter Variable',system-ui,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Escritório quente, um só azul",
+    "overview": "**Creative North Star: \"Escritório quente, um só azul\"**\n\nA tela é creme (`{colors.canvas}` #F7F5F2), não branca, com texto em tinta quase preta (`{colors.ink}` #1E1919). Isso deixa o sistema com cara de escritório de trabalho, não de painel frio. O branco puro aparece só onde está o \"produto\": painéis, tabelas e campos das telas internas, e o cartão de rota na home.\n\nO azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão preenchido por área, sempre em pílula. Todo o resto vive numa escada de neutros quentes — creme → creme elevado → marrom-acinzentado → tinta. A profundidade vem de uma faixa escura de largura total, usada uma vez por página, e não de sombras fortes.",
+    "keyCharacteristics": [
+      "Fundo creme `#F7F5F2` no lugar do branco; branco só nos painéis do produto.",
+      "Um único botão azul preenchido por área; o par dele é o botão de contorno em tinta.",
+      "Botões em pílula (100px); cartões com 12–16px; campos com 8px.",
+      "Títulos em Space Grotesk 500; texto, rótulos e botões em Inter (400/500).",
+      "Uma faixa escura de largura total por página, e depois de volta ao creme."
+    ],
+    "rules": [
+      {
+        "name": "The One Blue Rule",
+        "body": "Um só botão azul preenchido por área. A segunda ação é sempre o contorno em tinta.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cream Canvas Rule",
+        "body": "A página é creme. Branco puro só dentro do produto (painéis, tabelas, campos, cartão de rota).",
+        "section": "colors"
+      },
+      {
+        "name": "The Logo Exception",
+        "body": "O verde do logo Kilomo vive só no logo.",
+        "section": "colors"
+      },
+      {
+        "name": "The 500 Ceiling Rule",
+        "body": "Nada acima de peso 500 em títulos; rótulos e botões em 500, texto em 400.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Families Rule",
+        "body": "Space Grotesk só em títulos; tudo o que se lê ou se clica é Inter.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "**Do** manter um só botão azul preenchido por área.",
+      "**Do** usar creme como fundo e branco só nos painéis do produto.",
+      "**Do** usar pílula em todo botão, 8px em campo, 12–16px em cartão.",
+      "**Do** usar uma faixa escura de largura total por página e voltar ao creme em seguida.",
+      "**Do** marcar dados de exemplo como \"Dados de demonstração\" e funcionalidades futuras como \"Em breve\"."
+    ],
+    "donts": [
+      "**Don't** colocar dois botões azuis preenchidos lado a lado.",
+      "**Don't** usar peso acima de 500 em títulos.",
+      "**Don't** trocar o fundo creme por branco puro.",
+      "**Don't** usar a faixa escura como tema global.",
+      "**Don't** colocar rótulo pequeno acima de títulos (eyebrow): a referência usa, mas o padrão de qualidade do projeto não aceita.",
+      "**Don't** usar o verde do logo na interface, nem nome, textos ou fontes da marca de referência.",
+      "**Don't** inventar clientes, logos de clientes, números de resultado ou preços."
+    ]
+  }
+}
