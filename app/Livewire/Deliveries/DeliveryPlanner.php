@@ -593,6 +593,13 @@ class DeliveryPlanner extends Component
             return;
         }
 
+        if (! $customer->needsGeocoding()) {
+            $customer->settleWaitingStatus();
+            $this->toast(__('":name" já está localizado. Para mudar a posição, use "Editar endereço".', ['name' => $customer->name]));
+
+            return;
+        }
+
         $customer->forceFill(['geocode_status' => GeocodeStatus::Pending, 'geocode_error' => null])->save();
 
         GeocodeCustomer::dispatch($customer);

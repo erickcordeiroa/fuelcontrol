@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('geocoding:resume-pending')]
-#[Description('Reenfileira a busca dos clientes pendentes: os que pararam no teto diário ou na cota do mês e os que estão esperando há mais de algum tempo (job perdido). Roda a cada 15 minutos.')]
+#[Description('Reenfileira a busca dos clientes pendentes: os que pararam no teto diário ou na cota do mês e os que estão esperando há mais de algum tempo (job perdido). Quem já tem localização só tem o status acertado. Roda a cada 15 minutos.')]
 class ResumePendingGeocoding extends Command
 {
     public function handle(): int
@@ -26,6 +26,8 @@ class ResumePendingGeocoding extends Command
             ->chunkById(500, function ($customers) use (&$queued): void {
                 foreach ($customers as $customer) {
                     if (! $customer->needsGeocoding()) {
+                        $customer->settleWaitingStatus();
+
                         continue;
                     }
 

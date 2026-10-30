@@ -100,6 +100,35 @@ class GeocodingDailyLimitTest extends TestCase
         Queue::assertPushed(GeocodeCustomer::class, fn (GeocodeCustomer $job): bool => $job->customer->is($stale));
     }
 
+    public function test_located_customer_stuck_as_waiting_gets_its_status_fixed_without_a_new_search(): void
+    {
+        Queue::fake();
+        $resolved = Customer::factory()->located()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'location_type' => 'ROOFTOP']);
+        $manual = Customer::factory()->confirmed()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending]);
+        foreach ([$resolved, $manual] as $customer) {
+            $customer->forceFill(['updated_at' => now()->subMinutes(Customer::GEOCODE_STALE_MINUTES + 1)])->saveQuietly();
+        }
+
+        $this->artisan('geocoding:resume-pending')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertSame(GeocodeStatus::Resolved, $resolved->refresh()->geocode_status);
+        $this->assertSame(GeocodeStatus::Manual, $manual->refresh()->geocode_status);
+    }
+
+    public function test_job_for_an_already_located_customer_only_fixes_the_status(): void
+    {
+        $customer = Customer::factory()->located()->create(['user_id' => $this->admin->id, 'geocode_status' => GeocodeStatus::Pending, 'location_type' => 'GEOMETRIC_CENTER']);
+
+        $geocoder = Mockery::mock(Geocoder::class);
+        $geocoder->shouldNotReceive('geocode');
+        $this->app->instance(GeocoderFactory::class, Mockery::mock(GeocoderFactory::class.'[forTenant]', fn (MockInterface $mock) => $mock->allows('forTenant')->andReturn($geocoder))->makePartial());
+
+        (new GeocodeCustomer($customer))->handle(app(GeocoderFactory::class), app(AddressBook::class));
+
+        $this->assertSame(GeocodeStatus::Approximate, $customer->refresh()->geocode_status);
+    }
+
     public function test_scheduler_processes_the_queue_every_minute_and_resumes_pending_searches(): void
     {
         $events = collect(app(Schedule::class)->events());
