@@ -1,11 +1,11 @@
 # App do motorista: API
 
-Atualizado em 2026-10-29. A API do app (spec 004) está pronta no backend; o app em si ainda não foi construído.
+Atualizado em 2026-10-30. A API do app (spec 004) está pronta no backend; o app está no repositório `kilomo-app` (Expo/React Native).
 Protótipo de referência: [`prototype.html`](prototype.html).
 
 ## Decisão
 
-App separado consumindo API, com **Laravel Sanctum** (token por aparelho). Serve a PWA agora e um app nativo depois.
+App separado consumindo API, com **Laravel Sanctum** (token por aparelho). O app é nativo (Expo/React Native, Android primeiro).
 
 ## Autenticação
 
@@ -65,7 +65,7 @@ Pendentes primeiro, na ordem calculada; baixadas no fim, na ordem em que foram b
 - Toda baixa grava uma posição em `driver_locations`; posições repetidas (mesmo `recorded_at`) são ignoradas.
 - Finalizar só com todas as paradas baixadas.
 - Baixas, início e fim entram no log de auditoria com o motorista como autor.
-- A tela de Rotas do administrador já atualiza a cada 15 s e mostra as baixas e as posições.
+- A tela de Rotas do administrador atualiza a cada 10 min (e no botão "Atualizar agora") e mostra as baixas e as posições.
 
 ## Banco
 
@@ -78,5 +78,4 @@ Pendentes primeiro, na ordem calculada; baixadas no fim, na ordem em que foram b
 
 ## Fora desta entrega
 
-- O app (PWA ou nativo) consumindo a API.
 - Envio de posição com a tela apagada (exige app nativo).

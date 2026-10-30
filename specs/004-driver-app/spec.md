@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-29
 
-**Status**: API pronta (2026-10-29, Sanctum, `/api/v1/driver`); o app ainda não foi construído. Protótipo aprovado em 2026-10-29: [`prototype.html`](prototype.html) (abrir no navegador; também publicado como artefato em https://claude.ai/artifact/8EtEWjJnUX1YM29a8zQjie). Contrato da API: [`api-readiness.md`](api-readiness.md).
+**Status**: API pronta (2026-10-29, Sanctum, `/api/v1/driver`). App em construção desde 2026-10-30 no repositório `kilomo-app` (Expo/React Native, Android): fase 1 pronta (entrar, fila, detalhe, iniciar, baixas, finalizar, posição com o app aberto). Protótipo aprovado em 2026-10-29: [`prototype.html`](prototype.html) (abrir no navegador; também publicado como artefato em https://claude.ai/artifact/8EtEWjJnUX1YM29a8zQjie). Contrato da API: [`api-readiness.md`](api-readiness.md).
 
 **Input**: User description: "O aplicativo vai pegar as informações do motorista via app, salvando no banco e mostrando na tela de rota, para que a cada 10 ou 15 minutos atualize de forma automática as informações na tela, de entrega, status e tudo mais. O motorista vê as entregas e marca se foi entregue ou não e o motivo." Ajustes do protótipo: "login pelo celular do motorista, listagem em pilha da rota, detalhes da entrega, mudança de status conforme temos no sistema, simples e objetivo. A localização é interna, não aparece para o motorista. Não é linha do tempo: finalizada ou não entregue vai para o final da fila. O motorista não pode mudar a ordem da entrega."
 
@@ -88,7 +88,7 @@ sem duplicar registros.
 - Posição com precisão ruim (> 200 m): gravada, mas não usada para confirmar o cliente.
 - Administrador reotimiza a rota em andamento: o app recebe a nova ordem na próxima atualização.
 - Administrador exclui a rota: o app mostra "Nenhuma rota para hoje".
-- Navegador não mantém envio em segundo plano com a tela apagada: o envio automático vale com o app aberto (limitação da versão web).
+- Posição com a tela apagada: no Android exige um serviço em primeiro plano com notificação fixa ("Kilomo está acompanhando sua rota"); entra na fase 2 do app.
 
 ## Requirements *(mandatory)*
 
@@ -125,8 +125,9 @@ sem duplicar registros.
 
 ## Assumptions
 
-- Decidido em 2026-10-29: app separado consumindo a API com Sanctum; a primeira versão pode ser PWA e depois app nativo, sem mudar a API.
+- Decidido em 2026-10-29: app separado consumindo a API com Sanctum.
+- Decidido em 2026-10-30: app nativo com Expo/React Native em repositório próprio (`kilomo-app`), só Android na primeira versão; iPhone depois, com o mesmo código. Fases: 1) entrar, fila, detalhe, baixas e posição com o app aberto; 2) sem sinal, posição com a tela apagada e atualização em segundo plano; 3) trajeto no mapa e Play Store.
 - O celular de login é o campo "telefone" do cadastro de motorista, que passa a ser único por empresa.
 - Comprovante com foto ou assinatura fica para uma versão seguinte.
-- Rastreamento com a tela apagada exige app nativo; fica fora desta versão.
+- Rastreamento com a tela apagada vem na fase 2 do app nativo.
 - Telefone do cliente não existe no cadastro hoje; o protótipo mostra um campo de telefone que depende de incluir essa coluna na importação.
