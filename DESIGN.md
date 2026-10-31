@@ -228,7 +228,7 @@ O azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão pr
 
 **The Cream Canvas Rule.** A página é creme. Branco puro só dentro do produto (painéis, tabelas, campos, cartão de rota).
 
-**The Logo Exception.** O verde do logo Kilomo vive só no logo.
+**The Wordmark Rule.** A marca é só a palavra KILOMO (`<x-fleet.wordmark>`): Inter 900, caixa alta, em `{colors.primary}`. Não há símbolo nem imagem de logo na interface.
 
 ## Typography
 
@@ -250,7 +250,7 @@ O azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão pr
 | `button-md` | Inter | 16px | 500 | Botões (14px no tamanho pequeno) |
 
 ### Named Rules
-**The 500 Ceiling Rule.** Nada acima de peso 500 em títulos; rótulos e botões em 500, texto em 400.
+**The 500 Ceiling Rule.** Nada acima de peso 500 em títulos; rótulos e botões em 500, texto em 400. A única exceção é a marca KILOMO, em 900.
 
 **The Two Families Rule.** Space Grotesk só em títulos; tudo o que se lê ou se clica é Inter.
 
@@ -295,7 +295,7 @@ O azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão pr
 - Rótulo acima (`label-sm`, tinta); campo branco, fio suave, 8px, 44px. Foco: borda de 2px azul. Erro: borda e mensagem em `{colors.error}`.
 
 ### Navigation
-- **Menu lateral:** creme elevado; logo no topo; grupos com rótulo em tinta suave; item ativo em pílula de tinta com texto creme.
+- **Menu lateral:** creme elevado; marca KILOMO no topo; grupos com rótulo em tinta suave; item ativo em pílula de tinta com texto creme.
 - **Topo:** creme, 60px, fio suave inferior; busca rápida por categoria.
 
 ## Do's and Don'ts
@@ -313,5 +313,5 @@ O azul elétrico (`{colors.primary}` #0061FE) é a única voltagem: um botão pr
 - **Don't** trocar o fundo creme por branco puro.
 - **Don't** usar a faixa escura como tema global.
 - **Don't** colocar rótulo pequeno acima de títulos (eyebrow): a referência usa, mas o padrão de qualidade do projeto não aceita.
-- **Don't** usar o verde do logo na interface, nem nome, textos ou fontes da marca de referência.
+- **Don't** voltar a usar imagem de logo nem o verde antigo da marca; nem nome, textos ou fontes da marca de referência.
 - **Don't** inventar clientes, logos de clientes, números de resultado ou preços.

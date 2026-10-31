@@ -7,7 +7,7 @@
 
 <aside class="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-fleet-border bg-fleet-sidebar lg:sticky lg:top-0 lg:flex lg:h-[100dvh]">
     <a href="{{ route('reports') }}" wire:navigate class="mx-5 mt-6 flex items-center" aria-label="{{ __('Kilomo — página inicial') }}">
-        <img src="{{ asset('img/logo.png') }}" alt="Kilomo" class="h-8 w-auto" />
+        <x-fleet.wordmark class="text-2xl" />
     </a>
 
     <div class="mx-5 mt-6 border-t border-fleet-border pt-4">
