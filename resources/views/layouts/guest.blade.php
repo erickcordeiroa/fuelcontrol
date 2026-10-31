@@ -24,7 +24,7 @@
                         $brandName = config('app.name') === 'Laravel' ? 'Kilomo' : config('app.name');
                     @endphp
                     <a href="{{ url('/') }}" class="mx-auto inline-flex items-center gap-3 lg:mx-0">
-                        <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="w-[200px]" />
+                        <x-fleet.wordmark class="text-4xl" />
                     </a>
                     {{ $slot }}
                 </div>

@@ -47,7 +47,7 @@
     <header class="sticky top-0 z-40 border-b border-fleet-border bg-fleet-page">
         <div class="mx-auto flex min-h-[60px] max-w-[1200px] items-center justify-between gap-4 px-6 py-2">
             <a href="{{ url('/') }}" class="flex items-center" aria-label="{{ $brandName }}">
-                <img src="{{ asset('img/logo.png') }}" alt="{{ $brandName }}" class="h-7 w-auto sm:h-8" />
+                <x-fleet.wordmark class="text-xl sm:text-2xl" />
             </a>
             @if (Route::has('login'))
                 @include('partials.landing-nav')
