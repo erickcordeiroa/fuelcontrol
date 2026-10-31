@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        /**
+         * Em produção o app fica atrás do Traefik (Dokploy), que termina o HTTPS. Confiar nos cabeçalhos
+         * X-Forwarded-* faz o Laravel gerar URLs em https; sem isso o CSS e o JS saem em http e o navegador bloqueia.
+         */
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'driver' => EnsureUserIsDriver::class,
